@@ -9,9 +9,7 @@ import net.minecraft.server.world.ServerWorld;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import silicatyt.physicsref.entity.PhysicsObject;
-
-import static silicatyt.physicsref.entity.ModEntities.PHYSICS_OBJECT;
-import static silicatyt.physicsref.entity.ModEntities.registerModEntities;
+import silicatyt.physicsref.entity.ModEntities;
 
 public class PhysicsRef implements ModInitializer {
 	public static final String MOD_ID = "physicsref";
@@ -28,8 +26,8 @@ public class PhysicsRef implements ModInitializer {
 		// However, some things (like resources) may still be uninitialized.
 		// Proceed with mild caution.
         ServerTickEvents.START_SERVER_TICK.register(this::physicsTick);
-        registerModEntities();
-        PolymerEntityUtils.registerType(PHYSICS_OBJECT); // Mark Physics Object Entity as server-side only
+        ModEntities.registerModEntities();
+        PolymerEntityUtils.registerType(ModEntities.PHYSICS_OBJECT); // Mark Physics Object Entity as server-side only
 
 
     }
@@ -38,11 +36,9 @@ public class PhysicsRef implements ModInitializer {
     private void physicsTick(MinecraftServer server) {
 
         ServerWorld world = server.getOverworld();
-        PhysicsObject obj = new PhysicsObject(PHYSICS_OBJECT, world); // NOTE:
+        PhysicsObject obj = new PhysicsObject(ModEntities.PHYSICS_OBJECT, world); // NOTE:
         obj.updatePosition(0, 100, 0);
         world.spawnEntity(obj);
-
-        obj.test();
 
     }
 
