@@ -1,2 +1,2 @@
-# physics-engine
-A rigid-body physics engine for cuboids as a Minecraft Data Pack.
+# Physics Engine Reference
+This is a Fabric mod for 1.21.10 that aims to provide the same functionality of the main datapack using simpler calculations and full floating point accuracy. The goal is to compare both versions so I can see exactly where I need to scale up values more in the original versions. Another benefit is that I can verify certain algorithms or approaches more easily if I implement it using (easier to implement & unoptimized) Java.

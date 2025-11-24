@@ -1,0 +1,44 @@
+{
+	"schemaVersion": 1,
+	"id": "physicsref",
+	"version": "${version}",
+	"name": "PhysicsRef",
+	"description": "This is an example description! Tell everyone what your mod is about!",
+	"authors": [
+		"Me!"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/FabricMC/fabric-example-mod"
+	},
+	"license": "CC0-1.0",
+	"icon": "assets/physicsref/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"silicatyt.physicsref.PhysicsRef"
+		],
+		"client": [
+			"silicatyt.physicsref.PhysicsRefClient"
+		],
+		"fabric-datagen": [
+			"silicatyt.physicsref.PhysicsRefDataGenerator"
+		]
+	},
+	"mixins": [
+		"physicsref.mixins.json",
+		{
+			"config": "physicsref.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.18.1",
+		"minecraft": "~1.21.10",
+		"java": ">=21",
+		"fabric-api": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}
