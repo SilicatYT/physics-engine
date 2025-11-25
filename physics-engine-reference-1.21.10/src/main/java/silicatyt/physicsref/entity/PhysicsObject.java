@@ -36,7 +36,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     // Transient data
     private Vector3d pos; // Just for easy and consistent access
     private Matrix3d inverseInertiaTensorLocal;
-    private Matrix3d inverseInertiaTensorGlobal;
+    private Matrix3d inverseInertiaTensorWorld;
     private Matrix3d rotationMatrix;
     private Matrix3d rotationMatrixTranspose; // To avoid duplicate calculations when calling ".transpose()"
     private Vector3d accumulatedForce;
@@ -57,6 +57,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         this.restitutionCoefficient = DEFAULT_RESTITUTION_COEFFICIENT;
 
         this.initializeObjectData();
+        this.updateTransientObjectData();
     }
 
     // Getters & Setters
@@ -179,20 +180,23 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         // super.readCustomData(view);
         Codec<List<Double>> doubleListCodec = Codec.DOUBLE.listOf();
 
-        this.setItemStack(view.read("item", ItemStack.CODEC).orElse(ItemStack.EMPTY));
-        this.inverseMass = view.read("inverse_mass", Codec.DOUBLE).orElse(DEFAULT_INVERSE_MASS);
-        List<Double> linearVelocity = view.read("linear_velocity", doubleListCodec).orElse(List.of(0d, 0d, 0d));
-        this.linearVelocity = new Vector3d(linearVelocity.get(0), linearVelocity.get(1), linearVelocity.get(2));
-        List<Double> angularVelocity = view.read("angular_velocity", doubleListCodec).orElse(List.of(0d, 0d, 0d));
-        this.angularVelocity = new Vector3d(angularVelocity.get(0), angularVelocity.get(1), angularVelocity.get(2));
-        List<Double> orientation = view.read("orientation", doubleListCodec).orElse(List.of(0d, 0d, 0d, 1d));
-        this.orientation = new Quaterniond(orientation.get(0), orientation.get(1), orientation.get(2), orientation.get(3));
-        List<Double> scale = view.read("scale", doubleListCodec).orElse(List.of(0d, 0d, 0d));
-        this.scale = new Vector3d(scale.get(0), scale.get(1), scale.get(2));
-        this.frictionCoefficient = view.read("friction_coefficient", Codec.DOUBLE).orElse(DEFAULT_FRICTION_COEFFICIENT);
-        this.restitutionCoefficient = view.read("restitution_coefficient", Codec.DOUBLE).orElse(DEFAULT_RESTITUTION_COEFFICIENT);
-
         this.initializeObjectData();
+
+        this.setItemStack(view.read("item", ItemStack.CODEC).orElse(ItemStack.EMPTY));
+        this.setInverseMass(view.read("inverse_mass", Codec.DOUBLE).orElse(DEFAULT_INVERSE_MASS));
+        List<Double> linearVelocity = view.read("linear_velocity", doubleListCodec).orElse(List.of(0d, 0d, 0d));
+        this.setLinearVelocity(new Vector3d(linearVelocity.get(0), linearVelocity.get(1), linearVelocity.get(2)));
+        List<Double> angularVelocity = view.read("angular_velocity", doubleListCodec).orElse(List.of(0d, 0d, 0d));
+        this.setAngularVelocity(new Vector3d(angularVelocity.get(0), angularVelocity.get(1), angularVelocity.get(2)));
+        List<Double> orientation = view.read("orientation", doubleListCodec).orElse(List.of(0d, 0d, 0d, 1d));
+        this.setOrientation(new Quaterniond(orientation.get(0), orientation.get(1), orientation.get(2), orientation.get(3)));
+        List<Double> scale = view.read("scale", doubleListCodec).orElse(List.of(0d, 0d, 0d));
+        this.setScale(new Vector3d(scale.get(0), scale.get(1), scale.get(2)));
+        this.setFrictionCoefficient(view.read("friction_coefficient", Codec.DOUBLE).orElse(DEFAULT_FRICTION_COEFFICIENT));
+        this.setRestitutionCoefficient(view.read("restitution_coefficient", Codec.DOUBLE).orElse(DEFAULT_RESTITUTION_COEFFICIENT));
+
+        this.updateTransientObjectData();
+        this.updateVisualTransformation();
     }
 
     // Normal methods
@@ -201,20 +205,23 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         return EntityType.ITEM_DISPLAY;
     }
 
-    private void initializeObjectData() { // Makes sure that all instance variables are initialized (Not NULL) and update the visual transformation upon getting loaded or instantiated
+    private void initializeObjectData() { // Makes sure that all instance variables are initialized (Not NULL) and set other runtime data upon getting loaded or instantiated
         Vec3d entityPos = this.getEntityPos();
         this.pos = new Vector3d(entityPos.x, entityPos.y, entityPos.z);
         this.setInterpolationDuration(1);
-        this.setStartInterpolation(0);
         this.setTeleportDuration(1);
 
+        this.rotationMatrix = new Matrix3d();
+        this.rotationMatrixTranspose = new Matrix3d();
+        this.inverseInertiaTensorLocal = new Matrix3d();
+        this.inverseInertiaTensorWorld = new Matrix3d();
         this.accumulatedForce = new Vector3d();
         this.accumulatedTorque = new Vector3d();
-        this.rotationMatrix = new Matrix3d();
-        this.inverseInertiaTensorLocal = new Matrix3d();
+    }
 
-        this.updateRotationMatrix(); // Requires rotationMatrix to not be NULL
-        this.updateInertiaTensors(); // Requires inverseInertiaTensorLocal to not be NULL
+    private void updateTransientObjectData() { // Requires rotationMatrix and inverseInertiaTensorLocal to be initialized. Was originally part of initializeObjectData()
+        this.updateRotationMatrix();
+        this.updateInertiaTensors();
         this.updateVisualTransformation();
     }
 
@@ -229,7 +236,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     }
 
     private void updateInertiaTensorWorld() {
-        this.inverseInertiaTensorGlobal = this.inverseInertiaTensorLocal.mul(this.rotationMatrix);
+        this.inverseInertiaTensorWorld = this.inverseInertiaTensorLocal.mul(this.rotationMatrix);
     }
 
     private void updateInertiaTensors() {
