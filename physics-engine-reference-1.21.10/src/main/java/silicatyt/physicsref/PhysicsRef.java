@@ -29,14 +29,13 @@ public class PhysicsRef implements ModInitializer {
         ModEntities.registerModEntities();
         PolymerEntityUtils.registerType(ModEntities.PHYSICS_OBJECT); // Mark Physics Object Entity as server-side only
 
-
     }
 
 
     private void physicsTick(MinecraftServer server) {
 
         ServerWorld world = server.getOverworld();
-        PhysicsObject obj = new PhysicsObject(ModEntities.PHYSICS_OBJECT, world); // NOTE:
+        PhysicsObject obj = new PhysicsObject(ModEntities.PHYSICS_OBJECT, world);
         obj.updatePosition(0, 100, 0);
         world.spawnEntity(obj);
 
