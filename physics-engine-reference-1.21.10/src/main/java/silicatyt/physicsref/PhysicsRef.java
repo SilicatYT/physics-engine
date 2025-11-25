@@ -5,10 +5,8 @@ import net.fabricmc.api.ModInitializer;
 
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import silicatyt.physicsref.entity.PhysicsObject;
 import silicatyt.physicsref.entity.ModEntities;
 
 public class PhysicsRef implements ModInitializer {
@@ -33,12 +31,6 @@ public class PhysicsRef implements ModInitializer {
 
 
     private void physicsTick(MinecraftServer server) {
-
-        ServerWorld world = server.getOverworld();
-        PhysicsObject obj = new PhysicsObject(ModEntities.PHYSICS_OBJECT, world);
-        obj.updatePosition(0, 100, 0);
-        world.spawnEntity(obj);
-
     }
 
 }
