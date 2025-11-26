@@ -10,9 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import silicatyt.physicsref.entity.ModEntities;
 import silicatyt.physicsref.entity.PhysicsObject;
-import silicatyt.physicsref.simulation.CollisionDetection;
-import silicatyt.physicsref.simulation.ContactResolution;
-import silicatyt.physicsref.simulation.Integration;
+import silicatyt.physicsref.simulation.Main;
+
 
 import java.util.HashSet;
 
@@ -25,7 +24,7 @@ public class PhysicsRef implements ModInitializer {
 	@Override
 	public void onInitialize() {
         // Register things
-        ServerTickEvents.START_SERVER_TICK.register(this::physicsTick);
+        ServerTickEvents.START_SERVER_TICK.register(Main::physicsTick);
         ModEntities.registerModEntities();
         PolymerEntityUtils.registerType(ModEntities.PHYSICS_OBJECT); // Mark Physics Object Entity as server-side only
 
@@ -40,14 +39,6 @@ public class PhysicsRef implements ModInitializer {
                 loadedPhysicsObjects.remove(physicsObject);
             }
         });
-    }
-
-
-    private void physicsTick(MinecraftServer server) {
-        Integration.phaseOne();
-        CollisionDetection.start(); // TODO: Runs ContactGeneration later. Or should I split it up?
-        ContactResolution.resolve();
-        Integration.phaseTwo();
     }
 
 }

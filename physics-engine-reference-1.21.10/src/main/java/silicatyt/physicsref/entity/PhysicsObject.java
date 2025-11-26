@@ -21,7 +21,7 @@ import java.util.List;
 // Note: addXYZ and setXYZ also update dependent data like the rotationMatrices or the inverseInertiaTensors automatically. Calling add and set repeatedly therefore causes unnecessary work for the CPU. But it's most readable like this, so I won't bother fixing it for now. This is just a reference mod after all, not meant to be optimized. BUT a potential idea would be: Mark rotationMatrix and stuff as "dirty", and in "getRotationMatrix" accesses I check if it's dirty. If yes, update.
 // Note: In Integration, I have this: "obj.addLinearVelocity(obj.getAccumulatedForce().mul(obj.getInverseMass()));". The "getAccumulatedForce()" creates a new object. Is there a good way around that? Probably not without giving direct access, which would probably be bad.
 // Note: I made the decision to only write a new getter or setter method if I need it. Not write all of them at once for "consistency". That would create bloat and waste too much time. I can't know when I need a Vec3d as an input, or when I need a Vector3d or even 3 individual doubles.
-// Note: Currently, all getters return a new object in order to avoid giving access to the object directly (which would circumvent restrictions when setting the contents, like negative scale). And all setters keep the same object reference and do not re-assign.
+// Note: Currently, all getters return a new object in order to avoid giving access to the object directly (which would circumvent restrictions when setting the contents, like negative scale). And all setters keep the same object reference and do not re-assign. Additionally, that's the reason I use ".set()" instead of "=" for assignments.
 
 public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     public static final double DEFAULT_INVERSE_MASS = 0.001d;
@@ -108,9 +108,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         if (value == null) {
             throw new IllegalArgumentException("Vector must not be null");
         }
-        this.linearVelocity.x = value.x;
-        this.linearVelocity.y = value.y;
-        this.linearVelocity.z = value.z;
+        this.linearVelocity.set(value);
     }
 
     public void addLinearVelocity(Vector3d value) throws IllegalArgumentException {
@@ -121,85 +119,59 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     }
 
     public void scaleLinearVelocity(double scale) {
-        this.linearVelocity.x *= scale;
-        this.linearVelocity.y *= scale;
-        this.linearVelocity.z *= scale;
+        this.linearVelocity.mul(scale);
     }
 
     public Vector3d getAngularVelocity() {
         return new Vector3d(this.angularVelocity);
     }
 
-    public void setAngularVelocity(double x, double y, double z) {
-        this.angularVelocity.x = x;
-        this.angularVelocity.y = y;
-        this.angularVelocity.z = z;
-    }
-
     public void setAngularVelocity(Vector3d value) throws IllegalArgumentException {
         if (value == null) {
             throw new IllegalArgumentException("Vector must not be null");
         }
-        this.setAngularVelocity(value.x, value.y, value.z);
-    }
-
-    public void addAngularVelocity(double x, double y, double z) {
-        this.angularVelocity.x += x;
-        this.angularVelocity.y += y;
-        this.angularVelocity.z += z;
+        this.angularVelocity.set(value);
     }
 
     public void addAngularVelocity(Vector3d value) throws IllegalArgumentException {
         if (value == null) {
             throw new IllegalArgumentException("Vector must not be null");
         }
-        this.addAngularVelocity(value.x, value.y, value.z);
+        this.angularVelocity.add(value);
     }
 
     public void scaleAngularVelocity(double scale) {
-        this.angularVelocity.x *= scale;
-        this.angularVelocity.y *= scale;
-        this.angularVelocity.z *= scale;
-    }
-
-    public void setOrientation(double x, double y, double z, double w) {
-        this.orientation.x = x;
-        this.orientation.y = y;
-        this.orientation.z = z;
-        this.orientation.w = w;
-        this.orientation.normalize();
-
-        this.updateRotationMatrix();
-        this.updateInertiaTensorWorld(); // Requires the updated rotation matrix
+        this.angularVelocity.mul(scale);
     }
 
     public void setOrientation(Quaterniond value) throws IllegalArgumentException {
         if (value == null) {
             throw new IllegalArgumentException("Quaternion must not be null");
         }
-        this.setOrientation(value.x, value.y, value.z, value.w);
+        this.orientation.set(value);
+        this.orientation.normalize();
+
+        this.updateRotationMatrix();
+        this.updateInertiaTensorWorld(); // Requires the updated rotation matrix
+    }
+
+    public Quaterniond getOrientation() {
+        return new Quaterniond(this.orientation);
     }
 
     public Vector3d getScale() {
         return new Vector3d(this.scale);
     }
 
-    public void setScale(double x, double y, double z) throws IllegalArgumentException {
-        if (x < 0 || y < 0 || z < 0) {
-            throw new IllegalArgumentException("Scale must not be negative");
-        }
-        this.scale.x = x;
-        this.scale.y = y;
-        this.scale.z = z;
-
-        this.updateInertiaTensors();
-    }
-
     public void setScale(Vector3d value) throws IllegalArgumentException {
         if (value == null) {
             throw new IllegalArgumentException("Vector must not be null");
         }
-        this.setScale(value.x, value.y, value.z);
+        if (value.x < 0 || value.y < 0 || value.z < 0) {
+            throw new IllegalArgumentException("Scale must not be negative");
+        }
+        this.scale.set(value);
+        this.updateInertiaTensors();
     }
 
     public double getFrictionCoefficient() {
@@ -224,8 +196,24 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         this.restitutionCoefficient = value;
     }
 
+    public Matrix3d getInverseInertiaTensorLocal() {
+        return new Matrix3d(this.inverseInertiaTensorLocal); // TODO: REMOVE
+    }
+
+    public Matrix3d getInverseInertiaTensorWorld() {
+        return new Matrix3d(this.inverseInertiaTensorWorld);
+    }
+
+    public void resetAccumulatedForce() {
+        this.accumulatedForce.zero();
+    }
+
     public Vector3d getAccumulatedForce() {
         return new Vector3d(this.accumulatedForce);
+    }
+
+    public void resetAccumulatedTorque() {
+        this.accumulatedTorque.zero();
     }
 
     public Vector3d getAccumulatedTorque() {
@@ -309,11 +297,11 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
     private void updateRotationMatrix() {
         this.orientation.get(this.rotationMatrix);
-        this.rotationMatrixTranspose = this.rotationMatrix.transpose();
+        this.rotationMatrix.transpose(this.rotationMatrixTranspose); // transpose() with no parameters modifies the matrix, which is why I could first copy the rotationMatrix and then transpose the copy, or specify the target in the transpose method directly as I do here
     }
 
     private void updateInertiaTensorWorld() {
-        this.inverseInertiaTensorWorld = this.inverseInertiaTensorLocal.mul(this.rotationMatrix);
+        this.rotationMatrix.mul(this.inverseInertiaTensorLocal, this.inverseInertiaTensorWorld).mul(this.rotationMatrixTranspose, this.inverseInertiaTensorWorld); // Uses the return value of "mul". Very important that it doesn't overwrite inverseInertiaTensorLocal or the rotationMatrix! If I do "x.mul(y)" without specifying a destination, x is overwritten.
     }
 
     private void updateInertiaTensors() {
