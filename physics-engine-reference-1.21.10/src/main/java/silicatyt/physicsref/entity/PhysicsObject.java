@@ -5,6 +5,7 @@ import eu.pb4.polymer.core.api.entity.PolymerEntity;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.decoration.DisplayEntity.ItemDisplayEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.storage.ReadView;
 import net.minecraft.storage.WriteView;
 import net.minecraft.util.math.AffineTransformation;
@@ -15,14 +16,19 @@ import xyz.nucleoid.packettweaker.PacketContext;
 
 import java.util.List;
 
-
+// TODO: Important notes or things to rethink at some point
 // Note: All doubles could be NaN, Infinity or -Infinity, but I don't check for that everywhere. I don't have a consequent rule for that. I could check for isFinite() on the vectors and quaternions (on quaternions I could additionally check if it's all 0; I can't normalize that), but there's not really a point because this isn't meant to be an official well-made mod. Just a reference.
+// Note: addXYZ and setXYZ also update dependent data like the rotationMatrices or the inverseInertiaTensors automatically. Calling add and set repeatedly therefore causes unnecessary work for the CPU. But it's most readable like this, so I won't bother fixing it for now. This is just a reference mod after all, not meant to be optimized. BUT a potential idea would be: Mark rotationMatrix and stuff as "dirty", and in "getRotationMatrix" accesses I check if it's dirty. If yes, update.
+// Note: In Integration, I have this: "obj.addLinearVelocity(obj.getAccumulatedForce().mul(obj.getInverseMass()));". The "getAccumulatedForce()" creates a new object. Is there a good way around that? Probably not without giving direct access, which would probably be bad.
+// Note: I made the decision to only write a new getter or setter method if I need it. Not write all of them at once for "consistency". That would create bloat and waste too much time. I can't know when I need a Vec3d as an input, or when I need a Vector3d or even 3 individual doubles.
+// Note: Currently, all getters return a new object in order to avoid giving access to the object directly (which would circumvent restrictions when setting the contents, like negative scale). And all setters keep the same object reference and do not re-assign.
 
 public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     public static final double DEFAULT_INVERSE_MASS = 0.001d;
     public static final Vector3d DEFAULT_SCALE = new Vector3d(1d, 1d, 1d);
     public static final double DEFAULT_FRICTION_COEFFICIENT = 0.5d;
     public static final double DEFAULT_RESTITUTION_COEFFICIENT = 0.3d;
+    public static final ItemStack DEFAULT_ITEM_STACK = new ItemStack(Items.STONE);
 
     // Stored data
     private double inverseMass; // In kilograms
@@ -35,6 +41,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
     // Transient data
     private Vector3d pos; // Just for easy and consistent access
+    private Vec3d lastEntityPos;
     private Matrix3d inverseInertiaTensorLocal;
     private Matrix3d inverseInertiaTensorWorld;
     private Matrix3d rotationMatrix;
@@ -61,12 +68,28 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     }
 
     // Getters & Setters
-    public double getInverseMass() {
-        return this.inverseMass;
+    public Vec3d getLastEntityPos() {
+        return this.lastEntityPos;
     }
 
-    public double getMass() {
-        return 1 / this.inverseMass;
+    public void setInternalPos(Vec3d value) throws IllegalArgumentException {
+        if (value == null) {
+            throw new IllegalArgumentException("Vector must not be null");
+        }
+        this.pos.x = value.x;
+        this.pos.y = value.y;
+        this.pos.z = value.z;
+    }
+
+    public void addInternalPos(Vector3d value) throws IllegalArgumentException {
+        if (value == null) {
+            throw new IllegalArgumentException("Vector must not be null");
+        }
+        this.pos.add(value);
+    }
+
+    public double getInverseMass() {
+        return this.inverseMass;
     }
 
     public void setInverseMass(double value) throws IllegalArgumentException {
@@ -77,62 +100,106 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         this.updateInertiaTensors();
     }
 
-    public void setMass(double value) throws IllegalArgumentException {
-        this.setInverseMass(1 / value);
-    }
-
     public Vector3d getLinearVelocity() {
-        return this.linearVelocity;
+        return new Vector3d(this.linearVelocity);
     }
 
     public void setLinearVelocity(Vector3d value) throws IllegalArgumentException {
         if (value == null) {
             throw new IllegalArgumentException("Vector must not be null");
         }
-        this.linearVelocity = value;
+        this.linearVelocity.x = value.x;
+        this.linearVelocity.y = value.y;
+        this.linearVelocity.z = value.z;
+    }
+
+    public void addLinearVelocity(Vector3d value) throws IllegalArgumentException {
+        if (value == null) {
+            throw new IllegalArgumentException("Vector must not be null");
+        }
+        this.linearVelocity.add(value);
+    }
+
+    public void scaleLinearVelocity(double scale) {
+        this.linearVelocity.x *= scale;
+        this.linearVelocity.y *= scale;
+        this.linearVelocity.z *= scale;
     }
 
     public Vector3d getAngularVelocity() {
-        return this.angularVelocity;
+        return new Vector3d(this.angularVelocity);
+    }
+
+    public void setAngularVelocity(double x, double y, double z) {
+        this.angularVelocity.x = x;
+        this.angularVelocity.y = y;
+        this.angularVelocity.z = z;
     }
 
     public void setAngularVelocity(Vector3d value) throws IllegalArgumentException {
         if (value == null) {
             throw new IllegalArgumentException("Vector must not be null");
         }
-        this.angularVelocity = value;
+        this.setAngularVelocity(value.x, value.y, value.z);
     }
 
-    public Quaterniond getOrientation() {
-        return this.orientation;
+    public void addAngularVelocity(double x, double y, double z) {
+        this.angularVelocity.x += x;
+        this.angularVelocity.y += y;
+        this.angularVelocity.z += z;
+    }
+
+    public void addAngularVelocity(Vector3d value) throws IllegalArgumentException {
+        if (value == null) {
+            throw new IllegalArgumentException("Vector must not be null");
+        }
+        this.addAngularVelocity(value.x, value.y, value.z);
+    }
+
+    public void scaleAngularVelocity(double scale) {
+        this.angularVelocity.x *= scale;
+        this.angularVelocity.y *= scale;
+        this.angularVelocity.z *= scale;
+    }
+
+    public void setOrientation(double x, double y, double z, double w) {
+        this.orientation.x = x;
+        this.orientation.y = y;
+        this.orientation.z = z;
+        this.orientation.w = w;
+        this.orientation.normalize();
+
+        this.updateRotationMatrix();
+        this.updateInertiaTensorWorld(); // Requires the updated rotation matrix
     }
 
     public void setOrientation(Quaterniond value) throws IllegalArgumentException {
         if (value == null) {
             throw new IllegalArgumentException("Quaternion must not be null");
         }
-        this.orientation = value.normalize();
-
-        this.updateRotationMatrix();
-        this.updateInertiaTensorWorld(); // Requires the updated rotation matrix
-        this.updateVisualTransformation();
+        this.setOrientation(value.x, value.y, value.z, value.w);
     }
 
     public Vector3d getScale() {
-        return this.scale;
+        return new Vector3d(this.scale);
+    }
+
+    public void setScale(double x, double y, double z) throws IllegalArgumentException {
+        if (x < 0 || y < 0 || z < 0) {
+            throw new IllegalArgumentException("Scale must not be negative");
+        }
+        this.scale.x = x;
+        this.scale.y = y;
+        this.scale.z = z;
+
+        this.updateInertiaTensors();
     }
 
     public void setScale(Vector3d value) throws IllegalArgumentException {
         if (value == null) {
             throw new IllegalArgumentException("Vector must not be null");
         }
-        if (value.x < 0 || value.y < 0 || value.z < 0) {
-            throw new IllegalArgumentException("Scale must not be negative");
-        }
-        this.scale = value;
-
-        this.updateInertiaTensors();
-        this.updateVisualTransformation();
+        this.setScale(value.x, value.y, value.z);
     }
 
     public double getFrictionCoefficient() {
@@ -155,6 +222,14 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
             throw new IllegalArgumentException("Restitution coefficient must be between 0 and 1");
         }
         this.restitutionCoefficient = value;
+    }
+
+    public Vector3d getAccumulatedForce() {
+        return new Vector3d(this.accumulatedForce);
+    }
+
+    public Vector3d getAccumulatedTorque() {
+        return new Vector3d(this.accumulatedTorque);
     }
 
     // NBT saving & loading
@@ -182,7 +257,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
         this.initializeObjectData();
 
-        this.setItemStack(view.read("item", ItemStack.CODEC).orElse(ItemStack.EMPTY));
+        this.setItemStack(view.read("item", ItemStack.CODEC).orElse(DEFAULT_ITEM_STACK));
         this.setInverseMass(view.read("inverse_mass", Codec.DOUBLE).orElse(DEFAULT_INVERSE_MASS));
         List<Double> linearVelocity = view.read("linear_velocity", doubleListCodec).orElse(List.of(0d, 0d, 0d));
         this.setLinearVelocity(new Vector3d(linearVelocity.get(0), linearVelocity.get(1), linearVelocity.get(2)));
@@ -196,7 +271,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         this.setRestitutionCoefficient(view.read("restitution_coefficient", Codec.DOUBLE).orElse(DEFAULT_RESTITUTION_COEFFICIENT));
 
         this.updateTransientObjectData();
-        this.updateVisualTransformation();
+        this.updateVisuals();
     }
 
     // Normal methods
@@ -206,10 +281,11 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     }
 
     private void initializeObjectData() { // Makes sure that all instance variables are initialized (Not NULL) and set other runtime data upon getting loaded or instantiated
-        Vec3d entityPos = this.getEntityPos();
-        this.pos = new Vector3d(entityPos.x, entityPos.y, entityPos.z);
         this.setInterpolationDuration(1);
         this.setTeleportDuration(1);
+
+        this.lastEntityPos = this.getEntityPos();
+        this.pos = new Vector3d(this.lastEntityPos.x, this.lastEntityPos.y, this.lastEntityPos.z);
 
         this.rotationMatrix = new Matrix3d();
         this.rotationMatrixTranspose = new Matrix3d();
@@ -222,12 +298,13 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     private void updateTransientObjectData() { // Requires rotationMatrix and inverseInertiaTensorLocal to be initialized. Was originally part of initializeObjectData()
         this.updateRotationMatrix();
         this.updateInertiaTensors();
-        this.updateVisualTransformation();
+        this.updateVisuals();
     }
 
-    private void updateVisualTransformation() {
+    public void updateVisuals() {
         this.setStartInterpolation(0);
         this.setTransformation(new AffineTransformation(new Vector3f(), new Quaternionf(this.orientation), new Vector3f(this.scale), new Quaternionf())); // Although I calculate everything in doubles, the rendering uses floats because that's how item displays (and Minecraft's rendering in general) work
+        this.setPos(this.pos.x, this.pos.y, this.pos.z); // The vanilla method for entity position
     }
 
     private void updateRotationMatrix() {
@@ -247,5 +324,4 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         this.updateInertiaTensorWorld();
     }
 
-    // TODO: Add more public methods for manipulating the physics object
 }
