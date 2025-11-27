@@ -4,11 +4,15 @@ import org.joml.Quaterniond;
 import org.joml.Vector3d;
 import silicatyt.physicsref.entity.PhysicsObject;
 
+import static java.lang.Math.pow;
 import static silicatyt.physicsref.PhysicsRef.loadedPhysicsObjects;
-import static silicatyt.physicsref.settings.Integration.*;
 import static silicatyt.physicsref.simulation.Main.DELTA_TIME;
 
 public class Integration {
+    public static final Vector3d DEFAULT_GRAVITY = new Vector3d(0d, -9.81d, 0d).mul(DELTA_TIME); // Velocity difference per tick. So don't apply DELTA_TIME in tick again.
+    public static final double DEFAULT_LINEAR_DAMPING = pow(0.7d, DELTA_TIME); // "After 1 second, this much of its speed should remain". This is necessary so less DELTA_TIME doesn't make damping stronger. It should stay identical.
+    public static final double DEFAULT_ANGULAR_DAMPING = pow(0.7d, DELTA_TIME);
+
     // Phases
     public static void phaseOne() {
         for (PhysicsObject obj : loadedPhysicsObjects) {
@@ -20,15 +24,14 @@ public class Integration {
             // TODO: Do the remaining stuff
 
             // Clear accumulators
-            obj.resetAccumulatedForce();
-            obj.resetAccumulatedTorque();
+            obj.clearAccumulators();
         }
     }
 
-    public static void phaseTwo() {
+    public static void phaseTwo() { // Normally, I'd update cornerPosAbsolute here so the line of sight checks for hitting the object can use the updated data. But because the mod always automatically updates derived data (at the cost of unnecessary computation), this isn't necessary here. In the datapack, I would manually update the cornerPosAbsolute here, however.
         for (PhysicsObject obj : loadedPhysicsObjects) {
             obj.updateVisuals();
-            // TODO: Do the remaining stuff
+            obj.updateEntityPos();
         }
     }
 
@@ -50,10 +53,9 @@ public class Integration {
         obj.scaleLinearVelocity(DEFAULT_LINEAR_DAMPING);
     }
 
-    private static void updatePos(PhysicsObject obj) { // TODO: Maybe remove some of these helper methods because they're literally too short
+    private static void updatePos(PhysicsObject obj) {
         obj.addInternalPos(obj.getLinearVelocity().mul(DELTA_TIME)); // Velocity is m/s, so I need to scale by DELTA_TIME
     }
-
 
     private static void updateAngularVelocity(PhysicsObject obj) {
         // Apply accumulated torque
@@ -62,8 +64,8 @@ public class Integration {
         // Apply angular damping
         obj.scaleAngularVelocity(DEFAULT_ANGULAR_DAMPING);
     }
-    /*
-    private static void updateOrientation(PhysicsObject obj) { // Method: Euler integration (TODO: Less accurate but faster. How about in a datapack, where I can use entity rotation tricks to compute sin and cos quickly? What to choose there?)
+
+    /*private static void updateOrientation(PhysicsObject obj) { // Method: Euler integration (TODO: Less accurate but faster. How about in a datapack, where I can use entity rotation tricks to compute sin and cos quickly? What to choose there?)
         Vector3d angularVelocity = obj.getAngularVelocity(); // TODO: Maybe I didn't account for the DELTA_TIME properly in the datapack?
         Quaterniond orientation = obj.getOrientation();
         obj.setOrientation(

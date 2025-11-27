@@ -22,6 +22,8 @@ import java.util.List;
 // Note: In Integration, I have this: "obj.addLinearVelocity(obj.getAccumulatedForce().mul(obj.getInverseMass()));". The "getAccumulatedForce()" creates a new object. Is there a good way around that? Probably not without giving direct access, which would probably be bad.
 // Note: I made the decision to only write a new getter or setter method if I need it. Not write all of them at once for "consistency". That would create bloat and waste too much time. I can't know when I need a Vec3d as an input, or when I need a Vector3d or even 3 individual doubles.
 // Note: Currently, all getters return a new object in order to avoid giving access to the object directly (which would circumvent restrictions when setting the contents, like negative scale). And all setters keep the same object reference and do not re-assign. Additionally, that's the reason I use ".set()" instead of "=" for assignments.
+// Note: A lot of derived data like cornerPosRelative always update when the data they depend on (pos, scale, orientation) changes, even if the data isn't going to be used after that point. But updating everything automatically makes it more readable and safer. In the datapack, I would make sure not to do unnecessary computations, however.
+// Note: When an entity unloads and loads back in, a new instance is created, which is why the instance variables are never null if I initialize them in the constructor or directly in the class. No helper method needed that's run on readCustomData().
 
 public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     public static final double DEFAULT_INVERSE_MASS = 0.001d;
@@ -32,38 +34,45 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
     // Stored data
     private double inverseMass; // In kilograms
-    private Vector3d linearVelocity;
-    private Vector3d angularVelocity;
-    private Quaterniond orientation;
-    private Vector3d scale;
+    private final Vector3d linearVelocity = new Vector3d();
+    private final Vector3d angularVelocity = new Vector3d();
+    private final Quaterniond orientation = new Quaterniond();
+    private final Vector3d scale = new Vector3d();
     private double frictionCoefficient;
     private double restitutionCoefficient;
 
     // Transient data
-    private Vector3d pos; // Just for easy and consistent access
-    private Vec3d lastEntityPos;
-    private Matrix3d inverseInertiaTensorLocal;
-    private Matrix3d inverseInertiaTensorWorld;
-    private Matrix3d rotationMatrix;
-    private Matrix3d rotationMatrixTranspose; // To avoid duplicate calculations when calling ".transpose()"
-    private Vector3d accumulatedForce;
-    private Vector3d accumulatedTorque;
+    private final Vector3d pos = new Vector3d(); // Just for easy and consistent access without risking unloading the entity mid-tick
+    private Vec3d lastEntityPos = new Vec3d(0d, 0d, 0d);
+    private final Matrix3d inverseInertiaTensorLocal = new Matrix3d();
+    private final Matrix3d inverseInertiaTensorWorld = new Matrix3d();
+    private final Matrix3d rotationMatrix = new Matrix3d();
+    private final Matrix3d rotationMatrixTranspose = new Matrix3d(); // To avoid duplicate calculations when calling ".transpose()"
+    private final Vector3d accumulatedForce = new Vector3d();
+    private final Vector3d accumulatedTorque = new Vector3d();
+    private final Vector3d[] cornerPosLocal = new Vector3d[8]; // Only used to avoid unnecessary calculations every time cornerPosRelative updates due to orientation changes
+    private final Vector3d[] cornerPosRelative = new Vector3d[8];
+    private final Vector3d[] cornerPosAbsolute = new Vector3d[8]; // Corners are ordered like this: [[-,-,-,], [-,-,+], [-,+,-], [-,+,+], [+,-,-,], [+,-,+], [+,+,-], [+,+,+]]
 
     // Constructor
-    // TODO: Add better constructors
     public PhysicsObject(EntityType<?> type, World world) {
         super(type, world);
 
-        // Set default values
+        // Set default values (pos is taken care of in integrationPhaseOne)
+        this.setInterpolationDuration(1);
+        this.setTeleportDuration(1);
+
         this.inverseMass = DEFAULT_INVERSE_MASS;
-        this.linearVelocity = new Vector3d();
-        this.angularVelocity = new Vector3d();
-        this.orientation = new Quaterniond();
-        this.scale = DEFAULT_SCALE;
+        this.scale.set(DEFAULT_SCALE);
         this.frictionCoefficient = DEFAULT_FRICTION_COEFFICIENT;
         this.restitutionCoefficient = DEFAULT_RESTITUTION_COEFFICIENT;
 
-        this.initializeObjectData();
+        for (int i = 0; i < 8; i++) {
+            this.cornerPosLocal[i] = new Vector3d();
+            this.cornerPosRelative[i] = new Vector3d();
+            this.cornerPosAbsolute[i] = new Vector3d();
+        }
+
         this.updateTransientObjectData();
     }
 
@@ -79,6 +88,8 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         this.pos.x = value.x;
         this.pos.y = value.y;
         this.pos.z = value.z;
+
+        this.updateCornerPosAbsolute();
     }
 
     public void addInternalPos(Vector3d value) throws IllegalArgumentException {
@@ -86,6 +97,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
             throw new IllegalArgumentException("Vector must not be null");
         }
         this.pos.add(value);
+        this.updateCornerPosAbsolute();
     }
 
     public double getInverseMass() {
@@ -153,6 +165,8 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
         this.updateRotationMatrix();
         this.updateInertiaTensorWorld(); // Requires the updated rotation matrix
+        this.updateCornerPosRelative();
+        this.updateCornerPosAbsolute();
     }
 
     public Quaterniond getOrientation() {
@@ -172,6 +186,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         }
         this.scale.set(value);
         this.updateInertiaTensors();
+        this.updateCornerPosLocal();
     }
 
     public double getFrictionCoefficient() {
@@ -196,28 +211,21 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         this.restitutionCoefficient = value;
     }
 
-    public Matrix3d getInverseInertiaTensorLocal() {
-        return new Matrix3d(this.inverseInertiaTensorLocal); // TODO: REMOVE
-    }
-
     public Matrix3d getInverseInertiaTensorWorld() {
         return new Matrix3d(this.inverseInertiaTensorWorld);
-    }
-
-    public void resetAccumulatedForce() {
-        this.accumulatedForce.zero();
     }
 
     public Vector3d getAccumulatedForce() {
         return new Vector3d(this.accumulatedForce);
     }
 
-    public void resetAccumulatedTorque() {
-        this.accumulatedTorque.zero();
-    }
-
     public Vector3d getAccumulatedTorque() {
         return new Vector3d(this.accumulatedTorque);
+    }
+
+    public void clearAccumulators() {
+        this.accumulatedForce.zero();
+        this.accumulatedTorque.zero();
     }
 
     // NBT saving & loading
@@ -243,8 +251,6 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         // super.readCustomData(view);
         Codec<List<Double>> doubleListCodec = Codec.DOUBLE.listOf();
 
-        this.initializeObjectData();
-
         this.setItemStack(view.read("item", ItemStack.CODEC).orElse(DEFAULT_ITEM_STACK));
         this.setInverseMass(view.read("inverse_mass", Codec.DOUBLE).orElse(DEFAULT_INVERSE_MASS));
         List<Double> linearVelocity = view.read("linear_velocity", doubleListCodec).orElse(List.of(0d, 0d, 0d));
@@ -268,31 +274,23 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         return EntityType.ITEM_DISPLAY;
     }
 
-    private void initializeObjectData() { // Makes sure that all instance variables are initialized (Not NULL) and set other runtime data upon getting loaded or instantiated
-        this.setInterpolationDuration(1);
-        this.setTeleportDuration(1);
-
-        this.lastEntityPos = this.getEntityPos();
-        this.pos = new Vector3d(this.lastEntityPos.x, this.lastEntityPos.y, this.lastEntityPos.z);
-
-        this.rotationMatrix = new Matrix3d();
-        this.rotationMatrixTranspose = new Matrix3d();
-        this.inverseInertiaTensorLocal = new Matrix3d();
-        this.inverseInertiaTensorWorld = new Matrix3d();
-        this.accumulatedForce = new Vector3d();
-        this.accumulatedTorque = new Vector3d();
-    }
-
-    private void updateTransientObjectData() { // Requires rotationMatrix and inverseInertiaTensorLocal to be initialized. Was originally part of initializeObjectData()
+    private void updateTransientObjectData() {
         this.updateRotationMatrix();
         this.updateInertiaTensors();
+        this.updateCornerPosLocal();
+        this.updateCornerPosRelative();
+        this.updateCornerPosAbsolute();
         this.updateVisuals();
     }
 
     public void updateVisuals() {
         this.setStartInterpolation(0);
         this.setTransformation(new AffineTransformation(new Vector3f(), new Quaternionf(this.orientation), new Vector3f(this.scale), new Quaternionf())); // Although I calculate everything in doubles, the rendering uses floats because that's how item displays (and Minecraft's rendering in general) work
+    }
+
+    public void updateEntityPos() { // This isn't in updateVisuals because updating the entity pos in readCustomData (where entityPos is potentially still 0,0,0) would cause the object to teleport to 0,0,0 without additional code
         this.setPos(this.pos.x, this.pos.y, this.pos.z); // The vanilla method for entity position
+        this.lastEntityPos = this.getEntityPos();
     }
 
     private void updateRotationMatrix() {
@@ -310,6 +308,33 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         this.inverseInertiaTensorLocal.m22 = (12 * this.inverseMass) / (this.scale.x * this.scale.x + this.scale.y * this.scale.y);
 
         this.updateInertiaTensorWorld();
+    }
+
+    private void updateCornerPosLocal() {
+        int i = 0;
+        for (int x = -1; x <= 1; x += 2) { // x, y and z are either -1 or 1
+            for (int y = -1; y <= 1; y += 2) {
+                for (int z = -1; z <= 1; z += 2) {
+                    this.cornerPosLocal[i++].set(
+                            0.5 * x * this.scale.x,
+                            0.5 * y * this.scale.y,
+                            0.5 * z * this.scale.z
+                    );
+                }
+            }
+        }
+    }
+
+    private void updateCornerPosRelative() {
+        for (int i = 0; i < 8; i++) {
+            this.rotationMatrix.transform(this.cornerPosLocal[i], this.cornerPosRelative[i]);
+        }
+    }
+
+    private void updateCornerPosAbsolute() {
+        for (Vector3d corner : this.cornerPosAbsolute) {
+            corner.add(this.pos);
+        }
     }
 
 }
