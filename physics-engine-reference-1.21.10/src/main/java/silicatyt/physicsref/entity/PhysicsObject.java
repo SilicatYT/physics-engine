@@ -41,18 +41,20 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     private double frictionCoefficient;
     private double restitutionCoefficient;
 
-    // Transient data
-    private final Vector3d pos = new Vector3d(); // Just for easy and consistent access without risking unloading the entity mid-tick
-    private Vec3d lastEntityPos = new Vec3d(0d, 0d, 0d);
+    // Derived data
     private final Matrix3d inverseInertiaTensorLocal = new Matrix3d();
     private final Matrix3d inverseInertiaTensorWorld = new Matrix3d();
     private final Matrix3d rotationMatrix = new Matrix3d();
     private final Matrix3d rotationMatrixTranspose = new Matrix3d(); // To avoid duplicate calculations when calling ".transpose()"
-    private final Vector3d accumulatedForce = new Vector3d();
-    private final Vector3d accumulatedTorque = new Vector3d();
     private final Vector3d[] cornerPosLocal = new Vector3d[8]; // Only used to avoid unnecessary calculations every time cornerPosRelative updates due to orientation changes
     private final Vector3d[] cornerPosRelative = new Vector3d[8];
     private final Vector3d[] cornerPosAbsolute = new Vector3d[8]; // Corners are ordered like this: [[-,-,-,], [-,-,+], [-,+,-], [-,+,+], [+,-,-,], [+,-,+], [+,+,-], [+,+,+]]
+
+    // Other transient data
+    private final Vector3d pos = new Vector3d(); // Just for easy and consistent access without risking unloading the entity mid-tick
+    private Vec3d lastEntityPos = new Vec3d(0d, 0d, 0d);
+    private final Vector3d accumulatedForce = new Vector3d();
+    private final Vector3d accumulatedTorque = new Vector3d();
 
     // Constructor
     public PhysicsObject(EntityType<?> type, World world) {
@@ -73,7 +75,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
             this.cornerPosAbsolute[i] = new Vector3d();
         }
 
-        this.updateTransientObjectData();
+        this.updateDerivedObjectData();
     }
 
     // Getters & Setters
@@ -228,6 +230,14 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         this.accumulatedTorque.zero();
     }
 
+    public Vector3d[] getCornerPosRelative() {
+        return this.cornerPosRelative.clone();
+    }
+
+    public Vector3d[] getCornerPosAbsolute() {
+        return this.cornerPosAbsolute.clone();
+    }
+
     // NBT saving & loading
     @Override
     protected void writeCustomData(WriteView view) { // I can't store doubles properly, so I have to convert to float here
@@ -264,7 +274,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         this.setFrictionCoefficient(view.read("friction_coefficient", Codec.DOUBLE).orElse(DEFAULT_FRICTION_COEFFICIENT));
         this.setRestitutionCoefficient(view.read("restitution_coefficient", Codec.DOUBLE).orElse(DEFAULT_RESTITUTION_COEFFICIENT));
 
-        this.updateTransientObjectData();
+        this.updateDerivedObjectData();
         this.updateVisuals();
     }
 
@@ -274,13 +284,12 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         return EntityType.ITEM_DISPLAY;
     }
 
-    private void updateTransientObjectData() {
+    private void updateDerivedObjectData() {
         this.updateRotationMatrix();
         this.updateInertiaTensors();
         this.updateCornerPosLocal();
         this.updateCornerPosRelative();
         this.updateCornerPosAbsolute();
-        this.updateVisuals();
     }
 
     public void updateVisuals() {
@@ -332,9 +341,12 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     }
 
     private void updateCornerPosAbsolute() {
-        for (Vector3d corner : this.cornerPosAbsolute) {
-            corner.add(this.pos);
+        for (int i = 0; i < 8; i++) {
+            this.cornerPosRelative[i].add(this.pos, this.cornerPosAbsolute[i]);
         }
     }
+
+    // TODO: Maybe avoid duplicate code in setInternalPos and addInternalPos? (Both methods run updateCornerPosAbsolute(), which could lead to bugs if I forget to update one)
+    // TODO: Sort getters and setters (First getters, then all setters & adders). Add own category for "update derived data" helper methods
 
 }

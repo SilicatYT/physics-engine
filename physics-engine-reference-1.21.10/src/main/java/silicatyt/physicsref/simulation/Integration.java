@@ -1,5 +1,7 @@
 package silicatyt.physicsref.simulation;
 
+import net.minecraft.particle.ParticleTypes;
+import net.minecraft.server.world.ServerWorld;
 import org.joml.Quaterniond;
 import org.joml.Vector3d;
 import silicatyt.physicsref.entity.PhysicsObject;
@@ -22,6 +24,13 @@ public class Integration {
             updateAngularVelocity(obj);
             updateOrientation(obj);
             // TODO: Do the remaining stuff
+
+            // TEST PARTICLES
+            Vector3d[] corners = obj.getCornerPosAbsolute();
+            ServerWorld world = (ServerWorld) obj.getEntityWorld();
+            for (Vector3d corner : corners) {
+                world.spawnParticles(ParticleTypes.CRIT, corner.x, corner.y, corner.z, 1, 0d, 0d, 0d, 0d);
+            }
 
             // Clear accumulators
             obj.clearAccumulators();
