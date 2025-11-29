@@ -12,8 +12,11 @@ import net.minecraft.util.math.AffineTransformation;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.joml.*;
+import silicatyt.physicsref.data.Contact;
 import xyz.nucleoid.packettweaker.PacketContext;
 
+import java.lang.Math;
+import java.util.ArrayList;
 import java.util.List;
 
 // TODO: Important notes or things to rethink at some point
@@ -25,6 +28,7 @@ import java.util.List;
 // Note: All derived data like cornerPosRelative always update when the data they depend on (pos, scale, orientation) changes, even if the data isn't going to be used after that point. This adds unnecessary overhead (which I will avoid in the datapack), but updating everything automatically makes it more readable and safer. So for a non-commercial reference mod, that's fine.
 // Note: When an entity unloads and loads back in, a new instance is created, which is why the instance variables are never null if I initialize them in the constructor or directly in the class. No helper method needed that's run on readCustomData().
 // Note: An "updateXYZ()" method should NOT implicitly update another variable to avoid hiding operations and having something "accidentally work". Always explicitly declare what variables depend on the current variable.
+// Note: Not everything is perfectly optimized (at all). It just needs to work and be readable. This isn't an engine that's heavily optimized; I just need it for reference and to learn some Java. See the old physics engine datapack for the optimizations I can make.
 
 public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     public static final double DEFAULT_INVERSE_MASS = 0.001d;
@@ -34,7 +38,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     public static final ItemStack DEFAULT_ITEM_STACK = new ItemStack(Items.STONE);
 
     // Stored data
-    private double inverseMass; // In 1/kg
+    private double inverseMass; // In 1/kg. If inverseMass is 0, mass is infinite. This is interpreted as "the object is static and will not actively look for collisions", meaning two static objects cannot collide with each other.
     private final Vector3d linearVelocity = new Vector3d();
     private final Vector3d angularVelocity = new Vector3d();
     private final Quaterniond orientation = new Quaterniond();
@@ -50,12 +54,17 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     private final Vector3d[] cornerPosLocal = new Vector3d[8]; // Only used to avoid unnecessary calculations every time cornerPosRelative updates due to orientation changes
     private final Vector3d[] cornerPosRelative = new Vector3d[8];
     private final Vector3d[] cornerPosAbsolute = new Vector3d[8]; // Corners are ordered like this: [[-,-,-,], [-,-,+], [-,+,-], [-,+,+], [+,-,-,], [+,-,+], [+,+,-], [+,+,+]]
+    private final Vector3d[] boundingBoxAbsolute = {new Vector3d(), new Vector3d()}; // 1st element is the "[-,-,-]" corner of the bounding box, 2nd element is the [+,+,+] corner. I don't use the "Box" class Minecraft provides because that is immutable, and it's not compatible with JOML maths.
+    private final Vector3d[] axes = {new Vector3d(), new Vector3d(), new Vector3d()}; // The object's x, y and z axes in world coordinates. Identical to each column of the rotationMatrix, but kept separate for performance and readability reasons.
 
     // Other transient data
     private final Vector3d pos = new Vector3d(); // Just for easy and consistent access without risking unloading the entity mid-tick
     private Vec3d lastEntityPos = new Vec3d(0d, 0d, 0d);
     private final Vector3d accumulatedForce = new Vector3d();
     private final Vector3d accumulatedTorque = new Vector3d();
+    private final ArrayList<Contact> objectContacts = new ArrayList<>();
+    private final ArrayList<Contact> terrainContacts = new ArrayList<>();
+    public boolean isChecked = false;
 
 
 
@@ -140,6 +149,16 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         return this.cornerPosAbsolute.clone();
     }
 
+    public Vector3d[] getBoundingBoxAbsolute() {
+        return new Vector3d[]{new Vector3d(this.boundingBoxAbsolute[0]), new Vector3d(this.boundingBoxAbsolute[1])};
+    }
+
+    public Vector3d getAxis(int axis) {
+        Vector3d out = new Vector3d();
+        this.rotationMatrix.getColumn(axis, out);
+        return out;
+    }
+
 
 
 
@@ -154,6 +173,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         this.pos.z = value.z;
 
         this.updateCornerPosAbsolute();
+        this.updateBoundingBoxAbsolute();
     }
 
     public void setInverseMass(double value) throws IllegalArgumentException {
@@ -187,8 +207,10 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         this.orientation.normalize();
 
         this.updateRotationMatrix();
+        this.updateAxes();
         this.updateInertiaTensorWorld(); // Requires the updated rotation matrix
         this.updateCornerPosRelative();
+        this.updateCornerPosAbsolute();
     }
 
     public void setScale(Vector3d value) throws IllegalArgumentException {
@@ -204,6 +226,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         this.updateCornerPosLocal();
         this.updateCornerPosRelative();
         this.updateCornerPosAbsolute();
+        this.updateBoundingBoxAbsolute();
     }
 
     public void setFrictionCoefficient(double value) throws IllegalArgumentException {
@@ -231,6 +254,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         }
         this.pos.add(value);
         this.updateCornerPosAbsolute();
+        this.updateBoundingBoxAbsolute();
     }
 
     public void addLinearVelocity(Vector3d value) throws IllegalArgumentException {
@@ -346,6 +370,25 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         }
     }
 
+    private void updateBoundingBoxAbsolute() {
+        for (Vector3d corner : this.cornerPosAbsolute) {
+            this.boundingBoxAbsolute[0].x = Math.min(this.boundingBoxAbsolute[0].x, corner.x);
+            this.boundingBoxAbsolute[1].x = Math.max(this.boundingBoxAbsolute[1].x, corner.x);
+
+            this.boundingBoxAbsolute[0].y = Math.min(this.boundingBoxAbsolute[0].y, corner.y);
+            this.boundingBoxAbsolute[1].y = Math.max(this.boundingBoxAbsolute[1].y, corner.y);
+
+            this.boundingBoxAbsolute[0].z = Math.min(this.boundingBoxAbsolute[0].z, corner.z);
+            this.boundingBoxAbsolute[1].z = Math.max(this.boundingBoxAbsolute[1].z, corner.z);
+        }
+    }
+
+    private void updateAxes() {
+        this.rotationMatrix.getColumn(0, this.axes[0]);
+        this.rotationMatrix.getColumn(1, this.axes[1]);
+        this.rotationMatrix.getColumn(2, this.axes[2]);
+    }
+
 
 
 
@@ -358,11 +401,13 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
     private void updateDerivedObjectData() {
         this.updateRotationMatrix();
+        this.updateAxes();
         this.updateInertiaTensorLocal();
         this.updateInertiaTensorWorld();
         this.updateCornerPosLocal();
         this.updateCornerPosRelative();
         this.updateCornerPosAbsolute();
+        this.updateBoundingBoxAbsolute();
     }
 
     public void updateVisuals() {

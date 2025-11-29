@@ -18,19 +18,12 @@ public class Integration {
     // Phases
     public static void phaseOne() {
         for (PhysicsObject obj : loadedPhysicsObjects) {
+            obj.isChecked = false; // For collision detection
             fixEntityPos(obj);
             updateLinearVelocity(obj);
             updatePos(obj);
             updateAngularVelocity(obj);
             updateOrientation(obj);
-            // TODO: Do the remaining stuff
-
-            // TEST PARTICLES
-            Vector3d[] corners = obj.getCornerPosAbsolute();
-            ServerWorld world = (ServerWorld) obj.getEntityWorld();
-            for (Vector3d corner : corners) {
-                world.spawnParticles(ParticleTypes.CRIT, corner.x, corner.y, corner.z, 1, 0d, 0d, 0d, 0d);
-            }
 
             // Clear accumulators
             obj.clearAccumulators();
