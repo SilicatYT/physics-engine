@@ -7,7 +7,7 @@ public class Main {
 
     public static void physicsTick(MinecraftServer server) {
         Integration.phaseOne();
-        CollisionDetection.start(); // TODO: Runs ContactGeneration later. Or should I split it up?
+        CollisionDetection.start(server); // TODO: Runs ContactGeneration later. Or should I split it up?
         ContactResolution.resolve();
         Integration.phaseTwo();
     }

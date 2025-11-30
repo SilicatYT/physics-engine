@@ -17,6 +17,7 @@ import xyz.nucleoid.packettweaker.PacketContext;
 
 import java.lang.Math;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 // TODO: Important notes or things to rethink at some point
@@ -30,6 +31,7 @@ import java.util.List;
 // Note: An "updateXYZ()" method should NOT implicitly update another variable to avoid hiding operations and having something "accidentally work". Always explicitly declare what variables depend on the current variable.
 // Note: Not everything is perfectly optimized (at all). It just needs to work and be readable. This isn't an engine that's heavily optimized; I just need it for reference and to learn some Java. See the old physics engine datapack for the optimizations I can make.
 
+// TODO: Make the current contact generation and collision detection code cleaner
 public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     public static final double DEFAULT_INVERSE_MASS = 0.001d;
     public static final Vector3d DEFAULT_SCALE = new Vector3d(1d, 1d, 1d);
@@ -55,15 +57,14 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     private final Vector3d[] cornerPosRelative = new Vector3d[8];
     private final Vector3d[] cornerPosAbsolute = new Vector3d[8]; // Corners are ordered like this: [[-,-,-,], [-,-,+], [-,+,-], [-,+,+], [+,-,-,], [+,-,+], [+,+,-], [+,+,+]]
     private final Vector3d[] boundingBoxAbsolute = {new Vector3d(), new Vector3d()}; // 1st element is the "[-,-,-]" corner of the bounding box, 2nd element is the [+,+,+] corner. I don't use the "Box" class Minecraft provides because that is immutable, and it's not compatible with JOML maths.
-    private final Vector3d[] axes = {new Vector3d(), new Vector3d(), new Vector3d()}; // The object's x, y and z axes in world coordinates. Identical to each column of the rotationMatrix, but kept separate for performance and readability reasons.
 
     // Other transient data
     private final Vector3d pos = new Vector3d(); // Just for easy and consistent access without risking unloading the entity mid-tick
     private Vec3d lastEntityPos = new Vec3d(0d, 0d, 0d);
     private final Vector3d accumulatedForce = new Vector3d();
     private final Vector3d accumulatedTorque = new Vector3d();
-    private final ArrayList<Contact> objectContacts = new ArrayList<>();
-    private final ArrayList<Contact> terrainContacts = new ArrayList<>();
+    private HashMap<PhysicsObject, ArrayList<Contact>> objectContacts = new HashMap<>();
+    private HashMap<PhysicsObject, ArrayList<Contact>> terrainContacts = new HashMap<>();
     public boolean isChecked = false;
 
 
@@ -97,6 +98,10 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
 
     // Getters
+    public Vector3d getInternalPos() {
+        return new Vector3d(this.pos);
+    }
+
     public Vec3d getLastEntityPos() {
         return this.lastEntityPos;
     }
@@ -207,7 +212,6 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         this.orientation.normalize();
 
         this.updateRotationMatrix();
-        this.updateAxes();
         this.updateInertiaTensorWorld(); // Requires the updated rotation matrix
         this.updateCornerPosRelative();
         this.updateCornerPosAbsolute();
@@ -277,6 +281,17 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
     public void scaleAngularVelocity(double scale) {
         this.angularVelocity.mul(scale);
+    }
+
+    public void addObjectContact(PhysicsObject otherObject, Contact contact) { // TODO: Right now, I have to specify the object every time I want to add a contact. Maybe make it so I can get the list myself and then add/remove freely (without getters or setters). Maybe do it like "getObjectContacts(otherObject)" and then I can add/remove manually. It would return null if none exists. So I'd need addObjectContactsList or something like that.
+        ArrayList<Contact> contacts = this.objectContacts.computeIfAbsent(otherObject, k -> new ArrayList<>());
+        contacts.add(contact);
+    }
+
+    public HashMap<PhysicsObject, ArrayList<Contact>> clearObjectContacts() { // Returns the current contacts list as the "previous" and creates a new object for the current tick. It's on purpose that "previous" is returned directly without copying it.
+        HashMap<PhysicsObject, ArrayList<Contact>> prev = this.objectContacts; // TODO: Split it up so that I explicitly "getPreviousContacts" and "clearObjectContacts". Maybe I should really give direct access to the contacts list
+        this.objectContacts = new HashMap<>();
+        return prev;
     }
 
 
@@ -383,12 +398,6 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         }
     }
 
-    private void updateAxes() {
-        this.rotationMatrix.getColumn(0, this.axes[0]);
-        this.rotationMatrix.getColumn(1, this.axes[1]);
-        this.rotationMatrix.getColumn(2, this.axes[2]);
-    }
-
 
 
 
@@ -401,7 +410,6 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
     private void updateDerivedObjectData() {
         this.updateRotationMatrix();
-        this.updateAxes();
         this.updateInertiaTensorLocal();
         this.updateInertiaTensorWorld();
         this.updateCornerPosLocal();

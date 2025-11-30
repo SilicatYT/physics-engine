@@ -1,7 +1,5 @@
 package silicatyt.physicsref.simulation;
 
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.world.ServerWorld;
 import org.joml.Quaterniond;
 import org.joml.Vector3d;
 import silicatyt.physicsref.entity.PhysicsObject;

@@ -1,13 +1,22 @@
 package silicatyt.physicsref.simulation;
 
+import net.minecraft.particle.ParticleTypes;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3d;
+import silicatyt.physicsref.data.Contact;
 import silicatyt.physicsref.entity.PhysicsObject;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import static silicatyt.physicsref.PhysicsRef.LOGGER;
 import static silicatyt.physicsref.PhysicsRef.loadedPhysicsObjects;
+import static silicatyt.physicsref.simulation.ContactGeneration.genContactEdgeEdge;
+import static silicatyt.physicsref.simulation.ContactGeneration.genContactPointFace;
 
 public class CollisionDetection {
-    public static void start() {
+    public static void start(MinecraftServer server) { // TODO: Remove MinecraftServer server
         for (PhysicsObject obj : loadedPhysicsObjects) {
             if (obj.getInverseMass() == 0d) { // Don't search for collisions if you're a static object. Those should only appear as ObjectB.
                 continue;
@@ -16,6 +25,22 @@ public class CollisionDetection {
             // TODO: Terrain contacts (Maybe I won't do them in the mod, because I can test everything I want with object-object collisions too)
 
             // Collision detection with other objects
+            HashMap<PhysicsObject, ArrayList<Contact>> previousObjectContacts = obj.clearObjectContacts(); // Clears the contacts and gives me access to the previous contacts without creating any deep copies
+
+            // TEST PARTICLES AT CONTACT POINT
+            for (ArrayList<Contact> contacts : previousObjectContacts.values()) {
+                for (Contact contact : contacts) {
+                    Vector3d contactPoint = contact.contactPoint;
+                    ServerWorld world = (ServerWorld) obj.getEntityWorld();
+                    world.spawnParticles(ParticleTypes.CRIT, contactPoint.x, contactPoint.y, contactPoint.z, 1, 0d, 0d, 0d, 0d);
+                    LOGGER.info(Double.toString(contact.closingVelocity));
+                    LOGGER.info(contact.contactNormal.toString());
+                }
+            }
+
+
+
+
             obj.isChecked = true; // Make it so other objects don't check for collisions with this object anymore (to avoid duplicate collision entries).
             for (PhysicsObject otherObj : loadedPhysicsObjects) {
                 if (otherObj.isChecked) {
@@ -30,21 +55,26 @@ public class CollisionDetection {
         }
     }
 
+    // General helper methods
+
+    // Helper methods for object-terrain collisions
+
+    // Helper methods for object-object collisions
     private static boolean isIntersectingAABB(PhysicsObject left, PhysicsObject right) {
         Vector3d[] leftAABB = left.getBoundingBoxAbsolute();
         Vector3d[] rightAABB = right.getBoundingBoxAbsolute();
         return leftAABB[0].x <= rightAABB[1].x && rightAABB[0].x <= leftAABB[1].x && leftAABB[0].y <= rightAABB[1].y && rightAABB[0].y <= leftAABB[1].y && leftAABB[0].z <= rightAABB[1].z && rightAABB[0].z <= leftAABB[1].z;
     }
 
-    private static boolean isSeparatingAxis(Vector3d axis, PhysicsObject left, PhysicsObject right) {
+    private static double getAxisOverlap(Vector3d axis, PhysicsObject left, PhysicsObject right) {
         double[] leftProjection;
         double[] rightProjection;
-        leftProjection = projectOntoAxis(left, axis);
-        rightProjection = projectOntoAxis(right, axis);
-        return leftProjection[0] > rightProjection[1] || rightProjection[0] > leftProjection[1];
+        leftProjection = projectObjectOntoAxis(left, axis);
+        rightProjection = projectObjectOntoAxis(right, axis);
+        return Double.min(leftProjection[1] - rightProjection[0], rightProjection[1] - leftProjection[0]);
     }
 
-    private static double[] projectOntoAxis(PhysicsObject obj, Vector3d axis) { // Returns min and max projection for all corners
+    public static double[] projectObjectOntoAxis(PhysicsObject obj, Vector3d axis) { // Returns min and max projection for all corners
         Vector3d[] corners = obj.getCornerPosAbsolute();
 
         // Corner 0
@@ -66,20 +96,34 @@ public class CollisionDetection {
         Vector3d[] axes = new Vector3d[]{
                 left.getAxis(0), left.getAxis(1), left.getAxis(2), // Left object's axes
                 right.getAxis(0), right.getAxis(1), right.getAxis(2), // Right object's axes
-                left.getAxis(0).cross(right.getAxis(0)), left.getAxis(0).cross(right.getAxis(1)), left.getAxis(0).cross(right.getAxis(2)), // Cross product axes
-                left.getAxis(1).cross(right.getAxis(0)), left.getAxis(1).cross(right.getAxis(1)), left.getAxis(1).cross(right.getAxis(2)),
-                left.getAxis(2).cross(right.getAxis(0)), left.getAxis(2).cross(right.getAxis(1)), left.getAxis(2).cross(right.getAxis(2))
+                left.getAxis(0).cross(right.getAxis(0)).normalize(), left.getAxis(0).cross(right.getAxis(1)).normalize(), left.getAxis(0).cross(right.getAxis(2)).normalize(), // Cross product axes
+                left.getAxis(1).cross(right.getAxis(0)).normalize(), left.getAxis(1).cross(right.getAxis(1)).normalize(), left.getAxis(1).cross(right.getAxis(2)).normalize(),
+                left.getAxis(2).cross(right.getAxis(0)).normalize(), left.getAxis(2).cross(right.getAxis(1)).normalize(), left.getAxis(2).cross(right.getAxis(2)).normalize()
         };
 
-        // Check if any axis is a separating axis
-        for (Vector3d axis : axes) {
-            if (isSeparatingAxis(axis, left, right)) {
+        // Check if any axis is a separating axis (I combined it with the "get overlap" method to avoid doing the literal same calculations twice)
+        double overlap;
+        double minOverlap = Double.MAX_VALUE;
+        int minAxisIndex = -1;
+        for (int i = 0; i < axes.length; i++) {
+            overlap = getAxisOverlap(axes[i], left, right);
+            if (overlap < 0d) { // Separating axis found: No collision
                 return;
+            }
+            if (overlap < minOverlap) {
+                minOverlap = overlap;
+                minAxisIndex = i;
             }
         }
 
-        // TODO: The rest
-        LOGGER.info("Two objects are colliding");
+        // Generate contact with the minAxis as the normal
+        if (minAxisIndex < 3) {
+            genContactPointFace(left, right, axes[minAxisIndex], minAxisIndex);
+        } else if (minAxisIndex < 6) {
+            genContactPointFace(right, left, axes[minAxisIndex], minAxisIndex);
+        } else {
+            genContactEdgeEdge(left, right, axes[minAxisIndex]);
+        }
     }
 
 }
