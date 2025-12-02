@@ -1,8 +1,5 @@
 package silicatyt.physicsref.simulation;
 
-import net.minecraft.particle.ParticleTypes;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.world.ServerWorld;
 import org.joml.Vector3d;
 import silicatyt.physicsref.data.Contact;
 import silicatyt.physicsref.entity.PhysicsObject;
@@ -10,39 +7,23 @@ import silicatyt.physicsref.entity.PhysicsObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import static silicatyt.physicsref.PhysicsRef.LOGGER;
 import static silicatyt.physicsref.PhysicsRef.loadedPhysicsObjects;
-import static silicatyt.physicsref.simulation.ContactGeneration.genContactEdgeEdge;
-import static silicatyt.physicsref.simulation.ContactGeneration.genContactPointFace;
+import static silicatyt.physicsref.simulation.ContactGeneration.*;
 
 public class CollisionDetection {
-    public static void start(MinecraftServer server) { // TODO: Remove MinecraftServer server
+    public static void start() {
         for (PhysicsObject obj : loadedPhysicsObjects) {
             if (obj.getInverseMass() == 0d) { // Don't search for collisions if you're a static object. Those should only appear as ObjectB.
                 continue;
             }
 
-            // TODO: Terrain contacts (Maybe I won't do them in the mod, because I can test everything I want with object-object collisions too)
+            // TODO: Terrain contacts (Maybe I won't do them in the mod, because I can test everything I want with object-object collisions?)
 
             // Collision detection with other objects
             HashMap<PhysicsObject, ArrayList<Contact>> previousObjectContacts = obj.clearObjectContacts(); // Clears the contacts and gives me access to the previous contacts without creating any deep copies
+            obj.isChecked = true; // Makes it so other objects don't check for collisions with this object anymore (to avoid duplicate collision entries).
 
-            // TEST PARTICLES AT CONTACT POINT
-            for (ArrayList<Contact> contacts : previousObjectContacts.values()) {
-                for (Contact contact : contacts) {
-                    Vector3d contactPoint = contact.contactPoint;
-                    ServerWorld world = (ServerWorld) obj.getEntityWorld();
-                    world.spawnParticles(ParticleTypes.CRIT, contactPoint.x, contactPoint.y, contactPoint.z, 1, 0d, 0d, 0d, 0d);
-                    LOGGER.info(Double.toString(contact.closingVelocity));
-                    LOGGER.info(contact.contactNormal.toString());
-                }
-            }
-
-
-
-
-            obj.isChecked = true; // Make it so other objects don't check for collisions with this object anymore (to avoid duplicate collision entries).
-            for (PhysicsObject otherObj : loadedPhysicsObjects) {
+            for (PhysicsObject otherObj : loadedPhysicsObjects) { // TODO: Maybe optimize by only checking entities whose AABB intersects with chunks that my AABB intersects with. Could make a separate data structure where the entity is stored in each chunk it intersects with
                 if (otherObj.isChecked) {
                     continue;
                 }
@@ -51,7 +32,7 @@ public class CollisionDetection {
                     performSat(obj, otherObj); // Leads into contact generation if a collision is detected
                 }
             }
-
+            // TODO: accumulateContacts(obj, previousObjectContacts); // Update previous contacts
         }
     }
 

@@ -22,9 +22,6 @@ public class Integration {
             updatePos(obj);
             updateAngularVelocity(obj);
             updateOrientation(obj);
-
-            // Clear accumulators
-            obj.clearAccumulators();
         }
     }
 
@@ -32,6 +29,9 @@ public class Integration {
         for (PhysicsObject obj : loadedPhysicsObjects) {
             obj.updateVisuals();
             obj.updateEntityPos();
+
+            obj.accumulatedForce.zero();
+            obj.accumulatedTorque.zero(); // The accumulatedForce and accumulatedTorque need to still be stored until now so I can remove them from contactVelocity during contact generation. I could also precalculate the stuff in integration, but then I'd need an additional instance variable. I could also store the velocityPrev (which just wouldn't include the acceleration induced velocity), which would be even faster. BUT: Damping should NOT be removed from the velocity, so that makes it a tiny bit more complicated.
         }
     }
 
@@ -43,14 +43,17 @@ public class Integration {
     }
 
     private static void updateLinearVelocity(PhysicsObject obj) {
-        // Apply gravity
-        //obj.addLinearVelocity(DEFAULT_GRAVITY); // DELTA_TIME is already accounted for in the DEFAULT_GRAVITY constant. Otherwise, I'd multiply it here.
-
         // Apply accumulated force
-        obj.addLinearVelocity(obj.getAccumulatedForce().mul(obj.getInverseMass()).mul(DELTA_TIME)); // Scale by DELTA_TIME because force's unit uses seconds. See Euler Integration.
+        Vector3d velocityFromAcceleration = new Vector3d(obj.accumulatedForce).mul(obj.getInverseMass() * DELTA_TIME); // Scale by DELTA_TIME because force's unit uses seconds. See Euler Integration.
+
+        // Apply gravity
+        // velocityFromAcceleration.add(DEFAULT_GRAVITY); // DELTA_TIME is already accounted for in the DEFAULT_GRAVITY constant. Otherwise, I'd multiply it here.
 
         // Apply linear damping
-        obj.scaleLinearVelocity(DEFAULT_LINEAR_DAMPING);
+        obj.linearVelocity.add(velocityFromAcceleration);
+        obj.linearVelocity.mul(DEFAULT_LINEAR_DAMPING);
+
+        obj.updateLinearVelocityWithoutAcceleration(obj.linearVelocity, velocityFromAcceleration);
     }
 
     private static void updatePos(PhysicsObject obj) {
@@ -59,10 +62,14 @@ public class Integration {
 
     private static void updateAngularVelocity(PhysicsObject obj) {
         // Apply accumulated torque
-        obj.addAngularVelocity(obj.getInverseInertiaTensorWorld().transform(obj.getAccumulatedTorque()).mul(DELTA_TIME));
+        Vector3d scaledTorque = new Vector3d(obj.accumulatedTorque).mul(DELTA_TIME);
+        Vector3d velocityFromAcceleration = obj.getInverseInertiaTensorWorld().transform(scaledTorque);
 
         // Apply angular damping
-        obj.scaleAngularVelocity(DEFAULT_ANGULAR_DAMPING);
+        obj.angularVelocity.add(velocityFromAcceleration);
+        obj.angularVelocity.mul(DEFAULT_ANGULAR_DAMPING);
+
+        obj.updateAngularVelocityWithoutAcceleration(obj.angularVelocity, velocityFromAcceleration);
     }
 
     /*private static void updateOrientation(PhysicsObject obj) { // Method: Euler integration (TODO: Less accurate but faster. How about in a datapack, where I can use entity rotation tricks to compute sin and cos quickly? What to choose there?)

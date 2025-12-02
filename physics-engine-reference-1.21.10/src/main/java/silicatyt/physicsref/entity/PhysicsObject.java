@@ -31,7 +31,8 @@ import java.util.List;
 // Note: An "updateXYZ()" method should NOT implicitly update another variable to avoid hiding operations and having something "accidentally work". Always explicitly declare what variables depend on the current variable.
 // Note: Not everything is perfectly optimized (at all). It just needs to work and be readable. This isn't an engine that's heavily optimized; I just need it for reference and to learn some Java. See the old physics engine datapack for the optimizations I can make.
 
-// TODO: Make the current contact generation and collision detection code cleaner
+// TODO: Make the current contact generation and collision detection code cleaner (incl. maybe making contacts public, so that I don't have to have a dedicated method for getting previous contacts and clearing the current contacts?)
+
 public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     public static final double DEFAULT_INVERSE_MASS = 0.001d;
     public static final Vector3d DEFAULT_SCALE = new Vector3d(1d, 1d, 1d);
@@ -41,8 +42,8 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
     // Stored data
     private double inverseMass; // In 1/kg. If inverseMass is 0, mass is infinite. This is interpreted as "the object is static and will not actively look for collisions", meaning two static objects cannot collide with each other.
-    private final Vector3d linearVelocity = new Vector3d();
-    private final Vector3d angularVelocity = new Vector3d();
+    public final Vector3d linearVelocity = new Vector3d();
+    public final Vector3d angularVelocity = new Vector3d();
     private final Quaterniond orientation = new Quaterniond();
     private final Vector3d scale = new Vector3d();
     private double frictionCoefficient;
@@ -57,14 +58,15 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     private final Vector3d[] cornerPosRelative = new Vector3d[8];
     private final Vector3d[] cornerPosAbsolute = new Vector3d[8]; // Corners are ordered like this: [[-,-,-,], [-,-,+], [-,+,-], [-,+,+], [+,-,-,], [+,-,+], [+,+,-], [+,+,+]]
     private final Vector3d[] boundingBoxAbsolute = {new Vector3d(), new Vector3d()}; // 1st element is the "[-,-,-]" corner of the bounding box, 2nd element is the [+,+,+] corner. I don't use the "Box" class Minecraft provides because that is immutable, and it's not compatible with JOML maths.
+    private final Vector3d linearVelocityWithoutAcceleration = new Vector3d(); // Linear velocity from the start of integration, but only including the damping and not the velocity from accumulatedForce. Used during contactVelocity calculation for stability.
+    private final Vector3d angularVelocityWithoutAcceleration = new Vector3d();
 
     // Other transient data
     private final Vector3d pos = new Vector3d(); // Just for easy and consistent access without risking unloading the entity mid-tick
     private Vec3d lastEntityPos = new Vec3d(0d, 0d, 0d);
-    private final Vector3d accumulatedForce = new Vector3d();
-    private final Vector3d accumulatedTorque = new Vector3d();
+    public final Vector3d accumulatedForce = new Vector3d();
+    public final Vector3d accumulatedTorque = new Vector3d();
     private HashMap<PhysicsObject, ArrayList<Contact>> objectContacts = new HashMap<>();
-    private HashMap<PhysicsObject, ArrayList<Contact>> terrainContacts = new HashMap<>();
     public boolean isChecked = false;
 
 
@@ -138,14 +140,6 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         return new Matrix3d(this.inverseInertiaTensorWorld);
     }
 
-    public Vector3d getAccumulatedForce() {
-        return new Vector3d(this.accumulatedForce);
-    }
-
-    public Vector3d getAccumulatedTorque() {
-        return new Vector3d(this.accumulatedTorque);
-    }
-
     public Vector3d[] getCornerPosRelative() {
         return this.cornerPosRelative.clone();
     }
@@ -162,6 +156,14 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         Vector3d out = new Vector3d();
         this.rotationMatrix.getColumn(axis, out);
         return out;
+    }
+
+    public Vector3d getLinearVelocityWithoutAcceleration() {
+        return new Vector3d(this.linearVelocityWithoutAcceleration);
+    }
+
+    public Vector3d getAngularVelocityWithoutAcceleration() {
+        return new Vector3d(this.angularVelocityWithoutAcceleration);
     }
 
 
@@ -259,28 +261,6 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         this.pos.add(value);
         this.updateCornerPosAbsolute();
         this.updateBoundingBoxAbsolute();
-    }
-
-    public void addLinearVelocity(Vector3d value) throws IllegalArgumentException {
-        if (value == null) {
-            throw new IllegalArgumentException("Vector must not be null");
-        }
-        this.linearVelocity.add(value);
-    }
-
-    public void scaleLinearVelocity(double scale) {
-        this.linearVelocity.mul(scale);
-    }
-
-    public void addAngularVelocity(Vector3d value) throws IllegalArgumentException {
-        if (value == null) {
-            throw new IllegalArgumentException("Vector must not be null");
-        }
-        this.angularVelocity.add(value);
-    }
-
-    public void scaleAngularVelocity(double scale) {
-        this.angularVelocity.mul(scale);
     }
 
     public void addObjectContact(PhysicsObject otherObject, Contact contact) { // TODO: Right now, I have to specify the object every time I want to add a contact. Maybe make it so I can get the list myself and then add/remove freely (without getters or setters). Maybe do it like "getObjectContacts(otherObject)" and then I can add/remove manually. It would return null if none exists. So I'd need addObjectContactsList or something like that.
@@ -398,6 +378,14 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         }
     }
 
+    public void updateLinearVelocityWithoutAcceleration(Vector3d finalVelocity, Vector3d acceleration) { // It's important that it still includes the damping on the entire velocity (including the acceleration)
+        finalVelocity.sub(acceleration, this.linearVelocityWithoutAcceleration); // TODO: See note on updateAngularVelocity in integration
+    }
+
+    public void updateAngularVelocityWithoutAcceleration(Vector3d finalVelocity, Vector3d acceleration) {
+        finalVelocity.sub(acceleration, this.angularVelocityWithoutAcceleration); // TODO: See note on updateAngularVelocity in integration
+    }
+
 
 
 
@@ -428,9 +416,8 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         this.lastEntityPos = this.getEntityPos();
     }
 
-    public void clearAccumulators() {
-        this.accumulatedForce.zero();
-        this.accumulatedTorque.zero();
-    }
+    // TODO (VERY IMPORTANT): Check whether it's more stable to calculate contactVelocity with "(velocityBeforeIntegration + acceleration) * dampingMultiplier) - acceleration" or "velocityBeforeIntegration * dampingMultiplier" (or maybe even "velocityBeforeIntegration"). Currently I use the former.
+    // TODO: Maybe change the tick order (Apparently, modern engines use a different one? Could this improve stability?) => Experiment with different approaches in the mod to see what's best, then implement that in the datapack
+    // TODO: Check if any other improvements can be made with modern approaches (post Ian Millington's book)
 
 }

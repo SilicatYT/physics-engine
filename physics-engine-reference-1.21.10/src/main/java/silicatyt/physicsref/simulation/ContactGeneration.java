@@ -4,7 +4,6 @@ import org.joml.Vector3d;
 import silicatyt.physicsref.data.Contact;
 import silicatyt.physicsref.entity.PhysicsObject;
 
-import static silicatyt.physicsref.PhysicsRef.LOGGER;
 import static silicatyt.physicsref.simulation.CollisionDetection.projectObjectOntoAxis;
 
 public class ContactGeneration {
@@ -48,7 +47,7 @@ public class ContactGeneration {
         // Calculate contact data
         double penetrationDepth = projectObjectOntoAxis(faceObject, contactNormal)[1] - minProjection;
         Vector3d contactPoint = corners[chosenCorner].add(new Vector3d(contactNormal).mul(penetrationDepth)); // (new vector to avoid overwriting contactNormal) Corner projected back onto the surface
-        Vector3d contactVelocity = getContactVelocity(faceObject, cornerObject, contactPoint);
+        Vector3d contactVelocity = calculateContactVelocity(faceObject, cornerObject, contactPoint);
 
         // Store contact data
         contact.contactNormal.set(contactNormal);
@@ -58,18 +57,18 @@ public class ContactGeneration {
         contact.closingVelocity = contactVelocity.dot(contactNormal);
     }
 
-    private static Vector3d getContactVelocity(PhysicsObject left, PhysicsObject right, Vector3d contactPoint) { // Important: The order of the objects matters. For point-face, the "left" object is the one with the face, so that the dot product with the contact normal is the closingVelocity (without any sign changes necessary).
+    private static Vector3d calculateContactVelocity(PhysicsObject left, PhysicsObject right, Vector3d contactPoint) { // Important: The order of the objects matters. For point-face, the "left" object is the one with the face, so that the dot product with the contact normal is the closingVelocity (without any sign changes necessary).
+        // pointVelocityA
         Vector3d relativeContactPoint = new Vector3d(contactPoint);
         relativeContactPoint.sub(left.getInternalPos());
-        Vector3d pointVelocityA = left.getAngularVelocity().cross(relativeContactPoint);
-        pointVelocityA.add(left.getLinearVelocity());
+        Vector3d pointVelocityA = left.getAngularVelocityWithoutAcceleration().cross(relativeContactPoint);
+        pointVelocityA.add(left.getLinearVelocityWithoutAcceleration());
 
+        // pointVelocityB
         relativeContactPoint.set(contactPoint);
         relativeContactPoint.sub(right.getInternalPos());
-        Vector3d pointVelocityB = right.getAngularVelocity().cross(relativeContactPoint);
-        pointVelocityB.add(right.getLinearVelocity());
-
-        // TODO: Take "velocity from acceleration" (e.g. gravity) into account
+        Vector3d pointVelocityB = right.getAngularVelocityWithoutAcceleration().cross(relativeContactPoint);
+        pointVelocityB.add(right.getLinearVelocityWithoutAcceleration());
 
         return pointVelocityA.sub(pointVelocityB);
     }
@@ -92,7 +91,7 @@ public class ContactGeneration {
         return true;
     }
 
-    public static void accumulateContacts() { // TODO: Run once after every new contact has been added
+    public static void accumulateContacts() { // TODO: Run once after every new contact has been added. Iterate over every object pair
 
     }
 }

@@ -8,6 +8,6 @@ public class Contact {
     public final Vector3d contactPoint = new Vector3d();
     public final Vector3d contactNormal = new Vector3d();
     public final Vector3d contactVelocity = new Vector3d();
-    public double closingVelocity;
+    public double closingVelocity; // Dot product of contactVelocity and contactNormal. TODO: Check if I need to store that data, or if I can calculate it at runtime.
     public double penetrationDepth;
 }
