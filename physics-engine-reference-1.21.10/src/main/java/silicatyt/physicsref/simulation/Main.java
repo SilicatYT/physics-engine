@@ -10,5 +10,11 @@ public class Main {
         CollisionDetection.start();
         ContactResolution.resolve();
         Integration.phaseTwo();
+
+        // DEBUG
+        Debug.showObjectAxes();
+        Debug.showContactPoint();
+        Debug.showContactNormal();
+
     }
 }

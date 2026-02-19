@@ -68,6 +68,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     public final Vector3d accumulatedTorque = new Vector3d();
     private HashMap<PhysicsObject, ArrayList<Contact>> objectContacts = new HashMap<>();
     public boolean isChecked = false;
+    public Contact lastContact; // TODO: There may be a better way to achieve the "Don't accumulate contacts with the same feature pair" thing than this. It feels wrong, but I've made decisions like these several times here. I just need to get it working, I don't care about performance or clean code as long as I can finish this mod as a reference for the eventual datapack. It's also public, but honestly this code is already pretty messy.
 
 
 
@@ -152,9 +153,9 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         return new Vector3d[]{new Vector3d(this.boundingBoxAbsolute[0]), new Vector3d(this.boundingBoxAbsolute[1])};
     }
 
-    public Vector3d getAxis(int axis) {
+    public Vector3d getAxis(int axisIndex) { // axisIndex: 0 - 2
         Vector3d out = new Vector3d();
-        this.rotationMatrix.getColumn(axis, out);
+        this.rotationMatrix.getColumn(axisIndex, out);
         return out;
     }
 
@@ -414,6 +415,11 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     public void updateEntityPos() { // This isn't in updateVisuals because updating the entity pos in readCustomData (where entityPos is potentially still 0,0,0) would cause the object to teleport to 0,0,0 without additional code
         this.setPos(this.pos.x, this.pos.y, this.pos.z); // The vanilla method for entity position
         this.lastEntityPos = this.getEntityPos();
+    }
+
+    // Debugging
+    public HashMap<PhysicsObject, ArrayList<Contact>> getObjectContactsDebug() { // Currently only used for debugging because it would give direct access to the data instead of copying by value
+        return this.objectContacts;
     }
 
     // TODO (VERY IMPORTANT): Check whether it's more stable to calculate contactVelocity with "(velocityBeforeIntegration + acceleration) * dampingMultiplier) - acceleration" or "velocityBeforeIntegration * dampingMultiplier" (or maybe even "velocityBeforeIntegration"). Currently I use the former.

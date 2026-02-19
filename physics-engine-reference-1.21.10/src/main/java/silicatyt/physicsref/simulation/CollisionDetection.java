@@ -32,7 +32,9 @@ public class CollisionDetection {
                     performSat(obj, otherObj); // Leads into contact generation if a collision is detected
                 }
             }
-            // TODO: accumulateContacts(obj, previousObjectContacts); // Update previous contacts
+
+            // Contact accumulation for object-object contacts
+            accumulateContacts(obj, previousObjectContacts); // Update contacts from previous ticks
         }
     }
 
@@ -98,12 +100,10 @@ public class CollisionDetection {
         }
 
         // Generate contact with the minAxis as the normal
-        if (minAxisIndex < 3) {
+        if (minAxisIndex < 6) { // Point-face
             genContactPointFace(left, right, axes[minAxisIndex], minAxisIndex);
-        } else if (minAxisIndex < 6) {
-            genContactPointFace(right, left, axes[minAxisIndex], minAxisIndex);
-        } else {
-            genContactEdgeEdge(left, right, axes[minAxisIndex]);
+        } else { // Edge-edge
+            genContactEdgeEdge(left, right, axes[minAxisIndex], minAxisIndex);
         }
     }
 
