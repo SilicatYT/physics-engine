@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+// TODO: Check if "velocityWithoutAcceleration" is the correct approach for physics stability
+
 public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     public static final double DEFAULT_INVERSE_MASS = 0.001d;
     public static final Vector3d DEFAULT_SCALE = new Vector3d(1d, 1d, 1d);
@@ -54,7 +56,6 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     public final Vector3d accumulatedForce = new Vector3d();
     public final Vector3d accumulatedTorque = new Vector3d();
     private HashMap<PhysicsObject, ArrayList<Contact>> objectContacts = new HashMap<>();
-    public boolean isChecked = false;
 
     public boolean rotationMatrixDirty = true;
     public boolean inverseInertiaTensorLocalDirty = true;
@@ -198,14 +199,14 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
 
     // Setters
-    public void setInternalPos(Vec3d position) {
-        pos.x = position.x;
-        pos.y = position.y;
-        pos.z = position.z;
+    public void setInternalPos(Vector3d position) {
+        pos.set(position);
 
         cornerPosAbsoluteDirty = true;
         boundingBoxAbsoluteDirty = true;
     }
+
+    public void setInternalPos(Vec3d position) { setInternalPos(new Vec3d(position.x, position.y, position.z)); }
 
     public void setInverseMass(double inverseMass) throws IllegalArgumentException {
         if (inverseMass < 0) { throw new IllegalArgumentException("Inverse mass must not be negative"); }
@@ -256,13 +257,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
 
 
-    // Other operations (Similar to setters)
-    public void addInternalPos(Vector3d value) {
-        pos.add(value);
-
-        cornerPosAbsoluteDirty = true;
-        boundingBoxAbsoluteDirty = true;
-    }
+    // Other operations
 
     // TODO: REWORK
     //public void addObjectContact(PhysicsObject otherObject, Contact contact) { // TODO: Right now, I have to specify the object every time I want to add a contact. Maybe make it so I can get the list myself and then add/remove freely (without getters or setters). Maybe do it like "getObjectContacts(otherObject)" and then I can add/remove manually. It would return null if none exists. So I'd need addObjectContactsList or something like that.
@@ -398,13 +393,13 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         boundingBoxAbsoluteDirty = false;
     }
 
-    //public void updateLinearVelocityWithoutAcceleration(Vector3d finalVelocity, Vector3d acceleration) { // It's important that it still includes the damping on the entire velocity (including the acceleration)
-    //    finalVelocity.sub(acceleration, linearVelocityWithoutAcceleration); // TODO: See note on updateAngularVelocity in integration
-    //}
+    public void updateLinearVelocityWithoutAcceleration(Vector3d finalVelocity, Vector3d acceleration) { // It's important that it still includes the damping on the entire velocity (including on the acceleration)
+        finalVelocity.sub(acceleration, linearVelocityWithoutAcceleration); // TODO: See note on updateAngularVelocity in integration
+    }
 
-    //public void updateAngularVelocityWithoutAcceleration(Vector3d finalVelocity, Vector3d acceleration) {
-    //    finalVelocity.sub(acceleration, angularVelocityWithoutAcceleration); // TODO: See note on updateAngularVelocity in integration
-    //}
+    public void updateAngularVelocityWithoutAcceleration(Vector3d finalVelocity, Vector3d acceleration) {
+        finalVelocity.sub(acceleration, angularVelocityWithoutAcceleration); // TODO: See note on updateAngularVelocity in integration
+    }
 
 
 

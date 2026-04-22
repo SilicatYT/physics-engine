@@ -1,5 +1,6 @@
 package silicatyt.physics.simulation;
 
+import net.minecraft.util.math.Vec3d;
 import org.joml.Quaterniond;
 import org.joml.Vector3d;
 import silicatyt.physics.entity.PhysicsObject;
@@ -8,48 +9,48 @@ import static java.lang.Math.pow;
 import static silicatyt.physics.Physics.loadedPhysicsObjects;
 import static silicatyt.physics.simulation.Main.DELTA_TIME;
 
-// TODO: REWORK
-
 public class Integration {
-    public static final Vector3d DEFAULT_GRAVITY = new Vector3d(0d, -9.81d, 0d).mul(DELTA_TIME); // Velocity difference per tick. So don't apply DELTA_TIME in tick again.
-    public static final double DEFAULT_LINEAR_DAMPING = pow(0.7d, DELTA_TIME); // "After 1 second, this much of its speed should remain". This is necessary so less DELTA_TIME doesn't make damping stronger. It should stay identical.
+    public static final Vector3d DEFAULT_GRAVITY = new Vector3d(0d, -9.81d, 0d).mul(DELTA_TIME);
+    public static final double DEFAULT_LINEAR_DAMPING = pow(0.7d, DELTA_TIME); // "After 1 second, this much of its linear velocity should remain".
     public static final double DEFAULT_ANGULAR_DAMPING = pow(0.7d, DELTA_TIME);
 
     // Phases
-    public static void phaseOne() {
+    public static void phaseOne() { // Update internal state
         for (PhysicsObject obj : loadedPhysicsObjects) {
-            obj.isChecked = false; // For collision detection
             fixEntityPos(obj);
             updateLinearVelocity(obj);
             updatePos(obj);
             updateAngularVelocity(obj);
-            updateOrientation(obj);
+            updateOrientationExponentialMap(obj);
         }
     }
 
-    public static void phaseTwo() { // Normally, I'd update cornerPosAbsolute here so the line of sight checks for hitting the object can use the updated data. But because the mod always automatically updates derived data (at the cost of unnecessary computation), this isn't necessary here. In the datapack, I would manually update the cornerPosAbsolute here, however.
+    public static void phaseTwo() { // Update visual state & reset accumulators
         for (PhysicsObject obj : loadedPhysicsObjects) {
             obj.updateVisuals();
             obj.updateEntityPos();
 
             obj.accumulatedForce.zero();
-            obj.accumulatedTorque.zero(); // The accumulatedForce and accumulatedTorque need to still be stored until now so I can remove them from contactVelocity during contact generation. I could also precalculate the stuff in integration, but then I'd need an additional instance variable. I could also store the velocityPrev (which just wouldn't include the acceleration induced velocity), which would be even faster. BUT: Damping should NOT be removed from the velocity, so that makes it a tiny bit more complicated.
+            obj.accumulatedTorque.zero(); // The accumulatedForce and accumulatedTorque still need to be stored until now so I can subtract them from contactVelocity during contact generation. I could also precalculate the stuff in integration, but then I'd need an additional instance variable. I could also store the velocityPrev (which just wouldn't include the acceleration induced velocity), which would be even faster. BUT: Damping should NOT be removed from the velocity, so that makes it a tiny bit more complicated.
         }
     }
 
+
+
+
+
     // Helper methods
-    private static void fixEntityPos(PhysicsObject obj) { // If the actual entity pos has changed (e.g. through teleportation or when the entity is summoned for the 1st time), the internal "pos" is set to the entity pos to allow for teleportation and summoning at the correct locations. Without this, the entity teleports to 0,0,0 upon being summoned and ignores being teleported around.
-        if (!obj.getLastEntityPos().equals(obj.getEntityPos())) {
-            obj.setInternalPos(obj.getEntityPos());
-        }
+    private static void fixEntityPos(PhysicsObject obj) { // If the actual entity pos has changed (i.e. by teleportation, or when the entity is summoned for the 1st time), the internal "pos" is set to the entity pos to allow for teleportation and summoning at the correct locations. Without this, the entity teleports to 0,0,0 upon being summoned and ignores being teleported around.
+        Vec3d entityPos = obj.getEntityPos();
+        if (!obj.getLastEntityPos().equals(entityPos)) { obj.setInternalPos(entityPos); }
     }
 
     private static void updateLinearVelocity(PhysicsObject obj) {
         // Apply accumulated force
-        Vector3d velocityFromAcceleration = new Vector3d(obj.accumulatedForce).mul(obj.getInverseMass() * DELTA_TIME); // Scale by DELTA_TIME because force's unit uses seconds. See Euler Integration.
+        Vector3d velocityFromAcceleration = new Vector3d(obj.accumulatedForce).mul(obj.getInverseMass() * DELTA_TIME);
 
         // Apply gravity
-        // velocityFromAcceleration.add(DEFAULT_GRAVITY); // DELTA_TIME is already accounted for in the DEFAULT_GRAVITY constant. Otherwise, I'd multiply it here.
+        // velocityFromAcceleration.add(DEFAULT_GRAVITY);
 
         // Apply linear damping
         obj.linearVelocity.add(velocityFromAcceleration);
@@ -59,7 +60,9 @@ public class Integration {
     }
 
     private static void updatePos(PhysicsObject obj) {
-        obj.addInternalPos(obj.getLinearVelocity().mul(DELTA_TIME)); // Velocity is m/s, so I need to scale by DELTA_TIME
+        Vector3d pos = obj.getInternalPos();
+        Vector3d movement = obj.getLinearVelocity().mul(DELTA_TIME);
+        obj.setInternalPos(pos.add(movement));
     }
 
     private static void updateAngularVelocity(PhysicsObject obj) {
@@ -74,7 +77,7 @@ public class Integration {
         obj.updateAngularVelocityWithoutAcceleration(obj.angularVelocity, velocityFromAcceleration);
     }
 
-    /*private static void updateOrientation(PhysicsObject obj) { // Method: Euler integration (TODO: Less accurate but faster. How about in a datapack, where I can use entity rotation tricks to compute sin and cos quickly? What to choose there?)
+    private static void updateOrientationEuler(PhysicsObject obj) { // Approach: Euler integration (TODO: Less accurate but faster. How about in a datapack, where I can use entity rotation tricks to compute sin and cos quickly? What to choose there?)
         Vector3d angularVelocity = obj.getAngularVelocity(); // TODO: Maybe I didn't account for the DELTA_TIME properly in the datapack?
         Quaterniond orientation = obj.getOrientation();
         obj.setOrientation(
@@ -83,9 +86,9 @@ public class Integration {
                         .scale(0.5d * DELTA_TIME)
                 )
         ); // I don't normalize it here because setOrientation() already does that automatically
-    }*/
+    }
 
-    private static void updateOrientation(PhysicsObject obj) { // Method: Exponential map integration
+    private static void updateOrientationExponentialMap(PhysicsObject obj) { // Approach: Exponential map integration
         Vector3d angularVelocity = obj.getAngularVelocity();
         double angularVelocityLength = angularVelocity.length();
         if (angularVelocityLength < 1e-12) { // No orientation change. Continuing here (normalizing at some point) would produce NaN. 1e-12 is used because it's "pretty much 0" and makes it ignore unstable divisors.
