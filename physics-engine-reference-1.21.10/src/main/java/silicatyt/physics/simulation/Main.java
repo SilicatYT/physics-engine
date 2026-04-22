@@ -1,4 +1,4 @@
-package silicatyt.physicsref.simulation;
+package silicatyt.physics.simulation;
 
 import net.minecraft.server.MinecraftServer;
 

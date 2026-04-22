@@ -1,7 +1,9 @@
-package silicatyt.physicsref.data;
+// TODO: REWORK
+
+package silicatyt.physics.data;
 
 import org.joml.Vector3d;
-import silicatyt.physicsref.entity.PhysicsObject;
+import silicatyt.physics.entity.PhysicsObject;
 
 public abstract class Contact {
     public Contact(PhysicsObject objectA, PhysicsObject objectB, int featureA, int featureB) {

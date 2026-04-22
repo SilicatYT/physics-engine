@@ -1,6 +1,6 @@
 {
 	"required": true,
-	"package": "silicatyt.physicsref.mixin.client",
+	"package": "silicatyt.physics.mixin.client",
 	"compatibilityLevel": "JAVA_21",
 	"client": [
 		"ExampleClientMixin"

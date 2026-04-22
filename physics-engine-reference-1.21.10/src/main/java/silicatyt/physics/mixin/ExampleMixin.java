@@ -1,4 +1,4 @@
-package silicatyt.physicsref.mixin;
+package silicatyt.physics.mixin;
 
 import net.minecraft.server.MinecraftServer;
 import org.spongepowered.asm.mixin.Mixin;

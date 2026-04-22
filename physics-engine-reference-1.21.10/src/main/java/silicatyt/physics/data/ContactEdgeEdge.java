@@ -1,9 +1,11 @@
-package silicatyt.physicsref.data;
+// TODO: REWORK
+
+package silicatyt.physics.data;
 
 import org.joml.Vector3d;
-import silicatyt.physicsref.entity.PhysicsObject;
+import silicatyt.physics.entity.PhysicsObject;
 
-import static silicatyt.physicsref.simulation.ContactGeneration.getEdgeStartingPointIndices;
+import static silicatyt.physics.simulation.ContactGeneration.getEdgeStartingPointIndices;
 
 public class ContactEdgeEdge extends Contact {
     public ContactEdgeEdge(PhysicsObject objectA, PhysicsObject objectB, int featureA, int featureB) {

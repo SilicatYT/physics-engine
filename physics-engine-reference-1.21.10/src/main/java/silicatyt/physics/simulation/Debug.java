@@ -1,17 +1,19 @@
-package silicatyt.physicsref.simulation;
+package silicatyt.physics.simulation;
 
 import net.minecraft.particle.ParticleTypes;
 import net.minecraft.particle.TrailParticleEffect;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Vector3d;
-import silicatyt.physicsref.data.Contact;
-import silicatyt.physicsref.entity.PhysicsObject;
+import silicatyt.physics.data.Contact;
+import silicatyt.physics.entity.PhysicsObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import static silicatyt.physicsref.PhysicsRef.loadedPhysicsObjects;
+import static silicatyt.physics.Physics.loadedPhysicsObjects;
+
+// TODO: REWORK
 
 public class Debug {
     public static void showObjectAxes() {

@@ -1,6 +1,6 @@
 {
 	"required": true,
-	"package": "silicatyt.physicsref.mixin",
+	"package": "silicatyt.physics.mixin",
 	"compatibilityLevel": "JAVA_21",
 	"mixins": [
 		"ExampleMixin"

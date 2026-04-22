@@ -1,4 +1,4 @@
-package silicatyt.physicsref;
+package silicatyt.physics;
 
 import net.fabricmc.api.ClientModInitializer;
 

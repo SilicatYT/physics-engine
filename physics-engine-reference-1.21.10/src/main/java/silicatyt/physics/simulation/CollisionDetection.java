@@ -1,14 +1,16 @@
-package silicatyt.physicsref.simulation;
+package silicatyt.physics.simulation;
 
 import org.joml.Vector3d;
-import silicatyt.physicsref.data.Contact;
-import silicatyt.physicsref.entity.PhysicsObject;
+import silicatyt.physics.data.Contact;
+import silicatyt.physics.entity.PhysicsObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import static silicatyt.physicsref.PhysicsRef.loadedPhysicsObjects;
-import static silicatyt.physicsref.simulation.ContactGeneration.*;
+import static silicatyt.physics.Physics.loadedPhysicsObjects;
+import static silicatyt.physics.simulation.ContactGeneration.*;
+
+// TODO: REWORK
 
 public class CollisionDetection {
     public static void start() {

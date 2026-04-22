@@ -1,12 +1,14 @@
-package silicatyt.physicsref.simulation;
+package silicatyt.physics.simulation;
 
 import org.joml.Quaterniond;
 import org.joml.Vector3d;
-import silicatyt.physicsref.entity.PhysicsObject;
+import silicatyt.physics.entity.PhysicsObject;
 
 import static java.lang.Math.pow;
-import static silicatyt.physicsref.PhysicsRef.loadedPhysicsObjects;
-import static silicatyt.physicsref.simulation.Main.DELTA_TIME;
+import static silicatyt.physics.Physics.loadedPhysicsObjects;
+import static silicatyt.physics.simulation.Main.DELTA_TIME;
+
+// TODO: REWORK
 
 public class Integration {
     public static final Vector3d DEFAULT_GRAVITY = new Vector3d(0d, -9.81d, 0d).mul(DELTA_TIME); // Velocity difference per tick. So don't apply DELTA_TIME in tick again.
