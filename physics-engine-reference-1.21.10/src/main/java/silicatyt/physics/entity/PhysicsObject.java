@@ -351,10 +351,10 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         for (int x = -1; x <= 1; x += 2) {
             for (int y = -1; y <= 1; y += 2) {
                 for (int z = -1; z <= 1; z += 2) {
-                    this.cornerPosLocal[i++].set(
-                            0.5 * x * this.scale.x,
-                            0.5 * y * this.scale.y,
-                            0.5 * z * this.scale.z
+                    cornerPosLocal[i++].set(
+                            0.5 * x * scale.x,
+                            0.5 * y * scale.y,
+                            0.5 * z * scale.z
                     );
                 }
             }
@@ -364,9 +364,10 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     }
 
     private void updateCornerPosRelative() {
+        if (rotationMatrixDirty) { updateRotationMatrix(); }
         if (cornerPosLocalDirty) { updateCornerPosLocal(); }
         for (int i = 0; i < 8; i++) {
-            this.rotationMatrix.transform(this.cornerPosLocal[i], this.cornerPosRelative[i]);
+            rotationMatrix.transform(cornerPosLocal[i], cornerPosRelative[i]);
         }
 
         cornerPosRelativeDirty = false;
@@ -375,7 +376,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     private void updateCornerPosAbsolute() {
         if (cornerPosRelativeDirty) { updateCornerPosRelative(); }
         for (int i = 0; i < 8; i++) {
-            this.cornerPosRelative[i].add(this.pos, this.cornerPosAbsolute[i]);
+            cornerPosRelative[i].add(pos, cornerPosAbsolute[i]);
         }
 
         cornerPosAbsoluteDirty = false;
@@ -383,26 +384,26 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
     private void updateBoundingBoxAbsolute() {
         if (cornerPosAbsoluteDirty) { updateCornerPosAbsolute(); }
-        for (Vector3d corner : this.cornerPosAbsolute) {
-            this.boundingBoxAbsolute[0].x = Math.min(this.boundingBoxAbsolute[0].x, corner.x);
-            this.boundingBoxAbsolute[1].x = Math.max(this.boundingBoxAbsolute[1].x, corner.x);
+        for (Vector3d corner : cornerPosAbsolute) {
+            boundingBoxAbsolute[0].x = Math.min(boundingBoxAbsolute[0].x, corner.x);
+            boundingBoxAbsolute[1].x = Math.max(boundingBoxAbsolute[1].x, corner.x);
 
-            this.boundingBoxAbsolute[0].y = Math.min(this.boundingBoxAbsolute[0].y, corner.y);
-            this.boundingBoxAbsolute[1].y = Math.max(this.boundingBoxAbsolute[1].y, corner.y);
+            boundingBoxAbsolute[0].y = Math.min(boundingBoxAbsolute[0].y, corner.y);
+            boundingBoxAbsolute[1].y = Math.max(boundingBoxAbsolute[1].y, corner.y);
 
-            this.boundingBoxAbsolute[0].z = Math.min(this.boundingBoxAbsolute[0].z, corner.z);
-            this.boundingBoxAbsolute[1].z = Math.max(this.boundingBoxAbsolute[1].z, corner.z);
+            boundingBoxAbsolute[0].z = Math.min(boundingBoxAbsolute[0].z, corner.z);
+            boundingBoxAbsolute[1].z = Math.max(boundingBoxAbsolute[1].z, corner.z);
         }
 
         boundingBoxAbsoluteDirty = false;
     }
 
     //public void updateLinearVelocityWithoutAcceleration(Vector3d finalVelocity, Vector3d acceleration) { // It's important that it still includes the damping on the entire velocity (including the acceleration)
-    //    finalVelocity.sub(acceleration, this.linearVelocityWithoutAcceleration); // TODO: See note on updateAngularVelocity in integration
+    //    finalVelocity.sub(acceleration, linearVelocityWithoutAcceleration); // TODO: See note on updateAngularVelocity in integration
     //}
 
     //public void updateAngularVelocityWithoutAcceleration(Vector3d finalVelocity, Vector3d acceleration) {
-    //    finalVelocity.sub(acceleration, this.angularVelocityWithoutAcceleration); // TODO: See note on updateAngularVelocity in integration
+    //    finalVelocity.sub(acceleration, angularVelocityWithoutAcceleration); // TODO: See note on updateAngularVelocity in integration
     //}
 
 
