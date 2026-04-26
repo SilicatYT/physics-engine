@@ -12,15 +12,13 @@ import net.minecraft.util.math.AffineTransformation;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.joml.*;
-import silicatyt.physics.data.Contact;
 import xyz.nucleoid.packettweaker.PacketContext;
 
 import java.lang.Math;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 // TODO: Maybe use Vector3dc for getters. It's read-only, so it's faster because it doesn't create a new object, but you could cast back into Vector3d. So no true safety, but better performance.
+// TODO: Only subtract the velocityFromAcceleration during resolution, because the desiredDeltaVelocity formula has both the regular contactVelocity AND the (contactVelocity - velocityFromAcceleration) in it.
 
 public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     public static final double DEFAULT_INVERSE_MASS = 0.001d;
@@ -47,14 +45,13 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     private final Vector3d[] cornerPosRelative = new Vector3d[8];
     private final Vector3d[] cornerPosAbsolute = new Vector3d[8]; // Corners are ordered like this: [[-,-,-,], [-,-,+], [-,+,-], [-,+,+], [+,-,-,], [+,-,+], [+,+,-], [+,+,+]]
     private final Vector3d[] boundingBoxAbsolute = {new Vector3d(), new Vector3d()}; // 1st element is the "[-,-,-]" corner of the bounding box, 2nd element is the [+,+,+] corner. I don't use the "Box" class Minecraft provides because that is immutable, and it's not compatible with JOML maths.
-    private final Vector3d linearVelocityWithoutAcceleration = new Vector3d(); // Linear velocity from the start of integration, but only including the damping and not the velocity from accumulatedForce. Used during contactVelocity calculation for stability.
-    private final Vector3d angularVelocityWithoutAcceleration = new Vector3d();
 
     // Other transient data
     private final Vector3d pos = new Vector3d(); // Just for easy and consistent access without risking unloading the entity mid-tick
     private Vec3d lastEntityPos = new Vec3d(0d, 0d, 0d);
     public final Vector3d accumulatedForce = new Vector3d();
     public final Vector3d accumulatedTorque = new Vector3d();
+    private final Vector3d linearVelocityFromAcceleration = new Vector3d();
 
     public boolean rotationMatrixDirty = true;
     public boolean inverseInertiaTensorLocalDirty = true;
@@ -199,6 +196,12 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         return rotationMatrix.getColumn(index, dest);
     }
 
+    public Vector3d getLinearVelocityFromAcceleration() { return getLinearVelocityFromAcceleration(new Vector3d()); }
+
+    public Vector3d getLinearVelocityFromAcceleration(Vector3d dest) {
+        return dest.set(linearVelocityFromAcceleration);
+    }
+
 
 
 
@@ -257,6 +260,8 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         if (restitutionCoefficient < 0 || restitutionCoefficient > 1) { throw new IllegalArgumentException("Restitution coefficient must be between 0 and 1"); }
         this.restitutionCoefficient = restitutionCoefficient;
     }
+
+    public void setLinearVelocityFromAcceleration(Vector3dc linearVelocity) { linearVelocityFromAcceleration.set(linearVelocity); }
 
 
 
@@ -382,14 +387,6 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         }
 
         boundingBoxAbsoluteDirty = false;
-    }
-
-    public void updateLinearVelocityWithoutAcceleration(Vector3d finalVelocity, Vector3d acceleration) { // It's important that it still includes the damping on the entire velocity (including on the acceleration)
-        finalVelocity.sub(acceleration, linearVelocityWithoutAcceleration); // TODO: See note on updateAngularVelocity in integration
-    }
-
-    public void updateAngularVelocityWithoutAcceleration(Vector3d finalVelocity, Vector3d acceleration) {
-        finalVelocity.sub(acceleration, angularVelocityWithoutAcceleration); // TODO: See note on updateAngularVelocity in integration
     }
 
 
