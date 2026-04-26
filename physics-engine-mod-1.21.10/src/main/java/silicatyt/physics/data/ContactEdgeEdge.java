@@ -5,7 +5,7 @@ package silicatyt.physics.data;
 import org.joml.Vector3d;
 import silicatyt.physics.entity.PhysicsObject;
 
-import static silicatyt.physics.simulation.ContactGeneration.getEdgeStartingPointIndices;
+import static silicatyt.physics.simulation.ContactGenerator.getEdgeStartingPointIndices;
 
 public class ContactEdgeEdge extends Contact {
     public ContactEdgeEdge(PhysicsObject objectA, PhysicsObject objectB, int featureA, int featureB) {

@@ -5,7 +5,7 @@ package silicatyt.physics.data;
 import org.joml.Vector3d;
 import silicatyt.physics.entity.PhysicsObject;
 
-import static silicatyt.physics.simulation.CollisionDetection.projectObjectOntoAxis;
+import static silicatyt.physics.simulation.CollisionDetector.projectObjectOntoAxis;
 
 public class ContactPointFace extends Contact {
     public ContactPointFace(PhysicsObject objectA, PhysicsObject objectB, int featureA, int featureB) {

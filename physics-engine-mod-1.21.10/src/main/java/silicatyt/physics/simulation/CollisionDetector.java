@@ -45,9 +45,9 @@ public class CollisionDetector {
         return leftAABB[0].x <= rightAABB[1].x && rightAABB[0].x <= leftAABB[1].x && leftAABB[0].y <= rightAABB[1].y && rightAABB[0].y <= leftAABB[1].y && leftAABB[0].z <= rightAABB[1].z && rightAABB[0].z <= leftAABB[1].z;
     }
 
-    private static double getAxisOverlap(PhysicsObject objectA, PhysicsObject objectB, Vector3d axis) {
-        double[] leftProjection = projectObjectOntoAxis(objectA, axis);
-        double[] rightProjection = projectObjectOntoAxis(objectB, axis);
+    private static double getAxisOverlap(PhysicsObject left, PhysicsObject right, Vector3d axis) {
+        double[] leftProjection = projectObjectOntoAxis(left, axis);
+        double[] rightProjection = projectObjectOntoAxis(right, axis);
         return Double.min(leftProjection[1] - rightProjection[0], rightProjection[1] - leftProjection[0]);
     }
 
