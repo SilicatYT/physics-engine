@@ -1,5 +1,5 @@
 # Physics Engine
-A rigid-body physics engine Data Pack for cuboids.
+A rigid-body physics engine Data Pack for cuboids, and a simple example mod for Fabric.
 
 [(Archived old version)](https://github.com/SilicatYT/Physics-old)
 
@@ -11,7 +11,7 @@ A rigid-body physics engine Data Pack for cuboids.
 Development:
 - SilicatYT
 
-Additional help:
+External help:
 - SethBling (Inspiration & consultation)
 - Ian Millington (Book: "Game Physics Engine Development")
 
