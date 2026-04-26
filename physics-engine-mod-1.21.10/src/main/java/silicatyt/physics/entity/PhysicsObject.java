@@ -55,7 +55,6 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     private Vec3d lastEntityPos = new Vec3d(0d, 0d, 0d);
     public final Vector3d accumulatedForce = new Vector3d();
     public final Vector3d accumulatedTorque = new Vector3d();
-    private HashMap<PhysicsObject, ArrayList<Contact>> objectContacts = new HashMap<>();
 
     public boolean rotationMatrixDirty = true;
     public boolean inverseInertiaTensorLocalDirty = true;
@@ -186,14 +185,6 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         return rotationMatrix.getColumn(index, dest);
     }
 
-    public Vector3d getLinearVelocityWithoutAcceleration() { return getLinearVelocityWithoutAcceleration(new Vector3d()); }
-
-    public Vector3d getLinearVelocityWithoutAcceleration(Vector3d dest) { return dest.set(linearVelocityWithoutAcceleration); }
-
-    public Vector3d getAngularVelocityWithoutAcceleration() { return getAngularVelocityWithoutAcceleration(new Vector3d()); }
-
-    public Vector3d getAngularVelocityWithoutAcceleration(Vector3d dest) { return dest.set(angularVelocityWithoutAcceleration); }
-
 
 
 
@@ -206,7 +197,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         boundingBoxAbsoluteDirty = true;
     }
 
-    public void setInternalPos(Vec3d position) { setInternalPos(new Vec3d(position.x, position.y, position.z)); }
+    public void setInternalPos(Vec3d position) { setInternalPos(new Vector3d(position.x, position.y, position.z)); }
 
     public void setInverseMass(double inverseMass) throws IllegalArgumentException {
         if (inverseMass < 0) { throw new IllegalArgumentException("Inverse mass must not be negative"); }
@@ -252,25 +243,6 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         if (restitutionCoefficient < 0 || restitutionCoefficient > 1) { throw new IllegalArgumentException("Restitution coefficient must be between 0 and 1"); }
         this.restitutionCoefficient = restitutionCoefficient;
     }
-
-
-
-
-
-    // Other operations
-
-    // TODO: REWORK
-    //public void addObjectContact(PhysicsObject otherObject, Contact contact) { // TODO: Right now, I have to specify the object every time I want to add a contact. Maybe make it so I can get the list myself and then add/remove freely (without getters or setters). Maybe do it like "getObjectContacts(otherObject)" and then I can add/remove manually. It would return null if none exists. So I'd need addObjectContactsList or something like that.
-    //    ArrayList<Contact> contacts = this.objectContacts.computeIfAbsent(otherObject, k -> new ArrayList<>());
-    //    contacts.add(contact);
-    //}
-
-    // TODO: REWORK
-    //public HashMap<PhysicsObject, ArrayList<Contact>> clearObjectContacts() { // Returns the current contacts list as the "previous" and creates a new object for the current tick. It's on purpose that "previous" is returned directly without copying it.
-    //    HashMap<PhysicsObject, ArrayList<Contact>> prev = this.objectContacts; // TODO: Split it up so that I explicitly "getPreviousContacts" and "clearObjectContacts". Maybe I should really give direct access to the contacts list
-    //    this.objectContacts = new HashMap<>();
-    //    return prev;
-    //}
 
 
 

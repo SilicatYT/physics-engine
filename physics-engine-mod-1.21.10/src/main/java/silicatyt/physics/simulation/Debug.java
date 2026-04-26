@@ -11,13 +11,13 @@ import silicatyt.physics.entity.PhysicsObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import static silicatyt.physics.Physics.loadedPhysicsObjects;
+import static silicatyt.physics.Physics.LOADED_PHYSICS_OBJECTS;
 
 // TODO: REWORK
 
 public class Debug {
     public static void showObjectAxes() {
-        for (PhysicsObject object : loadedPhysicsObjects) {
+        for (PhysicsObject object : LOADED_PHYSICS_OBJECTS) {
             if (object.getEntityWorld() instanceof ServerWorld world) {
                 Vector3d[] cornerPositions = object.getCornerPosAbsolute();
 
@@ -38,7 +38,7 @@ public class Debug {
     }
 
     public static void showContactPoint() {
-        for (PhysicsObject object : loadedPhysicsObjects) {
+        for (PhysicsObject object : LOADED_PHYSICS_OBJECTS) {
             if (object.getEntityWorld() instanceof ServerWorld world) {
                 for (HashMap.Entry<PhysicsObject, ArrayList<Contact>> contactEntry : object.getObjectContactsDebug().entrySet()) {
                     ArrayList<Contact> contacts = contactEntry.getValue(); // All contacts with a specific objectB
@@ -57,7 +57,7 @@ public class Debug {
     }
 
     public static void showContactNormal() {
-        for (PhysicsObject object : loadedPhysicsObjects) {
+        for (PhysicsObject object : LOADED_PHYSICS_OBJECTS) {
             if (object.getEntityWorld() instanceof ServerWorld world) {
                 for (HashMap.Entry<PhysicsObject, ArrayList<Contact>> contactEntry : object.getObjectContactsDebug().entrySet()) {
                     ArrayList<Contact> contacts = contactEntry.getValue(); // All contacts with a specific objectB

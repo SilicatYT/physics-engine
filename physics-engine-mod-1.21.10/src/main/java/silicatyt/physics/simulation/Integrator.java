@@ -6,33 +6,28 @@ import org.joml.Vector3d;
 import silicatyt.physics.entity.PhysicsObject;
 
 import static java.lang.Math.pow;
-import static silicatyt.physics.Physics.loadedPhysicsObjects;
 import static silicatyt.physics.simulation.Main.DELTA_TIME;
 
-public class Integration {
-    public static final Vector3d DEFAULT_GRAVITY = new Vector3d(0d, -9.81d, 0d).mul(DELTA_TIME);
+public class Integrator {
+    public static final Vector3d DEFAULT_GRAVITY = new Vector3d(0d, -9.81d, 0d);
     public static final double DEFAULT_LINEAR_DAMPING = pow(0.7d, DELTA_TIME); // "After 1 second, this much of its linear velocity should remain".
     public static final double DEFAULT_ANGULAR_DAMPING = pow(0.7d, DELTA_TIME);
 
     // Phases
-    public static void phaseOne() { // Update internal state
-        for (PhysicsObject obj : loadedPhysicsObjects) {
-            fixEntityPos(obj);
-            updateLinearVelocity(obj);
-            updatePos(obj);
-            updateAngularVelocity(obj);
-            updateOrientationExponentialMap(obj);
-        }
+    public static void phaseOne(PhysicsObject obj) { // Update internal state
+        fixEntityPos(obj);
+        updateLinearVelocity(obj);
+        updatePos(obj);
+        updateAngularVelocity(obj);
+        updateOrientationExponentialMap(obj);
     }
 
-    public static void phaseTwo() { // Update visual state & reset accumulators
-        for (PhysicsObject obj : loadedPhysicsObjects) {
-            obj.updateVisuals();
-            obj.updateEntityPos();
+    public static void phaseTwo(PhysicsObject obj) { // Update visual state & reset accumulators
+        obj.updateVisuals();
+        obj.updateEntityPos();
 
-            obj.accumulatedForce.zero();
-            obj.accumulatedTorque.zero(); // The accumulatedForce and accumulatedTorque still need to be stored until now so I can subtract them from contactVelocity during contact generation. I could also precalculate the stuff in integration, but then I'd need an additional instance variable. I could also store the velocityPrev (which just wouldn't include the acceleration induced velocity), which would be even faster. BUT: Damping should NOT be removed from the velocity, so that makes it a tiny bit more complicated.
-        }
+        obj.accumulatedForce.zero();
+        obj.accumulatedTorque.zero(); // The accumulatedForce and accumulatedTorque still need to be stored until now so I can subtract them from contactVelocity during contact generation. I could also precalculate the stuff in integration, but then I'd need an additional instance variable. I could also store the velocityPrev (which just wouldn't include the acceleration induced velocity), which would be even faster. BUT: Damping should NOT be removed from the velocity, so that makes it a tiny bit more complicated.
     }
 
 
@@ -50,13 +45,11 @@ public class Integration {
         Vector3d velocityFromAcceleration = new Vector3d(obj.accumulatedForce).mul(obj.getInverseMass() * DELTA_TIME);
 
         // Apply gravity
-        // velocityFromAcceleration.add(DEFAULT_GRAVITY);
+        // velocityFromAcceleration.add(DEFAULT_GRAVITY.mul(DELTA_TIME));
 
         // Apply linear damping
         obj.linearVelocity.add(velocityFromAcceleration);
         obj.linearVelocity.mul(DEFAULT_LINEAR_DAMPING);
-
-        obj.updateLinearVelocityWithoutAcceleration(obj.linearVelocity, velocityFromAcceleration);
     }
 
     private static void updatePos(PhysicsObject obj) {
@@ -73,12 +66,10 @@ public class Integration {
         // Apply angular damping
         obj.angularVelocity.add(velocityFromAcceleration);
         obj.angularVelocity.mul(DEFAULT_ANGULAR_DAMPING);
-
-        obj.updateAngularVelocityWithoutAcceleration(obj.angularVelocity, velocityFromAcceleration);
     }
 
     private static void updateOrientationEuler(PhysicsObject obj) { // Approach: Euler integration (TODO: Less accurate but faster. How about in a datapack, where I can use entity rotation tricks to compute sin and cos quickly? What to choose there?)
-        Vector3d angularVelocity = obj.getAngularVelocity(); // TODO: Maybe I didn't account for the DELTA_TIME properly in the datapack?
+        Vector3d angularVelocity = obj.getAngularVelocity();
         Quaterniond orientation = obj.getOrientation();
         obj.setOrientation(
                 orientation.add(new Quaterniond(angularVelocity.x, angularVelocity.y, angularVelocity.z, 0) // angularVelocity is treated as a quaternion

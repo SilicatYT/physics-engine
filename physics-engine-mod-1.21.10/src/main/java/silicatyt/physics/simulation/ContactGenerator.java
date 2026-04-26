@@ -9,11 +9,11 @@ import silicatyt.physics.entity.PhysicsObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import static silicatyt.physics.simulation.CollisionDetection.projectObjectOntoAxis;
+import static silicatyt.physics.simulation.CollisionDetector.projectObjectOntoAxis;
 
 // TODO: REWORK
 
-public class ContactGeneration {
+public class ContactGenerator {
 
     public static void genContactPointFace(PhysicsObject objectA, PhysicsObject objectB, Vector3d contactNormal, int axisIndex) {
         // Select faceObject and cornerObject
