@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-// TODO: Check if "velocityWithoutAcceleration" is the correct approach for physics stability
+// TODO: Maybe use Vector3dc for getters. It's read-only, so it's faster because it doesn't create a new object, but you could cast back into Vector3d. So no true safety, but better performance.
 
 public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     public static final double DEFAULT_INVERSE_MASS = 0.001d;
@@ -134,13 +134,20 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         return dest.set(inverseInertiaTensorWorld);
     }
 
-    public Vector3d[] getCornerPosRelative() { return getCornerPosRelative(new Vector3d[]{new Vector3d(), new Vector3d()}); }
+    public Vector3d[] getCornerPosRelative() {
+        Vector3d[] out = new Vector3d[8];
+        for (int i = 0; i < 8; i++) {
+            out[i] = new Vector3d();
+        }
+        return getCornerPosRelative(out);
+    }
 
     public Vector3d[] getCornerPosRelative(Vector3d[] dest) throws IllegalArgumentException {
-        if (dest.length != 2) { throw new IllegalArgumentException("Expected array length of 2, got " +  dest.length); }
+        if (dest.length != 8) { throw new IllegalArgumentException("Expected array length of 8, got " +  dest.length); }
         if (cornerPosRelativeDirty) { updateCornerPosRelative(); }
-        dest[0].set(cornerPosRelative[0]);
-        dest[1].set(cornerPosRelative[1]);
+        for (int i = 0; i < 8; i++) {
+            dest[i] = cornerPosRelative[i];
+        }
         return dest;
     }
 
@@ -151,13 +158,20 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         return dest.set(cornerPosRelative[index]);
     }
 
-    public Vector3d[] getCornerPosAbsolute() { return getCornerPosAbsolute(new Vector3d[]{new Vector3d(), new Vector3d()}); }
+    public Vector3d[] getCornerPosAbsolute() {
+        Vector3d[] out = new Vector3d[8];
+        for (int i = 0; i < 8; i++) {
+            out[i] = new Vector3d();
+        }
+        return getCornerPosAbsolute(out);
+    }
 
     public Vector3d[] getCornerPosAbsolute(Vector3d[] dest) throws IllegalArgumentException {
-        if (dest.length != 2) { throw new IllegalArgumentException("Expected array length of 2, got " +  dest.length); }
+        if (dest.length != 8) { throw new IllegalArgumentException("Expected array length of 8, got " +  dest.length); }
         if (cornerPosAbsoluteDirty) { updateCornerPosAbsolute(); }
-        dest[0].set(cornerPosAbsolute[0]);
-        dest[1].set(cornerPosAbsolute[1]);
+        for (int i = 0; i < 8; i++) {
+            dest[i] = cornerPosAbsolute[i];
+        }
         return dest;
     }
 
@@ -190,7 +204,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
 
     // Setters
-    public void setInternalPos(Vector3d position) {
+    public void setInternalPos(Vector3dc position) {
         pos.set(position);
 
         cornerPosAbsoluteDirty = true;
@@ -208,9 +222,9 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         inverseInertiaTensorWorldDirty = true;
     }
 
-    public void setLinearVelocity(Vector3d linearVelocity) { linearVelocity.set(linearVelocity); }
+    public void setLinearVelocity(Vector3dc linearVelocity) { this.linearVelocity.set(linearVelocity); }
 
-    public void setAngularVelocity(Vector3d angularVelocity) { angularVelocity.set(angularVelocity); }
+    public void setAngularVelocity(Vector3dc angularVelocity) { this.angularVelocity.set(angularVelocity); }
 
     public void setOrientation(Quaterniond orientation) {
         this.orientation.set(orientation);
@@ -222,8 +236,8 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         cornerPosAbsoluteDirty = true;
     }
 
-    public void setScale(Vector3d scale) throws IllegalArgumentException {
-        if (scale.x < 0 || scale.y < 0 || scale.z < 0) { throw new IllegalArgumentException("Scale must not be negative"); }
+    public void setScale(Vector3dc scale) throws IllegalArgumentException {
+        if (scale.x() < 0 || scale.y() < 0 || scale.z() < 0) { throw new IllegalArgumentException("Scale must not be negative"); }
         this.scale.set(scale);
 
         inverseInertiaTensorLocalDirty = true;
@@ -307,6 +321,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     }
 
     private void updateInverseInertiaTensorWorld() {
+        if (rotationMatrixDirty) { updateRotationMatrix(); }
         if (inverseInertiaTensorLocalDirty) { updateInverseInertiaTensorLocal(); }
         rotationMatrix.mul(inverseInertiaTensorLocal, inverseInertiaTensorWorld).mul(rotationMatrixTranspose, inverseInertiaTensorWorld);
 
@@ -351,15 +366,19 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
     private void updateBoundingBoxAbsolute() {
         if (cornerPosAbsoluteDirty) { updateCornerPosAbsolute(); }
-        for (Vector3d corner : cornerPosAbsolute) {
-            boundingBoxAbsolute[0].x = Math.min(boundingBoxAbsolute[0].x, corner.x);
-            boundingBoxAbsolute[1].x = Math.max(boundingBoxAbsolute[1].x, corner.x);
 
-            boundingBoxAbsolute[0].y = Math.min(boundingBoxAbsolute[0].y, corner.y);
-            boundingBoxAbsolute[1].y = Math.max(boundingBoxAbsolute[1].y, corner.y);
+        boundingBoxAbsolute[0].set(cornerPosAbsolute[0]);
+        boundingBoxAbsolute[1].set(cornerPosAbsolute[1]);
 
-            boundingBoxAbsolute[0].z = Math.min(boundingBoxAbsolute[0].z, corner.z);
-            boundingBoxAbsolute[1].z = Math.max(boundingBoxAbsolute[1].z, corner.z);
+        for (int i = 1; i < 8; i++) {
+            boundingBoxAbsolute[0].x = Math.min(boundingBoxAbsolute[0].x, cornerPosAbsolute[i].x);
+            boundingBoxAbsolute[1].x = Math.max(boundingBoxAbsolute[1].x, cornerPosAbsolute[i].x);
+
+            boundingBoxAbsolute[0].y = Math.min(boundingBoxAbsolute[0].y, cornerPosAbsolute[i].y);
+            boundingBoxAbsolute[1].y = Math.max(boundingBoxAbsolute[1].y, cornerPosAbsolute[i].y);
+
+            boundingBoxAbsolute[0].z = Math.min(boundingBoxAbsolute[0].z, cornerPosAbsolute[i].z);
+            boundingBoxAbsolute[1].z = Math.max(boundingBoxAbsolute[1].z, cornerPosAbsolute[i].z);
         }
 
         boundingBoxAbsoluteDirty = false;
