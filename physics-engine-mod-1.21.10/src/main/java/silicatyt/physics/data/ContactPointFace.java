@@ -1,5 +1,3 @@
-// TODO: REWORK
-
 package silicatyt.physics.data;
 
 import org.joml.Vector3d;
@@ -14,41 +12,45 @@ public class ContactPointFace extends Contact {
 
     @Override
     public void updateContactNormal() {
-        PhysicsObject faceObject = this.objects[this.getFaceObjectIndex()];
-        Vector3d newContactNormal = new Vector3d(faceObject.getAxis((this.features[this.getFaceObjectIndex()] - 11) / 2));
-        if (this.getFaceObjectIndex() % 2 == 0) {
+        int faceObjectIndex = getFaceObjectIndex();
+
+        PhysicsObject faceObject = objects[faceObjectIndex];
+        Vector3d newContactNormal = new Vector3d(faceObject.getAxis((features[faceObjectIndex] - 11) / 2));
+        if (features[faceObjectIndex] % 2 == 0) {
             newContactNormal.mul(-1d);
         }
-        this.contactNormal.set(newContactNormal);
+
+        contactNormal.set(newContactNormal);
     }
 
     @Override
     public void updatePenetrationDepth() {
-        PhysicsObject faceObject = this.objects[this.getFaceObjectIndex()];
-        this.penetrationDepth = projectObjectOntoAxis(faceObject, this.contactNormal)[1] - this.getCorner().dot(this.contactNormal); // On new contacts, the selected corner's projection is the minProjection. That's not guaranteed during contact accumulation.
+        PhysicsObject faceObject = objects[getFaceObjectIndex()];
+        penetrationDepth = projectObjectOntoAxis(faceObject, contactNormal)[1] - getCorner().dot(contactNormal); // On new contacts, the selected corner's projection is the minProjection. That's not guaranteed afterwards (i.e., when updating the previous tick's contacts).
     }
 
     @Override
     public void updateContactPoint() {
-        this.contactPoint.set(this.getCorner().add(new Vector3d(contactNormal).mul(penetrationDepth))); // New vector to avoid overwriting contactNormal
+        contactPos.set(getCorner().add(new Vector3d(contactNormal).mul(penetrationDepth)));
     }
 
     @Override
     public void updateContactVelocity() {
-        this.contactVelocity.set(this.calculateContactVelocity(this.getFaceObjectIndex()));
+        contactVelocity.set(calculateContactVelocity(getFaceObjectIndex()));
     }
 
     // Helper methods
     private int getFaceObjectIndex() {
-        return this.features[0] < 10 ? 1 : 0;
+        return features[0] < 10 ? 1 : 0;
     }
 
     private int getCornerObjectIndex() {
-        return 1 - this.getFaceObjectIndex();
+        return 1 - getFaceObjectIndex();
     }
 
     private Vector3d getCorner() {
-        return this.objects[this.getCornerObjectIndex()].getCornerPosAbsolute()[this.features[this.getCornerObjectIndex()]];
+        int cornerObjectIndex = getCornerObjectIndex();
+        return objects[cornerObjectIndex].getCornerPosAbsolute(features[cornerObjectIndex]);
     }
 
 }
