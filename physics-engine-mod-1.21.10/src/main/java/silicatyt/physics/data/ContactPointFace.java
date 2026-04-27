@@ -90,6 +90,6 @@ public class ContactPointFace extends Contact {
 
     private int getCornerIndex() { return isFeatureACorner() ? featureA : featureB; }
 
-    private Vector3d getCornerPos() { return getCornerObject().getCornerPosAbsolute(getCornerIndex()); }
+    private Vector3dc getCornerPos() { return getCornerObject().getCornerPosAbsolute(getCornerIndex()); }
 
 }

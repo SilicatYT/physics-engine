@@ -95,7 +95,7 @@ public class ContactEdgeEdge extends Contact {
 
 
     // Helper methods
-    private Vector3d getEdgeStartingPoint(PhysicsObject object) {
+    private Vector3dc getEdgeStartingPoint(PhysicsObject object) {
         int feature = getFeature(object);
 
         int axisIndex = getAxisIndex(feature);

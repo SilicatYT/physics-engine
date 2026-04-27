@@ -3,6 +3,7 @@ package silicatyt.physics.simulation;
 import net.minecraft.util.math.Vec3d;
 import org.joml.Quaterniond;
 import org.joml.Vector3d;
+import org.joml.Vector3dc;
 import silicatyt.physics.entity.PhysicsObject;
 
 import static java.lang.Math.pow;
@@ -53,9 +54,8 @@ public class Integrator {
     }
 
     private static void updatePos(PhysicsObject obj) {
-        Vector3d pos = obj.getInternalPos();
-        Vector3d movement = obj.getLinearVelocity().mul(DELTA_TIME);
-        obj.setInternalPos(pos.add(movement));
+        Vector3d movement = new Vector3d(obj.getLinearVelocity()).mul(DELTA_TIME);
+        obj.setInternalPos(movement.add(obj.getInternalPos()));
     }
 
     private static void updateAngularVelocity(PhysicsObject obj) {
@@ -69,10 +69,10 @@ public class Integrator {
     }
 
     private static void updateOrientationEuler(PhysicsObject obj) { // Approach: Euler integration (TODO: Less accurate but faster. How about in a datapack, where I can use entity rotation tricks to compute sin and cos quickly? What to choose there?)
-        Vector3d angularVelocity = obj.getAngularVelocity();
-        Quaterniond orientation = obj.getOrientation();
+        Vector3dc angularVelocity = obj.getAngularVelocity();
+        Quaterniond orientation = new Quaterniond(obj.getOrientation());
         obj.setOrientation(
-                orientation.add(new Quaterniond(angularVelocity.x, angularVelocity.y, angularVelocity.z, 0) // angularVelocity is treated as a quaternion
+                orientation.add(new Quaterniond(angularVelocity.x(), angularVelocity.y(), angularVelocity.z(), 0) // angularVelocity is treated as a quaternion
                         .mul(orientation)
                         .scale(0.5d * DELTA_TIME)
                 )
@@ -80,7 +80,7 @@ public class Integrator {
     }
 
     private static void updateOrientationExponentialMap(PhysicsObject obj) { // Approach: Exponential map integration
-        Vector3d angularVelocity = obj.getAngularVelocity();
+        Vector3d angularVelocity = new Vector3d(obj.getAngularVelocity());
         double angularVelocityLength = angularVelocity.length();
         if (angularVelocityLength < 1e-12) { // No orientation change. Continuing here (normalizing at some point) would produce NaN. 1e-12 is used because it's "pretty much 0" and makes it ignore unstable divisors.
             return;

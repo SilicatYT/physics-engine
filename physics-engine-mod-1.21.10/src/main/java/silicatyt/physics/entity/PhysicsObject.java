@@ -17,7 +17,6 @@ import xyz.nucleoid.packettweaker.PacketContext;
 import java.lang.Math;
 import java.util.List;
 
-// TODO: Maybe use Vector3dc for getters. It's read-only, so it's faster because it doesn't create a new object, but you could cast back into Vector3d. So no true safety, but better performance.
 // TODO: Only subtract the velocityFromAcceleration during resolution, because the desiredDeltaVelocity formula has both the regular contactVelocity AND the (contactVelocity - velocityFromAcceleration) in it.
 
 public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
@@ -53,13 +52,13 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     public final Vector3d accumulatedTorque = new Vector3d();
     private final Vector3d linearVelocityFromAcceleration = new Vector3d();
 
-    public boolean rotationMatrixDirty = true;
-    public boolean inverseInertiaTensorLocalDirty = true;
-    public boolean inverseInertiaTensorWorldDirty = true;
-    public boolean cornerPosLocalDirty = true;
-    public boolean cornerPosRelativeDirty = true;
-    public boolean cornerPosAbsoluteDirty = true;
-    public boolean boundingBoxAbsoluteDirty = true;
+    private boolean rotationMatrixDirty = true;
+    private boolean inverseInertiaTensorLocalDirty = true;
+    private boolean inverseInertiaTensorWorldDirty = true;
+    private boolean cornerPosLocalDirty = true;
+    private boolean cornerPosRelativeDirty = true;
+    private boolean cornerPosAbsoluteDirty = true;
+    private boolean boundingBoxAbsoluteDirty = true;
 
 
 
@@ -90,33 +89,25 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
 
     // Getters
-    public Vector3d getInternalPos() {
-        return new Vector3d(this.pos);
-    }
+    public Vector3dc getInternalPos() { return pos; }
 
-    public Vec3d getLastEntityPos() {
-        return lastEntityPos;
-    }
+    public Vec3d getLastEntityPos() { return lastEntityPos; }
 
-    public double getInverseMass() {
-        return inverseMass;
-    }
+    public double getInverseMass() { return inverseMass; }
 
-    public Vector3d getLinearVelocity() {
-        return getLinearVelocity(new Vector3d());
-    }
+    public Vector3dc getLinearVelocity() { return linearVelocity; }
 
     public Vector3d getLinearVelocity(Vector3d dest) { return dest.set(linearVelocity); }
 
-    public Vector3d getAngularVelocity() { return getAngularVelocity(new Vector3d()); }
+    public Vector3dc getAngularVelocity() { return angularVelocity; }
 
     public Vector3d getAngularVelocity(Vector3d dest) { return dest.set(angularVelocity); }
 
-    public Quaterniond getOrientation() { return getOrientation(new Quaterniond()); }
+    public Quaterniondc getOrientation() { return orientation; }
 
     public Quaterniond getOrientation(Quaterniond dest) { return dest.set(orientation); }
 
-    public Vector3d getScale() { return getScale(new Vector3d()); }
+    public Vector3dc getScale() { return scale; }
 
     public Vector3d getScale(Vector3d dest) { return dest.set(scale); }
 
@@ -124,83 +115,78 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
     public double getRestitutionCoefficient() { return restitutionCoefficient; }
 
-    public Matrix3d getInverseInertiaTensorWorld() { return getInverseInertiaTensorWorld(new Matrix3d()); }
-
-    public Matrix3d getInverseInertiaTensorWorld(Matrix3d dest) {
+    public Matrix3dc getInverseInertiaTensorWorld() {
         if (inverseInertiaTensorWorldDirty) { updateInverseInertiaTensorWorld(); }
-        return dest.set(inverseInertiaTensorWorld);
+        return inverseInertiaTensorWorld;
     }
 
-    public Vector3d[] getCornerPosRelative() {
-        Vector3d[] out = new Vector3d[8];
-        for (int i = 0; i < 8; i++) {
-            out[i] = new Vector3d();
-        }
-        return getCornerPosRelative(out);
+    public Matrix3d getInverseInertiaTensorWorld(Matrix3d dest) { return dest.set(getInverseInertiaTensorWorld()); }
+
+    public Vector3dc[] getCornerPosRelative() {
+        if (cornerPosRelativeDirty) { updateCornerPosRelative(); }
+        return cornerPosRelative;
     }
 
     public Vector3d[] getCornerPosRelative(Vector3d[] dest) throws IllegalArgumentException {
         if (dest.length != 8) { throw new IllegalArgumentException("Expected array length of 8, got " +  dest.length); }
-        if (cornerPosRelativeDirty) { updateCornerPosRelative(); }
+        Vector3dc[] cornerPos = getCornerPosRelative();
         for (int i = 0; i < 8; i++) {
-            dest[i] = cornerPosRelative[i];
+            dest[i].set(cornerPos[i]);
         }
         return dest;
     }
 
-    public Vector3d getCornerPosRelative(int index) { return getCornerPosRelative(index, new Vector3d()); }
-
-    public Vector3d getCornerPosRelative(int index, Vector3d dest) {
+    public Vector3dc getCornerPosRelative(int index) {
         if (cornerPosRelativeDirty) { updateCornerPosRelative(); }
-        return dest.set(cornerPosRelative[index]);
+        return cornerPosRelative[index];
     }
 
-    public Vector3d[] getCornerPosAbsolute() {
-        Vector3d[] out = new Vector3d[8];
-        for (int i = 0; i < 8; i++) {
-            out[i] = new Vector3d();
-        }
-        return getCornerPosAbsolute(out);
+    public Vector3d getCornerPosRelative(int index, Vector3d dest) { return dest.set(getCornerPosRelative(index)); }
+
+    public Vector3dc[] getCornerPosAbsolute() {
+        if (cornerPosAbsoluteDirty) { updateCornerPosAbsolute(); }
+        return cornerPosAbsolute;
     }
 
     public Vector3d[] getCornerPosAbsolute(Vector3d[] dest) throws IllegalArgumentException {
         if (dest.length != 8) { throw new IllegalArgumentException("Expected array length of 8, got " +  dest.length); }
-        if (cornerPosAbsoluteDirty) { updateCornerPosAbsolute(); }
+        Vector3dc[] cornerPos = getCornerPosAbsolute();
         for (int i = 0; i < 8; i++) {
-            dest[i] = cornerPosAbsolute[i];
+            dest[i].set(cornerPos[i]);
         }
         return dest;
     }
 
-    public Vector3d getCornerPosAbsolute(int index) { return getCornerPosAbsolute(index, new Vector3d()); }
-
-    public Vector3d getCornerPosAbsolute(int index, Vector3d dest) {
+    public Vector3dc getCornerPosAbsolute(int index) {
         if (cornerPosAbsoluteDirty) { updateCornerPosAbsolute(); }
-        return dest.set(cornerPosAbsolute[index]);
+        return cornerPosAbsolute[index];
     }
 
-    public Vector3d[] getBoundingBoxAbsolute() { return getBoundingBoxAbsolute(new Vector3d[]{new Vector3d(), new Vector3d()}); }
+    public Vector3d getCornerPosAbsolute(int index, Vector3d dest) { return dest.set(getCornerPosAbsolute(index)); }
+
+    public Vector3dc[] getBoundingBoxAbsolute() {
+        if (boundingBoxAbsoluteDirty) { updateBoundingBoxAbsolute(); }
+        return boundingBoxAbsolute;
+    }
 
     public Vector3d[] getBoundingBoxAbsolute(Vector3d[] dest) throws IllegalArgumentException {
         if (dest.length != 2) { throw new IllegalArgumentException("Expected array length of 2, got " +  dest.length); }
-        if (boundingBoxAbsoluteDirty) { updateBoundingBoxAbsolute(); }
-        dest[0].set(boundingBoxAbsolute[0]);
-        dest[1].set(boundingBoxAbsolute[1]);
+        Vector3dc[] boundingBox = getBoundingBoxAbsolute();
+        dest[0].set(boundingBox[0]);
+        dest[1].set(boundingBox[1]);
         return dest;
     }
 
-    public Vector3d getAxis(int index) { return getAxis(index, new Vector3d()); }
+    public Vector3d getAxis(int index) { return getAxis(index, new Vector3d()); } // TODO: Maybe store this as its own instance variable for consistency, so I don't need to make a new object every time I call this.
 
     public Vector3d getAxis(int index, Vector3d dest) {
         if (rotationMatrixDirty) { updateRotationMatrix(); }
         return rotationMatrix.getColumn(index, dest);
     }
 
-    public Vector3d getLinearVelocityFromAcceleration() { return getLinearVelocityFromAcceleration(new Vector3d()); }
+    public Vector3dc getLinearVelocityFromAcceleration() { return linearVelocityFromAcceleration; }
 
-    public Vector3d getLinearVelocityFromAcceleration(Vector3d dest) {
-        return dest.set(linearVelocityFromAcceleration);
-    }
+    public Vector3d getLinearVelocityFromAcceleration(Vector3d dest) { return dest.set(linearVelocityFromAcceleration); }
 
 
 
@@ -237,6 +223,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         inverseInertiaTensorWorldDirty = true;
         cornerPosRelativeDirty = true;
         cornerPosAbsoluteDirty = true;
+        boundingBoxAbsoluteDirty = true;
     }
 
     public void setScale(Vector3dc scale) throws IllegalArgumentException {

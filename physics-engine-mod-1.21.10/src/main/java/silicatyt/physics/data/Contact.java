@@ -50,13 +50,13 @@ public abstract class Contact {
         // pointVelocityReference
         relativeContactPos.set(contactPos);
         relativeContactPos.sub(referenceObject.getInternalPos());
-        Vector3d pointVelocityReference = referenceObject.getAngularVelocity().cross(relativeContactPos);
+        Vector3d pointVelocityReference = new Vector3d(referenceObject.getAngularVelocity()).cross(relativeContactPos);
         pointVelocityReference.add(referenceObject.getLinearVelocity());
 
         // pointVelocityOther
         relativeContactPos.set(contactPos);
         relativeContactPos.sub(otherObject.getInternalPos());
-        Vector3d pointVelocityOther = otherObject.getAngularVelocity().cross(relativeContactPos);
+        Vector3d pointVelocityOther = new Vector3d(otherObject.getAngularVelocity()).cross(relativeContactPos);
         pointVelocityOther.add(otherObject.getLinearVelocity());
 
         return pointVelocityReference.sub(pointVelocityOther);

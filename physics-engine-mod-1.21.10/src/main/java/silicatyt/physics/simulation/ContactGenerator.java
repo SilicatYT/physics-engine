@@ -1,6 +1,7 @@
 package silicatyt.physics.simulation;
 
 import org.joml.Vector3d;
+import org.joml.Vector3dc;
 import silicatyt.physics.data.*;
 import silicatyt.physics.entity.PhysicsObject;
 
@@ -29,7 +30,7 @@ public class ContactGenerator {
         }
 
         // Select the correct corner (The one with the most negative projection onto the normal)
-        Vector3d[] corners = cornerObject.getCornerPosAbsolute();
+        Vector3dc[] corners = cornerObject.getCornerPosAbsolute();
         double projection;
         double minProjection = Double.MAX_VALUE;
         int chosenCorner = -1;
@@ -75,7 +76,7 @@ public class ContactGenerator {
 
 
     // Helper Methods (Point-Face)
-    private static boolean isPointInsideTangentialBounds(Vector3d point, PhysicsObject obj, int normalAxisIndex) {
+    private static boolean isPointInsideTangentialBounds(Vector3dc point, PhysicsObject obj, int normalAxisIndex) {
         if (normalAxisIndex < 0 || normalAxisIndex > 2) { throw new IllegalArgumentException("normalAxisIndex must be between 0 and 2."); }
         double pointProjection;
         double[] objProjection;
@@ -104,11 +105,11 @@ public class ContactGenerator {
         }
     }
 
-    private static int getObjectEdgeIndex(PhysicsObject object, int axisOfMinOverlapIndex, Vector3d contactNormal, boolean isObjectA) {
+    private static int getObjectEdgeIndex(PhysicsObject object, int axisOfMinOverlapIndex, Vector3dc contactNormal, boolean isObjectA) {
         double projection;
         double maxProjection = -Double.MAX_VALUE;
 
-        Vector3d[] corners = object.getCornerPosAbsolute();
+        Vector3dc[] corners = object.getCornerPosAbsolute();
         int axisIndex = getObjectAxisIndex(axisOfMinOverlapIndex, isObjectA); // x (0), y (1) or z (2)
         int[] edgeStartingPointIndices = getEdgeStartingPointIndices(axisIndex);
         int feature = -1;
