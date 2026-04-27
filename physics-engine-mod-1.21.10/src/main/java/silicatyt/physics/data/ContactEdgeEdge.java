@@ -1,6 +1,7 @@
 package silicatyt.physics.data;
 
 import org.joml.Vector3d;
+import org.joml.Vector3dc;
 import silicatyt.physics.entity.PhysicsObject;
 
 import static silicatyt.physics.simulation.ContactGenerator.correctContactNormalDirectionEdgeEdge;
@@ -11,17 +12,46 @@ public class ContactEdgeEdge extends Contact {
         super(objectA, objectB, featureA, featureB);
     }
 
+    // Getters
+    @Override
+    public Vector3dc getContactPos() {
+        if (contactPosDirty) { updateContactPos(); }
+        return contactPos;
+    }
+
+    @Override
+    public Vector3dc getContactNormal() {
+        if (contactNormalDirty) { updateContactNormal(); }
+        return contactNormal;
+    }
+
+    @Override
+    public double getPenetrationDepth() {
+        if (contactNormalDirty) { updateContactNormal(); }
+        if (penetrationDepthDirty) { updatePenetrationDepth(); }
+        return penetrationDepth;
+    }
+
+
+
+
+
+    // Updates
     @Override
     public void updateContactNormal() {
         getAxis(objectA).cross(getAxis(objectB)).normalize(contactNormal);
         correctContactNormalDirectionEdgeEdge(contactNormal, objectA, objectB);
+        contactNormalDirty = false;
     }
 
     @Override
-    public void updatePenetrationDepth() { penetrationDepth = getEdgeStartingPoint(objectA).sub(getEdgeStartingPoint(objectB)).dot(contactNormal); } // In the datapack, I will directly work with the projections and subtract those (mathmatically equivalent) because I already calculate them earlier.
+    public void updatePenetrationDepth() { // In the datapack, I will directly work with the projections and subtract those (mathmatically equivalent) because I already calculate them earlier.
+        penetrationDepth = getEdgeStartingPoint(objectA).sub(getEdgeStartingPoint(objectB)).dot(contactNormal);
+        penetrationDepthDirty = false;
+    }
 
     @Override
-    public void updateContactPoint() { // Center of the shortest connecting line between the two edges
+    public void updateContactPos() { // Center of the shortest connecting line between the two edges
         // Calculation: u (EdgeStartA), v (EdgeDirectionA = AxisA), m (EdgeStartB), n (EdgeDirectionB = AxisB)
         //              Point on EdgeA = u + s * v, Point on EdgeB = m + t * n
         //              A = v * v (Always 1 because v is normalized), B = n * n (Always 1 because n is normalized), C = v * n, D = v * (u - m), E = n * (u - m)
@@ -48,10 +78,18 @@ public class ContactEdgeEdge extends Contact {
         pointEdgeB.mul(t).add(edgeStartingPointB);
 
         contactPos.set(pointEdgeA).add(pointEdgeB).mul(0.5d);
+        contactPosDirty = false;
     }
 
     @Override
-    public void updateContactVelocity() { contactVelocity.set(calculateContactVelocity(objectA)); } // TODO: Check if the referenceObject is ALWAYS objectA
+    public void updateContactVelocity() { // TODO: Check if the referenceObject is ALWAYS objectA
+        contactVelocity.set(calculateContactVelocity(objectA));
+        contactVelocityDirty = false;
+    }
+
+
+
+
 
     // Helper methods
     private Vector3d getEdgeStartingPoint(PhysicsObject object) {

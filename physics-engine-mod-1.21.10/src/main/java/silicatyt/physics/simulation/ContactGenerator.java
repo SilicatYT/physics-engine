@@ -1,10 +1,7 @@
 package silicatyt.physics.simulation;
 
 import org.joml.Vector3d;
-import silicatyt.physics.data.ColliderCollision;
-import silicatyt.physics.data.Contact;
-import silicatyt.physics.data.ContactEdgeEdge;
-import silicatyt.physics.data.ContactPointFace;
+import silicatyt.physics.data.*;
 import silicatyt.physics.entity.PhysicsObject;
 
 import static silicatyt.physics.simulation.CollisionDetector.projectObjectOntoAxis;
@@ -19,15 +16,9 @@ public class ContactGenerator {
         PhysicsObject objectB = collision.objectB();
 
         // Select faceObject and cornerObject
-        PhysicsObject faceObject;
-        PhysicsObject cornerObject;
-        if (collision.axisOfMinOverlapIndex() < 3) {
-            faceObject = objectA;
-            cornerObject = objectB;
-        } else {
-            faceObject = objectB;
-            cornerObject = objectA;
-        }
+        boolean isObjectATheFaceObject = collision.axisOfMinOverlapIndex() < 3;
+        PhysicsObject faceObject = isObjectATheFaceObject ? objectA : objectB;
+        PhysicsObject cornerObject = isObjectATheFaceObject ? objectB : objectA;
 
         // Select the correct face and invert the contact normal if necessary
         Vector3d contactNormal = collision.axisOfMinOverlap();
@@ -57,10 +48,9 @@ public class ContactGenerator {
         // Create contact
         if (faceObject == objectA) {
             return new ContactPointFace(objectA, objectB, chosenFace, chosenCorner);
+        } else {
+            return new ContactPointFace(objectA, objectB, chosenCorner, chosenFace);
         }
-        ContactPointFace contact = new ContactPointFace(objectA, objectB, chosenCorner, chosenFace);
-        contact.updateAllData(); // Does a bit too much work, as the contactNormal is already calculated
-        return contact;
     }
 
     private static ContactEdgeEdge generateContactEdgeEdge(PhysicsObject objectA, ColliderCollision collision) {
@@ -77,9 +67,7 @@ public class ContactGenerator {
         int featureB = getObjectEdgeIndex(objectB, collision.axisOfMinOverlapIndex(), contactNormal, false);
 
         // Create contact
-        ContactEdgeEdge contact = new ContactEdgeEdge(objectA, objectB, featureA, featureB);
-        contact.updateAllData(); // Does a bit too much work, as the contactNormal is already calculated
-        return contact;
+        return new ContactEdgeEdge(objectA, objectB, featureA, featureB);
     }
 
 

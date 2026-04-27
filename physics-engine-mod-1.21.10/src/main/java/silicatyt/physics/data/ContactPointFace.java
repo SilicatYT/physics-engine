@@ -1,6 +1,7 @@
 package silicatyt.physics.data;
 
 import org.joml.Vector3d;
+import org.joml.Vector3dc;
 import silicatyt.physics.entity.PhysicsObject;
 
 import static silicatyt.physics.simulation.CollisionDetector.projectObjectOntoAxis;
@@ -10,8 +11,34 @@ public class ContactPointFace extends Contact {
         super(objectA, objectB, featureA, featureB);
     }
 
+    // Getters
     @Override
-    public void updateContactNormal() {
+    public Vector3dc getContactPos() {
+        if (contactNormalDirty) { updateContactNormal(); }
+        if (penetrationDepthDirty) { updatePenetrationDepth(); }
+        if (contactPosDirty) { updateContactPos(); }
+        return contactPos;
+    }
+
+    @Override
+    public Vector3dc getContactNormal() {
+        if (contactNormalDirty) { updateContactNormal(); }
+        return contactNormal;
+    }
+
+    @Override
+    public double getPenetrationDepth() {
+        if (penetrationDepthDirty) { updatePenetrationDepth(); }
+        return penetrationDepth;
+    }
+
+
+
+
+
+    // Updates
+    @Override
+    protected void updateContactNormal() {
         int faceIndex = getFaceIndex();
 
         PhysicsObject faceObject = getFaceObject();
@@ -21,41 +48,41 @@ public class ContactPointFace extends Contact {
         }
 
         contactNormal.set(newContactNormal);
+        contactNormalDirty = false;
     }
 
     @Override
-    public void updatePenetrationDepth() {
+    protected void updatePenetrationDepth() {
         penetrationDepth = projectObjectOntoAxis(getFaceObject(), contactNormal)[1] - getCornerPos().dot(contactNormal); // On new contacts, the selected corner's projection is the minProjection. That's not guaranteed afterwards (i.e., when updating the previous tick's contacts).
+        penetrationDepthDirty = false;
     }
 
     @Override
-    public void updateContactPoint() {
+    protected void updateContactPos() {
         contactPos.set(getCornerPos().add(new Vector3d(contactNormal).mul(penetrationDepth)));
+        contactPosDirty = false;
     }
 
     @Override
-    public void updateContactVelocity() {
+    protected void updateContactVelocity() {
         contactVelocity.set(calculateContactVelocity(getFaceObject()));
+        contactVelocityDirty = false;
     }
+
+
+
+
 
     // Helper methods
     private boolean isFeatureACorner() { return featureA < 10; }
 
-    private PhysicsObject getFaceObject() {
-        return isFeatureACorner() ? objectB : objectA;
-    }
+    private PhysicsObject getFaceObject() { return isFeatureACorner() ? objectB : objectA; }
 
-    private int getFaceIndex() {
-        return isFeatureACorner() ? featureB : featureA;
-    }
+    private int getFaceIndex() { return isFeatureACorner() ? featureB : featureA; }
 
-    private PhysicsObject getCornerObject() {
-        return isFeatureACorner() ? objectA : objectB;
-    }
+    private PhysicsObject getCornerObject() { return isFeatureACorner() ? objectA : objectB; }
 
-    private int getCornerIndex() {
-        return isFeatureACorner() ? featureA : featureB;
-    }
+    private int getCornerIndex() { return isFeatureACorner() ? featureA : featureB; }
 
     private Vector3d getCornerPos() { return getCornerObject().getCornerPosAbsolute(getCornerIndex()); }
 

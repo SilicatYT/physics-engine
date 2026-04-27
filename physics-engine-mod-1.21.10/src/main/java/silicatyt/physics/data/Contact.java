@@ -1,18 +1,23 @@
 package silicatyt.physics.data;
 
 import org.joml.Vector3d;
+import org.joml.Vector3dc;
 import silicatyt.physics.entity.PhysicsObject;
 
 public abstract class Contact {
     public final PhysicsObject objectA;
-    public final PhysicsObject objectB;
+    public final PhysicsObject objectB; // 'null' if it's a TerrainContact
     public final int featureA;
     public final int featureB;
-    public final Vector3d contactPos = new Vector3d();
-    public final Vector3d contactNormal = new Vector3d();
-    public final Vector3d contactVelocity = new Vector3d();
-    // public double closingVelocity; // Dot product of contactVelocity and contactNormal. TODO: Check if I need to store that data, or if I should calculate it at runtime (Probably depends on which resolver algorithm I'll use).
-    public double penetrationDepth;
+    protected final Vector3d contactPos = new Vector3d();
+    protected final Vector3d contactNormal = new Vector3d();
+    protected final Vector3d contactVelocity = new Vector3d();
+    protected double penetrationDepth;
+
+    protected boolean contactPosDirty = true;
+    protected boolean contactNormalDirty = true;
+    protected boolean contactVelocityDirty = true;
+    protected boolean penetrationDepthDirty = true;
 
     public Contact(PhysicsObject objectA, PhysicsObject objectB, int featureA, int featureB) {
         this.objectA = objectA;
@@ -21,17 +26,20 @@ public abstract class Contact {
         this.featureB = featureB;
     }
 
-    public void updateAllData() {
-        updateContactNormal();
-        updatePenetrationDepth();
-        updateContactPoint();
-        updateContactVelocity();
-    }
+    public abstract Vector3dc getContactPos();
+    public abstract Vector3dc getContactNormal();
+    public abstract double getPenetrationDepth();
+    protected abstract void updateContactNormal();
+    protected abstract void updatePenetrationDepth();
+    protected abstract void updateContactPos();
+    protected abstract void updateContactVelocity();
 
-    public abstract void updateContactNormal();
-    public abstract void updatePenetrationDepth();
-    public abstract void updateContactPoint();
-    public abstract void updateContactVelocity(); // Also updates closing velocity (IF I store it in the contact directly)
+
+    public Vector3dc getContactVelocity() {
+        if (contactPosDirty) { updateContactPos(); }
+        if (contactVelocityDirty) { updateContactVelocity(); }
+        return contactVelocity;
+    }
 
     protected int getFeature(PhysicsObject object) { return object == objectA ? featureA : featureB; }
 
