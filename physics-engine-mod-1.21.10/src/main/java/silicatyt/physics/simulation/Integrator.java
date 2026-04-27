@@ -41,11 +41,10 @@ public class Integrator {
     }
 
     private static void updateLinearVelocity(PhysicsObject obj) {
-        // Apply accumulated force
-        Vector3d velocityFromAcceleration = new Vector3d(obj.accumulatedForce).mul(obj.getInverseMass() * DELTA_TIME);
-
-        // Apply gravity
-        velocityFromAcceleration.add(DEFAULT_GRAVITY.mul(DELTA_TIME));
+        // Apply accumulated force & gravity
+        Vector3d velocityFromAcceleration = new Vector3d(obj.accumulatedForce).mul(obj.getInverseMass());
+        //velocityFromAcceleration.add(DEFAULT_GRAVITY);
+        velocityFromAcceleration.mul(DELTA_TIME);
         obj.setLinearVelocityFromAcceleration(velocityFromAcceleration);
 
         // Apply linear damping

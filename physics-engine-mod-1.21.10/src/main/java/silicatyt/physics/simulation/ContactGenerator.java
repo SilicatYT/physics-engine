@@ -42,8 +42,9 @@ public class ContactGenerator {
         double projection;
         double minProjection = Double.MAX_VALUE;
         int chosenCorner = -1;
+        int normalAxisIndex = (chosenFace - 10) / 2;
         for (int i = 0; i < 8; i++) {
-            if (isPointInsideObject(corners[i], faceObject)) {
+            if (isPointInsideTangentialBounds(corners[i], faceObject, normalAxisIndex)) { // Don't check for whether the corner is inside the boundaries for the contactNormal axis, because corners could pass through thin objects very easily, leading to 0 found corners otherwise.
                 projection = corners[i].dot(contactNormal);
                 if (projection < minProjection) {
                     minProjection = projection;
@@ -57,7 +58,9 @@ public class ContactGenerator {
         if (faceObject == objectA) {
             return new ContactPointFace(objectA, objectB, chosenFace, chosenCorner);
         }
-        return new ContactPointFace(objectA, objectB, chosenCorner, chosenFace);
+        ContactPointFace contact = new ContactPointFace(objectA, objectB, chosenCorner, chosenFace);
+        contact.updateAllData(); // Does a bit too much work, as the contactNormal is already calculated
+        return contact;
     }
 
     private static ContactEdgeEdge generateContactEdgeEdge(PhysicsObject objectA, ColliderCollision collision) {
@@ -65,11 +68,7 @@ public class ContactGenerator {
 
         // Invert the contact normal if necessary
         Vector3d contactNormal = collision.axisOfMinOverlap();
-        double[] projectionObjectA = projectObjectOntoAxis(objectA, contactNormal);
-        double[] projectionObjectB = projectObjectOntoAxis(objectB, contactNormal);
-        if (projectionObjectB[0] < projectionObjectA[0]) {
-            contactNormal.mul(-1d);
-        }
+        correctContactNormalDirectionEdgeEdge(contactNormal, objectA, objectB);
 
         // Get objectA's edge (The one that's closest to objectB)
         int featureA = getObjectEdgeIndex(objectA, collision.axisOfMinOverlapIndex(), contactNormal, true);
@@ -78,7 +77,9 @@ public class ContactGenerator {
         int featureB = getObjectEdgeIndex(objectB, collision.axisOfMinOverlapIndex(), contactNormal, false);
 
         // Create contact
-        return new ContactEdgeEdge(objectA, objectB, featureA, featureB);
+        ContactEdgeEdge contact = new ContactEdgeEdge(objectA, objectB, featureA, featureB);
+        contact.updateAllData(); // Does a bit too much work, as the contactNormal is already calculated
+        return contact;
     }
 
 
@@ -86,11 +87,13 @@ public class ContactGenerator {
 
 
     // Helper Methods (Point-Face)
-    private static boolean isPointInsideObject(Vector3d point, PhysicsObject obj) {
+    private static boolean isPointInsideTangentialBounds(Vector3d point, PhysicsObject obj, int normalAxisIndex) {
+        if (normalAxisIndex < 0 || normalAxisIndex > 2) { throw new IllegalArgumentException("normalAxisIndex must be between 0 and 2."); }
         double pointProjection;
         double[] objProjection;
 
         for (int i = 0; i < 3; i++) {
+            if (i == normalAxisIndex) { continue; }
             pointProjection = point.dot(obj.getAxis(i));
             objProjection = projectObjectOntoAxis(obj, obj.getAxis(i));
             if (objProjection[0] > pointProjection || pointProjection > objProjection[1]) {
@@ -105,6 +108,14 @@ public class ContactGenerator {
 
 
     // Helper Methods (Edge-Edge)
+    public static void correctContactNormalDirectionEdgeEdge(Vector3d contactNormal, PhysicsObject objectA, PhysicsObject objectB) { // Modifies the input contactNormal, making sure it always points from B to A.
+        double[] projectionObjectA = projectObjectOntoAxis(objectA, contactNormal);
+        double[] projectionObjectB = projectObjectOntoAxis(objectB, contactNormal);
+        if (projectionObjectB[0] < projectionObjectA[0]) {
+            contactNormal.mul(-1d);
+        }
+    }
+
     private static int getObjectEdgeIndex(PhysicsObject object, int axisOfMinOverlapIndex, Vector3d contactNormal, boolean isObjectA) {
         double projection;
         double maxProjection = -Double.MAX_VALUE;
@@ -127,14 +138,14 @@ public class ContactGenerator {
     }
 
     private static int getObjectAxisIndex(int crossProductAxisIndex, boolean isObjectA) { // Takes axisIndex as used in the SAT (0-14). Returns 0, 1 or 2 for x, y or z.
-        if (crossProductAxisIndex < 6 || crossProductAxisIndex > 14) { throw new IllegalArgumentException("Index does not match any cross product index (6-14)"); }
+        if (crossProductAxisIndex < 6 || crossProductAxisIndex > 14) { throw new IllegalArgumentException("Index does not match any cross product index (6-14)."); }
         if (isObjectA) {
             return (crossProductAxisIndex - 6) / 3;
         }
         return (crossProductAxisIndex - 6) % 3;
     }
 
-    private static int[] getEdgeStartingPointIndices(int axisIndex) {
+    public static int[] getEdgeStartingPointIndices(int axisIndex) {
         if (axisIndex == 0) { // x
             return new int[]{0,1,2,3};
         }

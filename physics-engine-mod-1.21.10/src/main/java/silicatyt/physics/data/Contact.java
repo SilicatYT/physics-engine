@@ -4,20 +4,22 @@ import org.joml.Vector3d;
 import silicatyt.physics.entity.PhysicsObject;
 
 public abstract class Contact {
-    public Contact(PhysicsObject objectA, PhysicsObject objectB, int featureA, int featureB) {
-        this.objects[0] = objectA;
-        this.objects[1] = objectB;
-        this.features[0] = featureA;
-        this.features[1] = featureB;
-    }
-
-    public final PhysicsObject[] objects = new PhysicsObject[2];
-    public final int[] features = new int[2];
+    public final PhysicsObject objectA;
+    public final PhysicsObject objectB;
+    public final int featureA;
+    public final int featureB;
     public final Vector3d contactPos = new Vector3d();
     public final Vector3d contactNormal = new Vector3d();
     public final Vector3d contactVelocity = new Vector3d();
-    // public double closingVelocity; // Dot product of contactVelocity and contactNormal. TODO: Check if I need to store that data, or if I can calculate it at runtime.
+    // public double closingVelocity; // Dot product of contactVelocity and contactNormal. TODO: Check if I need to store that data, or if I should calculate it at runtime (Probably depends on which resolver algorithm I'll use).
     public double penetrationDepth;
+
+    public Contact(PhysicsObject objectA, PhysicsObject objectB, int featureA, int featureB) {
+        this.objectA = objectA;
+        this.objectB = objectB;
+        this.featureA = featureA;
+        this.featureB = featureB;
+    }
 
     public void updateAllData() {
         updateContactNormal();
@@ -29,26 +31,27 @@ public abstract class Contact {
     public abstract void updateContactNormal();
     public abstract void updatePenetrationDepth();
     public abstract void updateContactPoint();
-    public abstract void updateContactVelocity(); // Also updates closing velocity
+    public abstract void updateContactVelocity(); // Also updates closing velocity (IF I store it in the contact directly)
 
-    protected Vector3d calculateContactVelocity(int referenceObjectIndex) { // referenceObject is the face object for point-face
-        PhysicsObject left = objects[referenceObjectIndex];
-        PhysicsObject right = objects[1 - referenceObjectIndex];
+    protected int getFeature(PhysicsObject object) { return object == objectA ? featureA : featureB; }
 
+    protected Vector3d calculateContactVelocity(PhysicsObject referenceObject) {
+        if (referenceObject != objectA && referenceObject != objectB) { throw new IllegalArgumentException("referenceObject must be the contact's objectA or objectB."); }
+        PhysicsObject otherObject = objectA == referenceObject ? objectB : objectA;
         Vector3d relativeContactPos = new Vector3d();
 
-        // pointVelocityLeft
+        // pointVelocityReference
         relativeContactPos.set(contactPos);
-        relativeContactPos.sub(left.getInternalPos());
-        Vector3d pointVelocityLeft = left.getAngularVelocity().cross(relativeContactPos);
-        pointVelocityLeft.add(left.getLinearVelocity());
+        relativeContactPos.sub(referenceObject.getInternalPos());
+        Vector3d pointVelocityReference = referenceObject.getAngularVelocity().cross(relativeContactPos);
+        pointVelocityReference.add(referenceObject.getLinearVelocity());
 
-        // pointVelocityRight
+        // pointVelocityOther
         relativeContactPos.set(contactPos);
-        relativeContactPos.sub(right.getInternalPos());
-        Vector3d pointVelocityRight = right.getAngularVelocity().cross(relativeContactPos);
-        pointVelocityRight.add(right.getLinearVelocity());
+        relativeContactPos.sub(otherObject.getInternalPos());
+        Vector3d pointVelocityOther = otherObject.getAngularVelocity().cross(relativeContactPos);
+        pointVelocityOther.add(otherObject.getLinearVelocity());
 
-        return pointVelocityLeft.sub(pointVelocityRight);
+        return pointVelocityReference.sub(pointVelocityOther);
     }
 }

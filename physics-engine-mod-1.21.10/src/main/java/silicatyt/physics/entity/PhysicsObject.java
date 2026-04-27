@@ -261,7 +261,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         this.restitutionCoefficient = restitutionCoefficient;
     }
 
-    public void setLinearVelocityFromAcceleration(Vector3dc linearVelocity) { linearVelocityFromAcceleration.set(linearVelocity); }
+    public void setLinearVelocityFromAcceleration(Vector3dc linearVelocity) { linearVelocityFromAcceleration.set(linearVelocity); } // TODO: Maybe make "addAcceleration" its own method, so that linearVelocityFromAcceleration and linearVelocity are always consistent
 
 
 

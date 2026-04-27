@@ -12,11 +12,11 @@ public class ContactPointFace extends Contact {
 
     @Override
     public void updateContactNormal() {
-        int faceObjectIndex = getFaceObjectIndex();
+        int faceIndex = getFaceIndex();
 
-        PhysicsObject faceObject = objects[faceObjectIndex];
-        Vector3d newContactNormal = new Vector3d(faceObject.getAxis((features[faceObjectIndex] - 11) / 2));
-        if (features[faceObjectIndex] % 2 == 0) {
+        PhysicsObject faceObject = getFaceObject();
+        Vector3d newContactNormal = new Vector3d(faceObject.getAxis((faceIndex - 11) / 2));
+        if (faceIndex % 2 == 0) {
             newContactNormal.mul(-1d);
         }
 
@@ -25,32 +25,38 @@ public class ContactPointFace extends Contact {
 
     @Override
     public void updatePenetrationDepth() {
-        PhysicsObject faceObject = objects[getFaceObjectIndex()];
-        penetrationDepth = projectObjectOntoAxis(faceObject, contactNormal)[1] - getCorner().dot(contactNormal); // On new contacts, the selected corner's projection is the minProjection. That's not guaranteed afterwards (i.e., when updating the previous tick's contacts).
+        penetrationDepth = projectObjectOntoAxis(getFaceObject(), contactNormal)[1] - getCornerPos().dot(contactNormal); // On new contacts, the selected corner's projection is the minProjection. That's not guaranteed afterwards (i.e., when updating the previous tick's contacts).
     }
 
     @Override
     public void updateContactPoint() {
-        contactPos.set(getCorner().add(new Vector3d(contactNormal).mul(penetrationDepth)));
+        contactPos.set(getCornerPos().add(new Vector3d(contactNormal).mul(penetrationDepth)));
     }
 
     @Override
     public void updateContactVelocity() {
-        contactVelocity.set(calculateContactVelocity(getFaceObjectIndex()));
+        contactVelocity.set(calculateContactVelocity(getFaceObject()));
     }
 
     // Helper methods
-    private int getFaceObjectIndex() {
-        return features[0] < 10 ? 1 : 0;
+    private boolean isFeatureACorner() { return featureA < 10; }
+
+    private PhysicsObject getFaceObject() {
+        return isFeatureACorner() ? objectB : objectA;
     }
 
-    private int getCornerObjectIndex() {
-        return 1 - getFaceObjectIndex();
+    private int getFaceIndex() {
+        return isFeatureACorner() ? featureB : featureA;
     }
 
-    private Vector3d getCorner() {
-        int cornerObjectIndex = getCornerObjectIndex();
-        return objects[cornerObjectIndex].getCornerPosAbsolute(features[cornerObjectIndex]);
+    private PhysicsObject getCornerObject() {
+        return isFeatureACorner() ? objectA : objectB;
     }
+
+    private int getCornerIndex() {
+        return isFeatureACorner() ? featureA : featureB;
+    }
+
+    private Vector3d getCornerPos() { return getCornerObject().getCornerPosAbsolute(getCornerIndex()); }
 
 }
