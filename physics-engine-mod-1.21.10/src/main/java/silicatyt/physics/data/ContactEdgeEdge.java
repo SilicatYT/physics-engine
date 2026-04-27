@@ -27,7 +27,6 @@ public class ContactEdgeEdge extends Contact {
 
     @Override
     public double getPenetrationDepth() {
-        if (contactNormalDirty) { updateContactNormal(); }
         if (penetrationDepthDirty) { updatePenetrationDepth(); }
         return penetrationDepth;
     }
@@ -41,11 +40,13 @@ public class ContactEdgeEdge extends Contact {
     public void updateContactNormal() {
         getAxis(objectA).cross(getAxis(objectB)).normalize(contactNormal);
         correctContactNormalDirectionEdgeEdge(contactNormal, objectA, objectB);
+
+        penetrationDepthDirty = true;
         contactNormalDirty = false;
     }
 
     @Override
-    public void updatePenetrationDepth() { // In the datapack, I will directly work with the projections and subtract those (mathmatically equivalent) because I already calculate them earlier.
+    public void updatePenetrationDepth() { // In the datapack, I will directly work with the projections and subtract those (mathematically equivalent) because I already calculate them earlier.
         penetrationDepth = getEdgeStartingPoint(objectA).sub(getEdgeStartingPoint(objectB)).dot(contactNormal);
         penetrationDepthDirty = false;
     }
@@ -78,6 +79,8 @@ public class ContactEdgeEdge extends Contact {
         pointEdgeB.mul(t).add(edgeStartingPointB);
 
         contactPos.set(pointEdgeA).add(pointEdgeB).mul(0.5d);
+
+        contactVelocityDirty = true;
         contactPosDirty = false;
     }
 

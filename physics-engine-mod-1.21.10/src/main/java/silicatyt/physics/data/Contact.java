@@ -36,7 +36,6 @@ public abstract class Contact {
 
 
     public Vector3dc getContactVelocity() {
-        if (contactPosDirty) { updateContactPos(); }
         if (contactVelocityDirty) { updateContactVelocity(); }
         return contactVelocity;
     }

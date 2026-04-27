@@ -14,8 +14,6 @@ public class ContactPointFace extends Contact {
     // Getters
     @Override
     public Vector3dc getContactPos() {
-        if (contactNormalDirty) { updateContactNormal(); }
-        if (penetrationDepthDirty) { updatePenetrationDepth(); }
         if (contactPosDirty) { updateContactPos(); }
         return contactPos;
     }
@@ -48,24 +46,32 @@ public class ContactPointFace extends Contact {
         }
 
         contactNormal.set(newContactNormal);
+
+        penetrationDepthDirty = true;
+        contactPosDirty = true;
         contactNormalDirty = false;
     }
 
     @Override
     protected void updatePenetrationDepth() {
         penetrationDepth = projectObjectOntoAxis(getFaceObject(), contactNormal)[1] - getCornerPos().dot(contactNormal); // On new contacts, the selected corner's projection is the minProjection. That's not guaranteed afterwards (i.e., when updating the previous tick's contacts).
+
+        contactPosDirty = true;
         penetrationDepthDirty = false;
     }
 
     @Override
     protected void updateContactPos() {
         contactPos.set(getCornerPos().add(new Vector3d(contactNormal).mul(penetrationDepth)));
+
+        contactVelocityDirty = true;
         contactPosDirty = false;
     }
 
     @Override
     protected void updateContactVelocity() {
         contactVelocity.set(calculateContactVelocity(getFaceObject()));
+
         contactVelocityDirty = false;
     }
 
