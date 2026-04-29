@@ -12,6 +12,8 @@ import net.minecraft.util.math.AffineTransformation;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import org.joml.*;
+import silicatyt.physics.versioning.VersionNode;
+import silicatyt.physics.versioning.VersionSource;
 import xyz.nucleoid.packettweaker.PacketContext;
 
 import java.lang.Math;
@@ -52,15 +54,43 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     public final Vector3d accumulatedTorque = new Vector3d();
     private final Vector3d linearVelocityFromAcceleration = new Vector3d();
 
-    private boolean rotationMatrixDirty = true;
-    private boolean inverseInertiaTensorLocalDirty = true;
-    private boolean inverseInertiaTensorWorldDirty = true;
-    private boolean cornerPosLocalDirty = true;
-    private boolean cornerPosRelativeDirty = true;
-    private boolean cornerPosAbsoluteDirty = true;
-    private boolean boundingBoxAbsoluteDirty = true;
+    // Variable Versioning (Transient)
+    private final VersionNode inverseMassVersion = new VersionNode(() -> {}); // inverseMass is a directly settable field, so it has no update method. Instead, it directly bumps its version in the public setter method.
+    private final VersionNode orientationVersion = new VersionNode(() -> {});
+    private final VersionNode linearVelocityVersion = new VersionNode(() -> {});
+    private final VersionNode angularVelocityVersion = new VersionNode(() -> {});
+    private final VersionNode scaleVersion = new VersionNode(() -> {});
+    private final VersionNode frictionCoefficientVersion = new VersionNode(() -> {});
+    private final VersionNode restitutionCoefficientVersion = new VersionNode(() -> {});
+
+    private final VersionNode rotationMatrixVersion = new VersionNode(this::updateRotationMatrix);
+    private final VersionNode inverseInertiaTensorLocalVersion = new VersionNode(this::updateInverseInertiaTensorLocal);
+    private final VersionNode inverseInertiaTensorWorldVersion = new VersionNode(this::updateInverseInertiaTensorLocal);
+    private final VersionNode cornerPosLocalVersion = new VersionNode(this::updateCornerPosLocal);
+    private final VersionNode cornerPosRelativeVersion = new VersionNode(this::updateCornerPosRelative);
+    private final VersionNode cornerPosAbsoluteVersion = new VersionNode(this::updateCornerPosAbsolute);
+    private final VersionNode boundingBoxAbsoluteVersion = new VersionNode(this::updateBoundingBoxAbsolute);
+
+    private final VersionNode posVersion = new VersionNode(() -> {});
 
 
+    public VersionSource getInverseMassVersion() { return inverseMassVersion; }
+    public VersionSource getLinearVelocityVersion() { return linearVelocityVersion; }
+    public VersionSource getAngularVelocityVersion() { return angularVelocityVersion; }
+    public VersionSource getOrientationVersion() { return orientationVersion; }
+    public VersionSource getScaleVersion() { return scaleVersion; }
+    public VersionSource getFrictionCoefficientVersion() { return scaleVersion; }
+    public VersionSource getRestitutionCoefficientVersion() { return scaleVersion; }
+
+    //public VersionSource getRotationMatrixVersion() { return rotationMatrixVersion; } // There is no getter, so there's no point
+    //public VersionSource getInverseInertiaTensorLocalVersion() { return inverseInertiaTensorLocalVersion; }
+    public VersionSource getInverseInertiaTensorWorldVersion() { return inverseInertiaTensorWorldVersion; }
+    //public VersionSource getCornerPosLocalVersion() { return cornerPosLocalVersion; }
+    public VersionSource getCornerPosRelativeVersion() { return cornerPosRelativeVersion; }
+    public VersionSource getCornerPosAbsoluteVersion() { return cornerPosAbsoluteVersion; }
+    public VersionSource getBoundingBoxAbsoluteVersion() { return boundingBoxAbsoluteVersion; }
+
+    public VersionSource getPosVersion() { return posVersion; }
 
 
 
@@ -82,6 +112,15 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
             cornerPosRelative[i] = new Vector3d();
             cornerPosAbsolute[i] = new Vector3d();
         }
+
+        // Add variable dependencies
+        rotationMatrixVersion.addDependencies(orientationVersion);
+        inverseInertiaTensorLocalVersion.addDependencies(inverseMassVersion, scaleVersion);
+        inverseInertiaTensorWorldVersion.addDependencies(rotationMatrixVersion, inverseInertiaTensorLocalVersion); // inverseInertiaTensorLocal already has rotationMatrix as a dependency, but I add both as dependencies for extra safety & clarity
+        cornerPosLocalVersion.addDependencies(scaleVersion);
+        cornerPosRelativeVersion.addDependencies(cornerPosLocalVersion, rotationMatrixVersion);
+        cornerPosAbsoluteVersion.addDependencies(cornerPosRelativeVersion, posVersion);
+        boundingBoxAbsoluteVersion.addDependencies(cornerPosAbsoluteVersion);
     }
 
 
@@ -116,14 +155,14 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     public double getRestitutionCoefficient() { return restitutionCoefficient; }
 
     public Matrix3dc getInverseInertiaTensorWorld() {
-        if (inverseInertiaTensorWorldDirty) { updateInverseInertiaTensorWorld(); }
+        inverseInertiaTensorWorldVersion.updateIfNeeded();
         return inverseInertiaTensorWorld;
     }
 
     public Matrix3d getInverseInertiaTensorWorld(Matrix3d dest) { return dest.set(getInverseInertiaTensorWorld()); }
 
     public Vector3dc[] getCornerPosRelative() {
-        if (cornerPosRelativeDirty) { updateCornerPosRelative(); }
+        cornerPosRelativeVersion.updateIfNeeded();
         return cornerPosRelative;
     }
 
@@ -137,14 +176,14 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     }
 
     public Vector3dc getCornerPosRelative(int index) {
-        if (cornerPosRelativeDirty) { updateCornerPosRelative(); }
+        cornerPosRelativeVersion.updateIfNeeded();
         return cornerPosRelative[index];
     }
 
     public Vector3d getCornerPosRelative(int index, Vector3d dest) { return dest.set(getCornerPosRelative(index)); }
 
     public Vector3dc[] getCornerPosAbsolute() {
-        if (cornerPosAbsoluteDirty) { updateCornerPosAbsolute(); }
+        cornerPosAbsoluteVersion.updateIfNeeded();
         return cornerPosAbsolute;
     }
 
@@ -158,14 +197,14 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     }
 
     public Vector3dc getCornerPosAbsolute(int index) {
-        if (cornerPosAbsoluteDirty) { updateCornerPosAbsolute(); }
+        cornerPosAbsoluteVersion.updateIfNeeded();
         return cornerPosAbsolute[index];
     }
 
     public Vector3d getCornerPosAbsolute(int index, Vector3d dest) { return dest.set(getCornerPosAbsolute(index)); }
 
     public Vector3dc[] getBoundingBoxAbsolute() {
-        if (boundingBoxAbsoluteDirty) { updateBoundingBoxAbsolute(); }
+        boundingBoxAbsoluteVersion.updateIfNeeded();
         return boundingBoxAbsolute;
     }
 
@@ -180,7 +219,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     public Vector3d getAxis(int index) { return getAxis(index, new Vector3d()); } // TODO: Maybe store this as its own instance variable for consistency, so I don't need to make a new object every time I call this.
 
     public Vector3d getAxis(int index, Vector3d dest) {
-        if (rotationMatrixDirty) { updateRotationMatrix(); }
+        rotationMatrixVersion.updateIfNeeded();
         return rotationMatrix.getColumn(index, dest);
     }
 
@@ -194,10 +233,8 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
     // Setters
     public void setInternalPos(Vector3dc position) {
+        posVersion.increment();
         pos.set(position);
-
-        cornerPosAbsoluteDirty = true;
-        boundingBoxAbsoluteDirty = true;
     }
 
     public void setInternalPos(Vec3d position) { setInternalPos(new Vector3d(position.x, position.y, position.z)); }
@@ -205,46 +242,45 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     public void setInverseMass(double inverseMass) throws IllegalArgumentException {
         if (inverseMass < 0) { throw new IllegalArgumentException("Inverse mass must not be negative"); }
         if (Double.isInfinite(inverseMass) || Double.isNaN(inverseMass)) { throw new IllegalArgumentException("Inverse mass must not be infinite or NaN"); }
-        this.inverseMass = inverseMass;
 
-        inverseInertiaTensorLocalDirty = true;
-        inverseInertiaTensorWorldDirty = true;
+        inverseMassVersion.increment();
+        this.inverseMass = inverseMass;
     }
 
-    public void setLinearVelocity(Vector3dc linearVelocity) { this.linearVelocity.set(linearVelocity); }
+    public void setLinearVelocity(Vector3dc linearVelocity) {
+        linearVelocityVersion.increment();
+        this.linearVelocity.set(linearVelocity);
+    }
 
-    public void setAngularVelocity(Vector3dc angularVelocity) { this.angularVelocity.set(angularVelocity); }
+    public void setAngularVelocity(Vector3dc angularVelocity) {
+        angularVelocityVersion.increment();
+        this.angularVelocity.set(angularVelocity);
+    }
 
     public void setOrientation(Quaterniond orientation) {
+        orientationVersion.increment();
         this.orientation.set(orientation);
         this.orientation.normalize();
-
-        rotationMatrixDirty = true;
-        inverseInertiaTensorWorldDirty = true;
-        cornerPosRelativeDirty = true;
-        cornerPosAbsoluteDirty = true;
-        boundingBoxAbsoluteDirty = true;
     }
 
     public void setScale(Vector3dc scale) throws IllegalArgumentException {
         if (scale.x() < 0 || scale.y() < 0 || scale.z() < 0) { throw new IllegalArgumentException("Scale must not be negative"); }
-        this.scale.set(scale);
 
-        inverseInertiaTensorLocalDirty = true;
-        inverseInertiaTensorWorldDirty = true;
-        cornerPosLocalDirty = true;
-        cornerPosRelativeDirty = true;
-        cornerPosAbsoluteDirty = true;
-        boundingBoxAbsoluteDirty = true;
+        scaleVersion.increment();
+        this.scale.set(scale);
     }
 
     public void setFrictionCoefficient(double frictionCoefficient) throws IllegalArgumentException {
         if (frictionCoefficient < 0 || frictionCoefficient > 1) { throw new IllegalArgumentException("Friction coefficient must be between 0 and 1"); }
+
+        frictionCoefficientVersion.increment();
         this.frictionCoefficient = frictionCoefficient;
     }
 
     public void setRestitutionCoefficient(double restitutionCoefficient) throws IllegalArgumentException {
         if (restitutionCoefficient < 0 || restitutionCoefficient > 1) { throw new IllegalArgumentException("Restitution coefficient must be between 0 and 1"); }
+
+        restitutionCoefficientVersion.increment();
         this.restitutionCoefficient = restitutionCoefficient;
     }
 
@@ -271,7 +307,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     }
 
     @Override
-    protected void readCustomData(ReadView view) { // All required instance variables need to be set or marked as dirty after this. Otherwise, it will be null after unloading and loading again, causing all sorts of calculation bugs.
+    protected void readCustomData(ReadView view) { // All required instance variables need to not be null after this. Otherwise, it will cause all sorts of calculation bugs after unloading and loading again.
         // super.readCustomData(view); <- Ignore for the same reason as in "writeCustomData"
         Codec<List<Double>> doubleListCodec = Codec.DOUBLE.listOf();
 
@@ -288,7 +324,6 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         setFrictionCoefficient(view.read("friction_coefficient", Codec.DOUBLE).orElse(DEFAULT_FRICTION_COEFFICIENT));
         setRestitutionCoefficient(view.read("restitution_coefficient", Codec.DOUBLE).orElse(DEFAULT_RESTITUTION_COEFFICIENT));
 
-        markEverythingDirty();
         updateVisuals();
     }
 
@@ -300,25 +335,15 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     private void updateRotationMatrix() {
         orientation.get(rotationMatrix);
         rotationMatrix.transpose(rotationMatrixTranspose);
-
-        rotationMatrixDirty = false;
     }
 
     private void updateInverseInertiaTensorLocal() {
         inverseInertiaTensorLocal.m00 = (12 * inverseMass) / (scale.y * scale.y + scale.z * scale.z);
         inverseInertiaTensorLocal.m11 = (12 * inverseMass) / (scale.x * scale.x + scale.z * scale.z);
         inverseInertiaTensorLocal.m22 = (12 * inverseMass) / (scale.x * scale.x + scale.y * scale.y);
-
-        inverseInertiaTensorLocalDirty = false;
     }
 
-    private void updateInverseInertiaTensorWorld() {
-        if (rotationMatrixDirty) { updateRotationMatrix(); }
-        if (inverseInertiaTensorLocalDirty) { updateInverseInertiaTensorLocal(); }
-        rotationMatrix.mul(inverseInertiaTensorLocal, inverseInertiaTensorWorld).mul(rotationMatrixTranspose, inverseInertiaTensorWorld);
-
-        inverseInertiaTensorWorldDirty = false;
-    }
+    private void updateInverseInertiaTensorWorld() { rotationMatrix.mul(inverseInertiaTensorLocal, inverseInertiaTensorWorld).mul(rotationMatrixTranspose, inverseInertiaTensorWorld); }
 
     private void updateCornerPosLocal() {
         int i = 0;
@@ -333,32 +358,17 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
                 }
             }
         }
-
-        cornerPosLocalDirty = false;
     }
 
     private void updateCornerPosRelative() {
-        if (rotationMatrixDirty) { updateRotationMatrix(); }
-        if (cornerPosLocalDirty) { updateCornerPosLocal(); }
-        for (int i = 0; i < 8; i++) {
-            rotationMatrix.transform(cornerPosLocal[i], cornerPosRelative[i]);
-        }
-
-        cornerPosRelativeDirty = false;
+        for (int i = 0; i < 8; i++) { rotationMatrix.transform(cornerPosLocal[i], cornerPosRelative[i]); }
     }
 
     private void updateCornerPosAbsolute() {
-        if (cornerPosRelativeDirty) { updateCornerPosRelative(); }
-        for (int i = 0; i < 8; i++) {
-            cornerPosRelative[i].add(pos, cornerPosAbsolute[i]);
-        }
-
-        cornerPosAbsoluteDirty = false;
+        for (int i = 0; i < 8; i++) { cornerPosRelative[i].add(pos, cornerPosAbsolute[i]); }
     }
 
     private void updateBoundingBoxAbsolute() {
-        if (cornerPosAbsoluteDirty) { updateCornerPosAbsolute(); }
-
         boundingBoxAbsolute[0].set(cornerPosAbsolute[0]);
         boundingBoxAbsolute[1].set(cornerPosAbsolute[1]);
 
@@ -372,8 +382,6 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
             boundingBoxAbsolute[0].z = Math.min(boundingBoxAbsolute[0].z, cornerPosAbsolute[i].z);
             boundingBoxAbsolute[1].z = Math.max(boundingBoxAbsolute[1].z, cornerPosAbsolute[i].z);
         }
-
-        boundingBoxAbsoluteDirty = false;
     }
 
 
@@ -386,16 +394,6 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         return EntityType.ITEM_DISPLAY;
     }
 
-    private void markEverythingDirty() {
-        rotationMatrixDirty = true;
-        inverseInertiaTensorLocalDirty = true;
-        inverseInertiaTensorWorldDirty = true;
-        cornerPosLocalDirty = true;
-        cornerPosRelativeDirty = true;
-        cornerPosAbsoluteDirty = true;
-        boundingBoxAbsoluteDirty = true;
-    }
-
     public void updateVisuals() {
         setStartInterpolation(0);
         setTransformation(new AffineTransformation(new Vector3f(), new Quaternionf(orientation), new Vector3f(scale), new Quaternionf())); // Although I calculate everything in doubles, the rendering uses floats because that's how item displays (and Minecraft's rendering in general) work
@@ -406,13 +404,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         lastEntityPos = getEntityPos();
     }
 
-    // Debugging
-    //public HashMap<PhysicsObject, ArrayList<Contact>> getObjectContactsDebug() { // Currently only used for debugging because it would give direct access to the data instead of copying by value
-    //    return objectContacts;
-    //}
 
     // TODO (VERY IMPORTANT): Check whether it's more stable to calculate contactVelocity with "(velocityBeforeIntegration + acceleration) * dampingMultiplier) - acceleration" or "velocityBeforeIntegration * dampingMultiplier" (or maybe even "velocityBeforeIntegration"). Currently I use the former.
-    // TODO: Maybe change the tick order (Apparently, modern engines use a different one? Could this improve stability?) => Experiment with different approaches in the mod to see what's best, then implement that in the datapack
-    // TODO: Check if any other improvements can be made with modern approaches (post Ian Millington's book)
 
 }

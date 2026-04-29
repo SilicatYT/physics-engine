@@ -3,6 +3,7 @@ package silicatyt.physics.data;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
 import silicatyt.physics.entity.PhysicsObject;
+import silicatyt.physics.versioning.VersionNode;
 
 public abstract class Contact {
     public final PhysicsObject objectA;
@@ -14,21 +15,40 @@ public abstract class Contact {
     protected final Vector3d contactVelocity = new Vector3d();
     protected double penetrationDepth;
 
-    protected boolean contactPosDirty = true;
-    protected boolean contactNormalDirty = true;
-    protected boolean contactVelocityDirty = true;
-    protected boolean penetrationDepthDirty = true;
+    protected final VersionNode contactPosVersion = new VersionNode(this::updateContactPos);
+    protected final VersionNode contactNormalVersion = new VersionNode(this::updateContactNormal);
+    protected final VersionNode contactVelocityVersion = new VersionNode(this::updateContactVelocity);
+    protected final VersionNode penetrationDepthVersion = new VersionNode(this::updatePenetrationDepth);
 
     public Contact(PhysicsObject objectA, PhysicsObject objectB, int featureA, int featureB) {
         this.objectA = objectA;
         this.objectB = objectB;
         this.featureA = featureA;
         this.featureB = featureB;
+
+        // Add variable dependencies
+        contactVelocityVersion.addDependencies(
+                objectA.getPosVersion(),  objectB.getPosVersion(),
+                objectA.getLinearVelocityVersion(),  objectB.getLinearVelocityVersion(),
+                objectA.getAngularVelocityVersion(),  objectB.getAngularVelocityVersion()
+                );
     }
 
-    public abstract Vector3dc getContactPos();
-    public abstract Vector3dc getContactNormal();
-    public abstract double getPenetrationDepth();
+    public Vector3dc getContactPos() {
+        contactPosVersion.updateIfNeeded();
+        return contactPos;
+    }
+
+    public Vector3dc getContactNormal() {
+        contactNormalVersion.updateIfNeeded();
+        return contactNormal;
+    }
+
+    public double getPenetrationDepth() {
+        penetrationDepthVersion.updateIfNeeded();
+        return penetrationDepth;
+    }
+
     protected abstract void updateContactNormal();
     protected abstract void updatePenetrationDepth();
     protected abstract void updateContactPos();
@@ -36,7 +56,7 @@ public abstract class Contact {
 
 
     public Vector3dc getContactVelocity() {
-        if (contactVelocityDirty) { updateContactVelocity(); }
+        contactVelocityVersion.updateIfNeeded();
         return contactVelocity;
     }
 

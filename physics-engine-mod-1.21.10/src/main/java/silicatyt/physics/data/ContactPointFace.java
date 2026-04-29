@@ -9,25 +9,21 @@ import static silicatyt.physics.simulation.CollisionDetector.projectObjectOntoAx
 public class ContactPointFace extends Contact {
     public ContactPointFace(PhysicsObject objectA, PhysicsObject objectB, int featureA, int featureB) {
         super(objectA, objectB, featureA, featureB);
-    }
 
-    // Getters
-    @Override
-    public Vector3dc getContactPos() {
-        if (contactPosDirty) { updateContactPos(); }
-        return contactPos;
-    }
+        // Add variable dependencies
+        PhysicsObject cornerObject = getCornerObject();
 
-    @Override
-    public Vector3dc getContactNormal() {
-        if (contactNormalDirty) { updateContactNormal(); }
-        return contactNormal;
-    }
-
-    @Override
-    public double getPenetrationDepth() {
-        if (penetrationDepthDirty) { updatePenetrationDepth(); }
-        return penetrationDepth;
+        contactPosVersion.addDependencies(
+                cornerObject.getPosVersion(),
+                cornerObject.getOrientationVersion(),
+                contactNormalVersion, penetrationDepthVersion
+        );
+        contactNormalVersion.addDependencies(getFaceObject().getOrientationVersion());
+        penetrationDepthVersion.addDependencies(
+                objectA.getPosVersion(), objectB.getPosVersion(),
+                objectA.getOrientationVersion(), objectB.getOrientationVersion(),
+                contactNormalVersion
+        );
     }
 
 
@@ -41,38 +37,24 @@ public class ContactPointFace extends Contact {
 
         PhysicsObject faceObject = getFaceObject();
         Vector3d newContactNormal = new Vector3d(faceObject.getAxis((faceIndex - 11) / 2));
-        if (faceIndex % 2 == 0) {
-            newContactNormal.mul(-1d);
-        }
+        if (faceIndex % 2 == 0) { newContactNormal.mul(-1d); }
 
         contactNormal.set(newContactNormal);
-
-        penetrationDepthDirty = true;
-        contactPosDirty = true;
-        contactNormalDirty = false;
     }
 
     @Override
     protected void updatePenetrationDepth() {
         penetrationDepth = projectObjectOntoAxis(getFaceObject(), contactNormal)[1] - getCornerPos().dot(contactNormal); // On new contacts, the selected corner's projection is the minProjection. That's not guaranteed afterwards (i.e., when updating the previous tick's contacts).
-
-        contactPosDirty = true;
-        penetrationDepthDirty = false;
     }
 
     @Override
     protected void updateContactPos() {
-        contactPos.set(getCornerPos().add(new Vector3d(contactNormal).mul(penetrationDepth)));
-
-        contactVelocityDirty = true;
-        contactPosDirty = false;
+        contactPos.set(new Vector3d(contactNormal).mul(penetrationDepth).add(getCornerPos()));
     }
 
     @Override
     protected void updateContactVelocity() {
         contactVelocity.set(calculateContactVelocity(getFaceObject()));
-
-        contactVelocityDirty = false;
     }
 
 

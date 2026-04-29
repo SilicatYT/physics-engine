@@ -10,25 +10,21 @@ import static silicatyt.physics.simulation.ContactGenerator.getEdgeStartingPoint
 public class ContactEdgeEdge extends Contact {
     public ContactEdgeEdge(PhysicsObject objectA, PhysicsObject objectB, int featureA, int featureB) {
         super(objectA, objectB, featureA, featureB);
-    }
 
-    // Getters
-    @Override
-    public Vector3dc getContactPos() {
-        if (contactPosDirty) { updateContactPos(); }
-        return contactPos;
-    }
-
-    @Override
-    public Vector3dc getContactNormal() {
-        if (contactNormalDirty) { updateContactNormal(); }
-        return contactNormal;
-    }
-
-    @Override
-    public double getPenetrationDepth() {
-        if (penetrationDepthDirty) { updatePenetrationDepth(); }
-        return penetrationDepth;
+        // Add variable dependencies
+        contactPosVersion.addDependencies(
+                objectA.getPosVersion(), objectB.getPosVersion(),
+                objectA.getOrientationVersion(), objectB.getOrientationVersion()
+                );
+        contactNormalVersion.addDependencies(
+                objectA.getPosVersion(), objectB.getPosVersion(),
+                objectA.getOrientationVersion(), objectB.getOrientationVersion()
+        );
+        penetrationDepthVersion.addDependencies(
+                objectA.getPosVersion(), objectB.getPosVersion(),
+                objectA.getOrientationVersion(), objectB.getOrientationVersion(),
+                contactNormalVersion
+        );
     }
 
 
@@ -40,15 +36,11 @@ public class ContactEdgeEdge extends Contact {
     public void updateContactNormal() {
         getAxis(objectA).cross(getAxis(objectB)).normalize(contactNormal);
         correctContactNormalDirectionEdgeEdge(contactNormal, objectA, objectB);
-
-        penetrationDepthDirty = true;
-        contactNormalDirty = false;
     }
 
     @Override
     public void updatePenetrationDepth() { // In the datapack, I will directly work with the projections and subtract those (mathematically equivalent) because I already calculate them earlier.
-        penetrationDepth = getEdgeStartingPoint(objectA).sub(getEdgeStartingPoint(objectB)).dot(contactNormal);
-        penetrationDepthDirty = false;
+        penetrationDepth = new Vector3d(getEdgeStartingPoint(objectA)).sub(getEdgeStartingPoint(objectB)).dot(contactNormal);
     }
 
     @Override
@@ -60,8 +52,8 @@ public class ContactEdgeEdge extends Contact {
         Vector3d axisA = getAxis(objectA);
         Vector3d axisB = getAxis(objectB);
 
-        Vector3d edgeStartingPointA = getEdgeStartingPoint(objectA);
-        Vector3d edgeStartingPointB = getEdgeStartingPoint(objectB);
+        Vector3dc edgeStartingPointA = getEdgeStartingPoint(objectA);
+        Vector3dc edgeStartingPointB = getEdgeStartingPoint(objectB);
 
         double c = axisA.dot(axisB);
         Vector3d startingPointDifference = new Vector3d();
@@ -79,15 +71,11 @@ public class ContactEdgeEdge extends Contact {
         pointEdgeB.mul(t).add(edgeStartingPointB);
 
         contactPos.set(pointEdgeA).add(pointEdgeB).mul(0.5d);
-
-        contactVelocityDirty = true;
-        contactPosDirty = false;
     }
 
     @Override
     public void updateContactVelocity() { // TODO: Check if the referenceObject is ALWAYS objectA
         contactVelocity.set(calculateContactVelocity(objectA));
-        contactVelocityDirty = false;
     }
 
 
