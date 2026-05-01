@@ -48,9 +48,8 @@ public class Main {
         }
 
         // DEBUG
-        Debug.showObjectAxes();
-        Debug.showContactPoint();
-        Debug.showContactNormal();
-
+        //Debug.showObjectAxes();
+        //Debug.showContactPoint();
+        //Debug.showContactNormal();
     }
 }
