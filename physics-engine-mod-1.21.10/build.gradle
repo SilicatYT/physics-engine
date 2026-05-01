@@ -23,7 +23,7 @@ loom {
 	splitEnvironmentSourceSets()
 
 	mods {
-		"physicsref" {
+		"physics" {
 			sourceSet sourceSets.main
 			sourceSet sourceSets.client
 		}
