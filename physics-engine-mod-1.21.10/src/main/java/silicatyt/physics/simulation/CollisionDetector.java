@@ -1,22 +1,15 @@
 package silicatyt.physics.simulation;
 
 import org.joml.Vector3d;
-import silicatyt.physics.data.ColliderCollision;
-import silicatyt.physics.data.TerrainCollision;
 import org.joml.Vector3dc;
+import silicatyt.physics.data.ObjectCollision;
 import silicatyt.physics.entity.PhysicsObject;
 
 import java.util.*;
 
 public class CollisionDetector {
-
-    public static LinkedList<TerrainCollision> getTerrainCollisions(PhysicsObject obj) {
-        // TODO
-        return null;
-    }
-
-    public static LinkedList<ColliderCollision> getColliderCollisions(PhysicsObject obj, Set<PhysicsObject> checkedObjects) {
-        LinkedList<ColliderCollision> collisions = new LinkedList<>();
+    public static LinkedList<ObjectCollision> getObjectCollisions(PhysicsObject obj, Set<PhysicsObject> checkedObjects) {
+        LinkedList<ObjectCollision> collisions = new LinkedList<>();
         for (PhysicsObject otherObj : checkedObjects) {
             if (checkedObjects.contains(otherObj)) { continue; }
 
@@ -24,7 +17,7 @@ public class CollisionDetector {
             if (!isIntersectingAABB(obj, otherObj)) { continue; }
 
             // Fine collision check (SAT)
-            ColliderCollision collision = performSat(obj, otherObj);
+            ObjectCollision collision = performSat(obj, otherObj);
             if (collision != null) { collisions.add(collision); }
         }
         checkedObjects.add(obj);
@@ -39,7 +32,7 @@ public class CollisionDetector {
 
     // Helper methods for terrain collisions
 
-    // Helper methods for collider collisions
+    // Helper methods for object collisions
     private static boolean isIntersectingAABB(PhysicsObject left, PhysicsObject right) {
         Vector3dc[] leftAABB = left.getBoundingBoxAbsolute();
         Vector3dc[] rightAABB = right.getBoundingBoxAbsolute();
@@ -68,7 +61,7 @@ public class CollisionDetector {
         return new double[]{minProjection, maxProjection};
     }
 
-    private static ColliderCollision performSat(PhysicsObject objectA, PhysicsObject objectB) {
+    private static ObjectCollision performSat(PhysicsObject objectA, PhysicsObject objectB) {
         Vector3d[] axes = new Vector3d[]{
                 objectA.getAxis(0), objectA.getAxis(1), objectA.getAxis(2), // objectA's axes
                 objectB.getAxis(0), objectB.getAxis(1), objectB.getAxis(2), // objectB's axes
@@ -83,6 +76,7 @@ public class CollisionDetector {
         int minAxisIndex = -1;
 
         for (int i = 0; i < axes.length; i++) {
+            if (axes[i].lengthSquared() < 1e-12) { continue; } // Skip (cross-product) axes that are unstable because the base axes are parallel
             overlap = getAxisOverlap(objectA, objectB, axes[i]);
             if (overlap < 0d) { return null; } // Separating axis found: No collision
             if (overlap < minOverlap) {
@@ -91,7 +85,7 @@ public class CollisionDetector {
             }
         }
 
-        return new ColliderCollision(objectB, axes[minAxisIndex], minAxisIndex);
+        return new ObjectCollision(objectB, axes[minAxisIndex], minAxisIndex);
     }
 
 }

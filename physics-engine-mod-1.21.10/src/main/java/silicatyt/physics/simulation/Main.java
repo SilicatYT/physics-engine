@@ -1,8 +1,9 @@
 package silicatyt.physics.simulation;
 
 import net.minecraft.server.MinecraftServer;
-import silicatyt.physics.data.ColliderCollision;
-import silicatyt.physics.data.TerrainCollision;
+import silicatyt.physics.data.ObjectCollision;
+import silicatyt.physics.data.Contact;
+import silicatyt.physics.data.ContactManager;
 import silicatyt.physics.entity.PhysicsObject;
 
 import java.util.HashSet;
@@ -14,6 +15,7 @@ import static silicatyt.physics.simulation.ContactGenerator.generateContact;
 
 public class Main {
     public static final double DELTA_TIME = 1.0 / 20.0;
+    public static final ContactManager contactManager = new ContactManager();
 
     public static void physicsTick(MinecraftServer server) {
         for (PhysicsObject obj : LOADED_PHYSICS_OBJECTS) {
@@ -26,16 +28,17 @@ public class Main {
 
             // Collision Detection
             // List<TerrainCollision> terrainCollisions = CollisionDetector.getTerrainCollisions(obj);
-            List<ColliderCollision> colliderCollisions = CollisionDetector.getColliderCollisions(obj, checkedObjects);
+            List<ObjectCollision> objectCollisions = CollisionDetector.getObjectCollisions(obj, checkedObjects);
 
             // Contact Generation TODO: Maybe unify the two collisions into a single for-loop
             //for (TerrainCollision collision : terrainCollisions) {
             //    generateContact(obj, collision);
             //}
-            for (ColliderCollision collision : colliderCollisions) {
-                var temp = generateContact(obj, collision); // TODO: CAN BE NULL!!!
+            for (ObjectCollision collision : objectCollisions) {
+                Contact newContact = generateContact(obj, collision);
+                if (newContact == null) { continue; }
+                contactManager.accumulateContacts(newContact);
             }
-            // TODO: Where to store contacts? Do I need a "final ... PREVIOUS_CONTACTS"? That should ideally be a map with objectA:<pair of terrainContacts and colliderContacts>. But the resolver should get an array or a list, right? Unless I need to search for contacts of a specific objectA efficiently (for the "update separatingVelocities" method)...
         }
 
         // ContactResolver.resolve(allContacts);

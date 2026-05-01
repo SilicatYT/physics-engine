@@ -8,12 +8,12 @@ import silicatyt.physics.entity.PhysicsObject;
 import static silicatyt.physics.simulation.CollisionDetector.projectObjectOntoAxis;
 
 public class ContactGenerator {
-    public static Contact generateContact(PhysicsObject objectA, ColliderCollision collision) {
+    public static Contact generateContact(PhysicsObject objectA, ObjectCollision collision) {
         if (collision.axisOfMinOverlapIndex() < 6) { return generateContactPointFace(objectA, collision); }
         return generateContactEdgeEdge(objectA, collision);
     }
 
-    private static ContactPointFace generateContactPointFace(PhysicsObject objectA, ColliderCollision collision) {
+    private static ContactPointFace generateContactPointFace(PhysicsObject objectA, ObjectCollision collision) {
         PhysicsObject objectB = collision.objectB();
 
         // Select faceObject and cornerObject
@@ -54,7 +54,7 @@ public class ContactGenerator {
         }
     }
 
-    private static ContactEdgeEdge generateContactEdgeEdge(PhysicsObject objectA, ColliderCollision collision) {
+    private static ContactEdgeEdge generateContactEdgeEdge(PhysicsObject objectA, ObjectCollision collision) {
         PhysicsObject objectB = collision.objectB();
 
         // Invert the contact normal if necessary
