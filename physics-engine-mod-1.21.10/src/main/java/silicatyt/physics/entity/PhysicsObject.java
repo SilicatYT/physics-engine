@@ -65,7 +65,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
     private final VersionNode rotationMatrixVersion = new VersionNode(this::updateRotationMatrix);
     private final VersionNode inverseInertiaTensorLocalVersion = new VersionNode(this::updateInverseInertiaTensorLocal);
-    private final VersionNode inverseInertiaTensorWorldVersion = new VersionNode(this::updateInverseInertiaTensorLocal);
+    private final VersionNode inverseInertiaTensorWorldVersion = new VersionNode(this::updateInverseInertiaTensorWorld);
     private final VersionNode cornerPosLocalVersion = new VersionNode(this::updateCornerPosLocal);
     private final VersionNode cornerPosRelativeVersion = new VersionNode(this::updateCornerPosRelative);
     private final VersionNode cornerPosAbsoluteVersion = new VersionNode(this::updateCornerPosAbsolute);
@@ -233,6 +233,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
     // Setters
     public void setInternalPos(Vector3dc position) {
+        if (!isFinite(position)) { throw new IllegalArgumentException("Position must be finite"); }
         posVersion.increment();
         pos.set(position);
     }
@@ -241,23 +242,28 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
     public void setInverseMass(double inverseMass) throws IllegalArgumentException {
         if (inverseMass < 0) { throw new IllegalArgumentException("Inverse mass must not be negative"); }
-        if (Double.isInfinite(inverseMass) || Double.isNaN(inverseMass)) { throw new IllegalArgumentException("Inverse mass must not be infinite or NaN"); }
+        if (!Double.isFinite(inverseMass)) { throw new IllegalArgumentException("Inverse mass must be finite"); }
 
         inverseMassVersion.increment();
         this.inverseMass = inverseMass;
     }
 
     public void setLinearVelocity(Vector3dc linearVelocity) {
+        if (!isFinite(linearVelocity)) { throw new IllegalArgumentException("Linear velocity must be finite"); }
+
         linearVelocityVersion.increment();
         this.linearVelocity.set(linearVelocity);
     }
 
     public void setAngularVelocity(Vector3dc angularVelocity) {
+        if (!isFinite(angularVelocity)) { throw new IllegalArgumentException("Angular velocity must be finite"); }
+
         angularVelocityVersion.increment();
         this.angularVelocity.set(angularVelocity);
     }
 
     public void setOrientation(Quaterniond orientation) {
+        if (!isValidQuaternion(orientation)) { throw new  IllegalArgumentException("Orientation must have a finite, non-zero length"); }
         orientationVersion.increment();
         this.orientation.set(orientation);
         this.orientation.normalize();
@@ -265,6 +271,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
     public void setScale(Vector3dc scale) throws IllegalArgumentException {
         if (scale.x() < 0 || scale.y() < 0 || scale.z() < 0) { throw new IllegalArgumentException("Scale must not be negative"); }
+        if (!isFinite(scale)) { throw new IllegalArgumentException("Scale must be finite"); }
 
         scaleVersion.increment();
         this.scale.set(scale);
@@ -272,6 +279,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
     public void setFrictionCoefficient(double frictionCoefficient) throws IllegalArgumentException {
         if (frictionCoefficient < 0 || frictionCoefficient > 1) { throw new IllegalArgumentException("Friction coefficient must be between 0 and 1"); }
+        if (!Double.isFinite(frictionCoefficient)) { throw new IllegalArgumentException("Friction coefficient must be finite"); }
 
         frictionCoefficientVersion.increment();
         this.frictionCoefficient = frictionCoefficient;
@@ -279,12 +287,16 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
     public void setRestitutionCoefficient(double restitutionCoefficient) throws IllegalArgumentException {
         if (restitutionCoefficient < 0 || restitutionCoefficient > 1) { throw new IllegalArgumentException("Restitution coefficient must be between 0 and 1"); }
+        if (!Double.isFinite(restitutionCoefficient)) { throw new IllegalArgumentException("Restitution coefficient must be finite"); }
 
         restitutionCoefficientVersion.increment();
         this.restitutionCoefficient = restitutionCoefficient;
     }
 
-    public void setLinearVelocityFromAcceleration(Vector3dc linearVelocity) { linearVelocityFromAcceleration.set(linearVelocity); } // TODO: Maybe make "addAcceleration" its own method, so that linearVelocityFromAcceleration and linearVelocity are always consistent
+    public void setLinearVelocityFromAcceleration(Vector3dc linearVelocity) { // TODO: Maybe make "addAcceleration" its own method, so that linearVelocityFromAcceleration and linearVelocity are always consistent
+        if (!isFinite(linearVelocity)) { throw new IllegalArgumentException("linear velocity must be finite"); }
+        linearVelocityFromAcceleration.set(linearVelocity);
+    }
 
 
 
@@ -309,6 +321,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     @Override
     protected void readCustomData(ReadView view) { // All required instance variables need to not be null after this. Otherwise, it will cause all sorts of calculation bugs after unloading and loading again.
         // super.readCustomData(view); <- Ignore for the same reason as in "writeCustomData"
+        // TODO: Add list size validation & "isFinite" checks, as well as "fail if scale is not bigger than 0". Also add a check for "0,0,0,0" quaternions
         Codec<List<Double>> doubleListCodec = Codec.DOUBLE.listOf();
 
         setItemStack(view.read("item", ItemStack.CODEC).orElse(DEFAULT_ITEM_STACK));
@@ -404,6 +417,15 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         lastEntityPos = getEntityPos();
     }
 
+    private boolean isFinite(Vector3dc vector) { return Double.isFinite(vector.x()) && Double.isFinite(vector.y()) && Double.isFinite(vector.z()); }
+
+    private static boolean isFinite(Quaterniondc quaternion) { return Double.isFinite(quaternion.x()) && Double.isFinite(quaternion.y()) &&  Double.isFinite(quaternion.z()) && Double.isFinite(quaternion.w()); }
+
+    private static boolean isValidQuaternion(Quaterniondc quaternion) {
+        if (!Double.isFinite(quaternion.x()) || !Double.isFinite(quaternion.y()) || !Double.isFinite(quaternion.z()) || !Double.isFinite(quaternion.w())) { return false; }
+        double lengthSquared = quaternion.x()*quaternion.x() + quaternion.y()*quaternion.y() + quaternion.z()*quaternion.z() + quaternion.w()*quaternion.w();
+        return lengthSquared > 1e-24;
+    }
 
     // TODO (VERY IMPORTANT): Check whether it's more stable to calculate contactVelocity with "(velocityBeforeIntegration + acceleration) * dampingMultiplier) - acceleration" or "velocityBeforeIntegration * dampingMultiplier" (or maybe even "velocityBeforeIntegration"). Currently I use the former.
 

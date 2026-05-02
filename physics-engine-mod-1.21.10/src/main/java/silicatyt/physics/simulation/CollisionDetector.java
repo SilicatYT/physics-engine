@@ -7,10 +7,12 @@ import silicatyt.physics.entity.PhysicsObject;
 
 import java.util.*;
 
+import static silicatyt.physics.Physics.LOADED_PHYSICS_OBJECTS;
+
 public class CollisionDetector {
     public static LinkedList<ObjectCollision> getObjectCollisions(PhysicsObject obj, Set<PhysicsObject> checkedObjects) {
         LinkedList<ObjectCollision> collisions = new LinkedList<>();
-        for (PhysicsObject otherObj : checkedObjects) {
+        for (PhysicsObject otherObj : LOADED_PHYSICS_OBJECTS) {
             if (checkedObjects.contains(otherObj)) { continue; }
 
             // Coarse collision check (AABB)

@@ -6,7 +6,7 @@ public final class DependencyNode {
 
     public DependencyNode(VersionSource source, boolean isUpToDate) {
         this.source = source;
-        this.lastSeenVersion = isUpToDate ? source.getVersion() : 0;
+        this.lastSeenVersion = isUpToDate ? source.getVersion() : -1;
     }
 
     public DependencyNode(VersionSource source) { this(source, false); }

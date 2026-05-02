@@ -15,15 +15,17 @@ import static silicatyt.physics.simulation.ContactGenerator.generateContact;
 
 public class Main {
     public static final double DELTA_TIME = 1.0 / 20.0;
-    public static final ContactManager contactManager = new ContactManager();
+    public static final ContactManager CONTACT_MANAGER = new ContactManager();
 
     public static void physicsTick(MinecraftServer server) {
-        for (PhysicsObject obj : LOADED_PHYSICS_OBJECTS) {
+        List<PhysicsObject> loadedObjects = List.copyOf(LOADED_PHYSICS_OBJECTS); // So I don't modify LOADED_PHYSICS_OBJECTS in integration (entities could unload) while I iterate over it
+
+        for (PhysicsObject obj : loadedObjects) {
             Integrator.phaseOne(obj);
         }
 
         Set<PhysicsObject> checkedObjects = new HashSet<>();
-        for (PhysicsObject obj : LOADED_PHYSICS_OBJECTS) {
+        for (PhysicsObject obj : loadedObjects) {
             if (obj.getInverseMass() == 0d) { continue; } // Don't search for collisions if you're a static object. Static objects can only appear as ObjectB because they can't move.
 
             // Collision Detection
@@ -37,15 +39,17 @@ public class Main {
             for (ObjectCollision collision : objectCollisions) {
                 Contact newContact = generateContact(obj, collision);
                 if (newContact == null) { continue; }
-                contactManager.accumulateContacts(newContact);
+                CONTACT_MANAGER.accumulateContacts(newContact);
             }
         }
 
         // ContactResolver.resolve(allContacts);
 
-        for (PhysicsObject obj : LOADED_PHYSICS_OBJECTS) {
+        for (PhysicsObject obj : loadedObjects) {
             Integrator.phaseTwo(obj);
         }
+
+        checkedObjects.clear();
 
         // DEBUG
         //Debug.showObjectAxes();

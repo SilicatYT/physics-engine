@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 public class ContactManager {
-    //private final Map<TerrainContactKey, TerrainContactManifold> previousTerrainManifolds = new HashMap<>();
-    //private final Map<TerrainContactKey, TerrainContactManifold> currentTerrainManifolds = new HashMap<>();
+    private final Map<TerrainContactKey, TerrainContactManifold> previousTerrainManifolds = new HashMap<>();
+    private final Map<TerrainContactKey, TerrainContactManifold> currentTerrainManifolds = new HashMap<>();
 
     private final Map<ObjectContactKey, ObjectContactManifold> previousObjectManifolds = new HashMap<>();
     private final Map<ObjectContactKey, ObjectContactManifold> currentObjectManifolds = new HashMap<>();
@@ -25,5 +25,12 @@ public class ContactManager {
 
     public List<Contact> getContacts() {
         return null;
+    }
+
+    public void clear() {
+        previousTerrainManifolds.clear();
+        currentTerrainManifolds.clear();
+        previousObjectManifolds.clear();
+        currentObjectManifolds.clear();
     }
 }
