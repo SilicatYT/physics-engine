@@ -2,12 +2,20 @@ package silicatyt.physics.simulation;
 
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
+import silicatyt.physics.Physics;
 import silicatyt.physics.data.*;
 import silicatyt.physics.entity.PhysicsObject;
 
 import static silicatyt.physics.simulation.CollisionDetector.projectObjectOntoAxis;
 
 public class ContactGenerator {
+    // TODO: Maybe relocate these constants and rename them
+    public static final double ACCUMULATION_PROJECTION_DISCARD_THRESHOLD = 0.7; // During accumulation, discard contacts from the previous tick whose contactNormal's projection onto the current tick's contact's contactNormal is less than this.
+    public static final double ACCUMULATION_PROJECTION_DEACTIVATION_THRESHOLD = 0.9; // During accumulation, deactivate (but keep) contacts from the previous tick whose contactNormal's projection onto the current tick's contact's contactNormal is less than this.
+    public static final double ACCUMULATION_MIN_PENETRATION_DEPTH_THRESHOLD = -0.1; // If penetrationDepth is smaller than this, the contact will be discarded during accumulation.
+    public static final double ACCUMULATION_MAX_AABB_SEPARATION_THRESHOLD = 0.5; // When updating non-touching manifolds, discard them if the AABBs are separated by this amount
+    public static final int ACCUMULATION_MAX_SEPARATION_TIME_THRESHOLD = 10; // When updating non-touching manifolds, discard them if they don't get in contact within X ticks
+
     public static Contact generateContact(PhysicsObject objectA, ObjectCollision collision) {
         if (collision.axisOfMinOverlapIndex() < 6) { return generateContactPointFace(objectA, collision); }
         return generateContactEdgeEdge(objectA, collision);

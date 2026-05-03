@@ -21,8 +21,8 @@ public class TerrainHitboxContactManifold implements ContactManifold {
     }
 
     @Override
-    public void updateWithoutContact() {
-
+    public boolean updateWithoutContact() {
+        return false;
     }
 
     @Override

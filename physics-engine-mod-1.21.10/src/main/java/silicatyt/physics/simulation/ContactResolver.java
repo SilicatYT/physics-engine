@@ -2,7 +2,10 @@ package silicatyt.physics.simulation;
 
 // TODO: REWORK
 
+import silicatyt.physics.data.ContactManager;
+
 public class ContactResolver {
-    public static void resolve() { // Start resolving contacts, one at a time
+    public static void resolve(ContactManager manager) {
+
     }
 }

@@ -5,6 +5,9 @@ import org.joml.Vector3dc;
 import silicatyt.physics.entity.PhysicsObject;
 import silicatyt.physics.versioning.VersionNode;
 
+// TODO: You can currently access protected variables everywhere in the same package. Make it so those are exclusive to contact and its subclasses.
+// TODO: Maybe isActive should not be public? But I need to be able to set it in accumulation...
+
 public abstract class Contact {
     public final PhysicsObject objectA;
     public final PhysicsObject objectB; // 'null' if it's a TerrainContact
@@ -14,6 +17,8 @@ public abstract class Contact {
     protected final Vector3d contactNormal = new Vector3d();
     protected final Vector3d contactVelocity = new Vector3d();
     protected double penetrationDepth;
+
+    public boolean isActive = true;
 
     protected final VersionNode contactPosVersion = new VersionNode(this::updateContactPos);
     protected final VersionNode contactNormalVersion = new VersionNode(this::updateContactNormal);

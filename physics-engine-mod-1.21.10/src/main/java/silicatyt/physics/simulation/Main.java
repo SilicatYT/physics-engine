@@ -29,13 +29,7 @@ public class Main {
             if (obj.getInverseMass() == 0d) { continue; } // Don't search for collisions if you're a static object. Static objects can only appear as ObjectB because they can't move.
 
             // Collision Detection
-            // List<TerrainCollision> terrainCollisions = CollisionDetector.getTerrainCollisions(obj);
             List<ObjectCollision> objectCollisions = CollisionDetector.getObjectCollisions(obj, checkedObjects);
-
-            // Contact Generation TODO: Maybe unify the two collisions into a single for-loop
-            //for (TerrainCollision collision : terrainCollisions) {
-            //    generateContact(obj, collision);
-            //}
             for (ObjectCollision collision : objectCollisions) {
                 Contact newContact = generateContact(obj, collision);
                 if (newContact == null) { continue; }
@@ -43,7 +37,7 @@ public class Main {
             }
         }
 
-        // ContactResolver.resolve(allContacts);
+        ContactResolver.resolve(CONTACT_MANAGER);
 
         for (PhysicsObject obj : loadedObjects) {
             Integrator.phaseTwo(obj);

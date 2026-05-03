@@ -16,7 +16,7 @@ public class CollisionDetector {
             if (checkedObjects.contains(otherObj)) { continue; }
 
             // Coarse collision check (AABB)
-            if (!isIntersectingAABB(obj, otherObj)) { continue; }
+            if (!isIntersectingAABB(obj.getBoundingBoxAbsolute(), otherObj.getBoundingBoxAbsolute())) { continue; }
 
             // Fine collision check (SAT)
             ObjectCollision collision = performSat(obj, otherObj);
@@ -35,9 +35,7 @@ public class CollisionDetector {
     // Helper methods for terrain collisions
 
     // Helper methods for object collisions
-    private static boolean isIntersectingAABB(PhysicsObject left, PhysicsObject right) {
-        Vector3dc[] leftAABB = left.getBoundingBoxAbsolute();
-        Vector3dc[] rightAABB = right.getBoundingBoxAbsolute();
+    public static boolean isIntersectingAABB(Vector3dc[] leftAABB, Vector3dc[] rightAABB) {
         return leftAABB[0].x() <= rightAABB[1].x() && rightAABB[0].x() <= leftAABB[1].x() && leftAABB[0].y() <= rightAABB[1].y() && rightAABB[0].y() <= leftAABB[1].y() && leftAABB[0].z() <= rightAABB[1].z() && rightAABB[0].z() <= leftAABB[1].z();
     }
 
