@@ -231,7 +231,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
     // Setters
     public void setInternalPos(Vector3dc position) {
-        if (!isFinite(position)) { throw new IllegalArgumentException("Position must be finite"); }
+        if (!position.isFinite()) { throw new IllegalArgumentException("Position must be finite"); }
         posVersion.increment();
         pos.set(position);
     }
@@ -247,14 +247,14 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     }
 
     public void setLinearVelocity(Vector3dc linearVelocity) {
-        if (!isFinite(linearVelocity)) { throw new IllegalArgumentException("Linear velocity must be finite"); }
+        if (!linearVelocity.isFinite()) { throw new IllegalArgumentException("Linear velocity must be finite"); }
 
         linearVelocityVersion.increment();
         this.linearVelocity.set(linearVelocity);
     }
 
     public void setAngularVelocity(Vector3dc angularVelocity) {
-        if (!isFinite(angularVelocity)) { throw new IllegalArgumentException("Angular velocity must be finite"); }
+        if (!angularVelocity.isFinite()) { throw new IllegalArgumentException("Angular velocity must be finite"); }
 
         angularVelocityVersion.increment();
         this.angularVelocity.set(angularVelocity);
@@ -269,7 +269,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
     public void setScale(Vector3dc scale) throws IllegalArgumentException {
         if (scale.x() < 0 || scale.y() < 0 || scale.z() < 0) { throw new IllegalArgumentException("Scale must not be negative"); }
-        if (!isFinite(scale)) { throw new IllegalArgumentException("Scale must be finite"); }
+        if (!scale.isFinite()) { throw new IllegalArgumentException("Scale must be finite"); }
 
         scaleVersion.increment();
         this.scale.set(scale);
@@ -292,7 +292,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     }
 
     public void setLinearVelocityFromAcceleration(Vector3dc linearVelocity) { // TODO: Maybe make "addAcceleration" its own method, so that linearVelocityFromAcceleration and linearVelocity are always consistent
-        if (!isFinite(linearVelocity)) { throw new IllegalArgumentException("linear velocity must be finite"); }
+        if (!linearVelocity.isFinite()) { throw new IllegalArgumentException("linear velocity must be finite"); }
         linearVelocityFromAcceleration.set(linearVelocity);
     }
 
@@ -429,12 +429,8 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         setAngularVelocity(angularVelocityChange.add(getAngularVelocity()));
     }
 
-    private boolean isFinite(Vector3dc vector) { return Double.isFinite(vector.x()) && Double.isFinite(vector.y()) && Double.isFinite(vector.z()); }
-
-    private static boolean isFinite(Quaterniondc quaternion) { return Double.isFinite(quaternion.x()) && Double.isFinite(quaternion.y()) &&  Double.isFinite(quaternion.z()) && Double.isFinite(quaternion.w()); }
-
     private static boolean isValidQuaternion(Quaterniondc quaternion) {
-        if (!Double.isFinite(quaternion.x()) || !Double.isFinite(quaternion.y()) || !Double.isFinite(quaternion.z()) || !Double.isFinite(quaternion.w())) { return false; }
+        if (!quaternion.isFinite()) { return false; }
         double lengthSquared = quaternion.x()*quaternion.x() + quaternion.y()*quaternion.y() + quaternion.z()*quaternion.z() + quaternion.w()*quaternion.w();
         return lengthSquared > 1e-24;
     }

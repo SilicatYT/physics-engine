@@ -27,17 +27,17 @@ public class ContactManager {
 
     public void prepareResolution() {
         // Carry over the remaining non-touching manifolds from the previous tick as inactive, or discard
+        // TODO: Do the same for terrain manifolds
         for (Map.Entry<ObjectContactKey, ObjectContactManifold> entry : previousObjectManifolds.entrySet()) {
             ObjectContactManifold manifold = entry.getValue();
             if (manifold.updateWithoutContact()) { currentObjectManifolds.put(entry.getKey(), manifold); }
         }
+        previousTerrainManifolds.clear();
+        previousObjectManifolds.clear();
     }
 
     public void finishTick() {
-        previousTerrainManifolds.clear();
         previousTerrainManifolds.putAll(currentTerrainManifolds);
-
-        previousObjectManifolds.clear();
         previousObjectManifolds.putAll(currentObjectManifolds);
 
         currentTerrainManifolds.clear();
