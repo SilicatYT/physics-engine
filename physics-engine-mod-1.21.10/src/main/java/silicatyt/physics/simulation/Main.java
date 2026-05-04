@@ -18,6 +18,8 @@ public class Main {
     public static final ContactManager CONTACT_MANAGER = new ContactManager();
 
     public static void physicsTick(MinecraftServer server) {
+        if (!server.getTickManager().shouldTick()) { return; }
+
         List<PhysicsObject> loadedObjects = List.copyOf(LOADED_PHYSICS_OBJECTS); // So I don't modify LOADED_PHYSICS_OBJECTS in integration (entities could unload) while I iterate over it
 
         for (PhysicsObject obj : loadedObjects) {
@@ -37,7 +39,9 @@ public class Main {
             }
         }
 
+        CONTACT_MANAGER.prepareResolution();
         ContactResolver.resolve(CONTACT_MANAGER);
+        CONTACT_MANAGER.finishTick();
 
         for (PhysicsObject obj : loadedObjects) {
             Integrator.phaseTwo(obj);

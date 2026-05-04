@@ -19,8 +19,6 @@ import xyz.nucleoid.packettweaker.PacketContext;
 import java.lang.Math;
 import java.util.List;
 
-// TODO: Only subtract the velocityFromAcceleration during resolution, because the desiredDeltaVelocity formula has both the regular contactVelocity AND the (contactVelocity - velocityFromAcceleration) in it.
-
 public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     public static final double DEFAULT_INVERSE_MASS = 0.001d;
     public static final Vector3d DEFAULT_SCALE = new Vector3d(1d, 1d, 1d);
@@ -30,8 +28,8 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
     // Stored data
     private double inverseMass; // In 1/kg. If inverseMass is 0, mass is infinite. This is interpreted as "the object is static and will not actively look for collisions", meaning two static objects cannot collide with each other.
-    public final Vector3d linearVelocity = new Vector3d();
-    public final Vector3d angularVelocity = new Vector3d();
+    private final Vector3d linearVelocity = new Vector3d();
+    private final Vector3d angularVelocity = new Vector3d();
     private final Quaterniond orientation = new Quaterniond();
     private final Vector3d scale = new Vector3d();
     private double frictionCoefficient;
@@ -79,8 +77,8 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     public VersionSource getAngularVelocityVersion() { return angularVelocityVersion; }
     public VersionSource getOrientationVersion() { return orientationVersion; }
     public VersionSource getScaleVersion() { return scaleVersion; }
-    public VersionSource getFrictionCoefficientVersion() { return scaleVersion; }
-    public VersionSource getRestitutionCoefficientVersion() { return scaleVersion; }
+    public VersionSource getFrictionCoefficientVersion() { return frictionCoefficientVersion; }
+    public VersionSource getRestitutionCoefficientVersion() { return restitutionCoefficientVersion; }
 
     //public VersionSource getRotationMatrixVersion() { return rotationMatrixVersion; } // There is no getter, so there's no point
     //public VersionSource getInverseInertiaTensorLocalVersion() { return inverseInertiaTensorLocalVersion; }
@@ -383,7 +381,7 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
     private void updateBoundingBoxAbsolute() {
         boundingBoxAbsolute[0].set(cornerPosAbsolute[0]);
-        boundingBoxAbsolute[1].set(cornerPosAbsolute[1]);
+        boundingBoxAbsolute[1].set(cornerPosAbsolute[0]);
 
         for (int i = 1; i < 8; i++) {
             boundingBoxAbsolute[0].x = Math.min(boundingBoxAbsolute[0].x, cornerPosAbsolute[i].x);
@@ -430,3 +428,6 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     // TODO (VERY IMPORTANT): Check whether it's more stable to calculate contactVelocity with "(velocityBeforeIntegration + acceleration) * dampingMultiplier) - acceleration" or "velocityBeforeIntegration * dampingMultiplier" (or maybe even "velocityBeforeIntegration"). Currently I use the former.
 
 }
+
+
+// TODO: Fix a bug where scale flickers (interpolates every tick after setting)

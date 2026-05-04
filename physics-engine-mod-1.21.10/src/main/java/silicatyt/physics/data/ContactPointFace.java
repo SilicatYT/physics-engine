@@ -36,25 +36,31 @@ public class ContactPointFace extends Contact {
         int faceIndex = getFaceIndex();
 
         PhysicsObject faceObject = getFaceObject();
-        Vector3d newContactNormal = new Vector3d(faceObject.getAxis((faceIndex - 11) / 2));
-        if (faceIndex % 2 == 0) { newContactNormal.mul(-1d); }
+        Vector3d newContactNormal = new Vector3d(faceObject.getAxis((faceIndex - 10) / 2));
+        if (faceIndex % 2 == 0) { newContactNormal.negate(); }
+        if (faceObject == objectA) { newContactNormal.negate(); } // contactNormal always points from B -> A
 
         contactNormal.set(newContactNormal);
     }
 
     @Override
-    protected void updatePenetrationDepth() {
-        penetrationDepth = projectObjectOntoAxis(getFaceObject(), contactNormal)[1] - getCornerPos().dot(contactNormal); // On new contacts, the selected corner's projection is the minProjection. That's not guaranteed afterwards (i.e., when updating the previous tick's contacts).
+    protected void updatePenetrationDepth() { // (TODO: Verify if this comment is still correct, now that the contactNormal points from B -> A): On new contacts, the selected corner's projection is the minProjection. That's not guaranteed afterwards (i.e., when updating the previous tick's contacts).
+        double[] faceObjectProjection = projectObjectOntoAxis(getFaceObject(), contactNormal);
+        double cornerProjection = getCornerPos().dot(contactNormal);
+        if (getFaceObject() == objectA) {
+            penetrationDepth = cornerProjection - faceObjectProjection[0];
+        } else {
+            penetrationDepth = faceObjectProjection[1] - cornerProjection;
+        }
     }
 
     @Override
     protected void updateContactPos() {
-        contactPos.set(new Vector3d(contactNormal).mul(penetrationDepth).add(getCornerPos()));
-    }
-
-    @Override
-    protected void updateContactVelocity() {
-        contactVelocity.set(calculateContactVelocity(getFaceObject()));
+        if (getFaceObject() == objectA) {
+            contactPos.set(getCornerPos()).sub(new Vector3d(contactNormal).mul(penetrationDepth));
+        } else {
+            contactPos.set(getCornerPos()).add(new Vector3d(contactNormal).mul(penetrationDepth));
+        }
     }
 
 

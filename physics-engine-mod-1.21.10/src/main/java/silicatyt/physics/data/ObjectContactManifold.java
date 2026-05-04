@@ -26,12 +26,15 @@ public class ObjectContactManifold implements ContactManifold {
     public void updateWithContact(Contact newContact) {
         Iterator<Contact> it =  contacts.iterator();
         separatedForTicks = 0;
-        boolean foundSameContact = false;
 
         // Update previous contacts
         while (it.hasNext()) {
             Contact contact = it.next();
-            if (contact.featureA == newContact.featureA && contact.featureB == newContact.featureB) { foundSameContact = true; }
+            if (contact.featureA == newContact.featureA && contact.featureB == newContact.featureB) { // Remove the "newContact" if it already existed
+                it.remove();
+                continue;
+            }
+
             double projection = new Vector3d(contact.getContactNormal()).dot(newContact.getContactNormal());
 
             // Discard contacts where necessary
@@ -40,12 +43,12 @@ public class ObjectContactManifold implements ContactManifold {
                 continue;
             }
 
-            // Deactivate contacts where necessary (Ignored during resolution, but kept in case they become valid again)
-            if (projection < ACCUMULATION_PROJECTION_DEACTIVATION_THRESHOLD) { contact.isActive = false; }
+            // Set the "isActive" status: Deactivate contacts where necessary (Ignored during resolution, but kept in case they become valid again)
+            contact.isActive = projection >= ACCUMULATION_PROJECTION_DEACTIVATION_THRESHOLD;
         }
 
-        // Add new contact if it doesn't already exist
-        if (!foundSameContact) { contacts.add(newContact); }
+        // Add new contact
+        contacts.add(newContact);
     }
 
     @Override
@@ -59,10 +62,14 @@ public class ObjectContactManifold implements ContactManifold {
         // Check if the objects' AABBs are further away than the max configurable amount allows
         Vector3dc[] leftAABB = objectA.getBoundingBoxAbsolute();
         Vector3dc[] rightAABB = objectB.getBoundingBoxAbsolute();
-        Vector3d[] expandedLeftAABB = new Vector3d[2];
-        expandedLeftAABB[0].set(leftAABB[0]).sub(ACCUMULATION_MAX_AABB_SEPARATION_THRESHOLD, ACCUMULATION_MAX_AABB_SEPARATION_THRESHOLD, ACCUMULATION_MAX_AABB_SEPARATION_THRESHOLD);
-        expandedLeftAABB[1].set(leftAABB[1]).add(ACCUMULATION_MAX_AABB_SEPARATION_THRESHOLD, ACCUMULATION_MAX_AABB_SEPARATION_THRESHOLD, ACCUMULATION_MAX_AABB_SEPARATION_THRESHOLD);
-        return isIntersectingAABB(expandedLeftAABB, rightAABB);
+        Vector3d[] expandedLeftAABB = new Vector3d[]{new Vector3d(leftAABB[0]), new Vector3d(leftAABB[1])};
+        expandedLeftAABB[0].sub(ACCUMULATION_MAX_AABB_SEPARATION_THRESHOLD, ACCUMULATION_MAX_AABB_SEPARATION_THRESHOLD, ACCUMULATION_MAX_AABB_SEPARATION_THRESHOLD);
+        expandedLeftAABB[1].add(ACCUMULATION_MAX_AABB_SEPARATION_THRESHOLD, ACCUMULATION_MAX_AABB_SEPARATION_THRESHOLD, ACCUMULATION_MAX_AABB_SEPARATION_THRESHOLD);
+        if (isIntersectingAABB(expandedLeftAABB, rightAABB)) {
+            for (Contact contact : contacts) { contact.isActive = false; }
+            return true;
+        }
+        return false;
     }
 
     @Override

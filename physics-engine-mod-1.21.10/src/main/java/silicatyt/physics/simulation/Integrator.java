@@ -49,8 +49,7 @@ public class Integrator {
         obj.setLinearVelocityFromAcceleration(velocityFromAcceleration);
 
         // Apply linear damping
-        obj.linearVelocity.add(velocityFromAcceleration);
-        obj.linearVelocity.mul(DEFAULT_LINEAR_DAMPING);
+        obj.setLinearVelocity(velocityFromAcceleration.add(obj.getLinearVelocity()).mul(DEFAULT_LINEAR_DAMPING));
     }
 
     private static void updatePos(PhysicsObject obj) {
@@ -64,8 +63,7 @@ public class Integrator {
         Vector3d velocityFromAcceleration = obj.getInverseInertiaTensorWorld().transform(scaledTorque);
 
         // Apply angular damping
-        obj.angularVelocity.add(velocityFromAcceleration);
-        obj.angularVelocity.mul(DEFAULT_ANGULAR_DAMPING);
+        obj.setAngularVelocity(velocityFromAcceleration.add(obj.getAngularVelocity()).mul(DEFAULT_ANGULAR_DAMPING));
     }
 
     private static void updateOrientationEuler(PhysicsObject obj) { // Approach: Euler integration (TODO: Less accurate but faster. How about in a datapack, where I can use entity rotation tricks to compute sin and cos quickly? What to choose there?)

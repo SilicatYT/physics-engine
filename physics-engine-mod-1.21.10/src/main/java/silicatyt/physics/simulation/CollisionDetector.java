@@ -11,6 +11,7 @@ import static silicatyt.physics.Physics.LOADED_PHYSICS_OBJECTS;
 
 public class CollisionDetector {
     public static LinkedList<ObjectCollision> getObjectCollisions(PhysicsObject obj, Set<PhysicsObject> checkedObjects) {
+        checkedObjects.add(obj);
         LinkedList<ObjectCollision> collisions = new LinkedList<>();
         for (PhysicsObject otherObj : LOADED_PHYSICS_OBJECTS) {
             if (checkedObjects.contains(otherObj)) { continue; }
@@ -22,7 +23,6 @@ public class CollisionDetector {
             ObjectCollision collision = performSat(obj, otherObj);
             if (collision != null) { collisions.add(collision); }
         }
-        checkedObjects.add(obj);
         return collisions;
     }
 
@@ -61,13 +61,13 @@ public class CollisionDetector {
         return new double[]{minProjection, maxProjection};
     }
 
-    private static ObjectCollision performSat(PhysicsObject objectA, PhysicsObject objectB) {
+    private static ObjectCollision performSat(PhysicsObject objectA, PhysicsObject objectB) { // TODO: Optimize by only calculating the cross product axes once it reaches them (There could be a separating axis before that)
         Vector3d[] axes = new Vector3d[]{
                 objectA.getAxis(0), objectA.getAxis(1), objectA.getAxis(2), // objectA's axes
                 objectB.getAxis(0), objectB.getAxis(1), objectB.getAxis(2), // objectB's axes
-                objectA.getAxis(0).cross(objectB.getAxis(0)).normalize(), objectA.getAxis(0).cross(objectB.getAxis(1)).normalize(), objectA.getAxis(0).cross(objectB.getAxis(2)).normalize(), // Cross product axes with objectA's x-axis
-                objectA.getAxis(1).cross(objectB.getAxis(0)).normalize(), objectA.getAxis(1).cross(objectB.getAxis(1)).normalize(), objectA.getAxis(1).cross(objectB.getAxis(2)).normalize(), // Cross product axes with objectA's y-axis
-                objectA.getAxis(2).cross(objectB.getAxis(0)).normalize(), objectA.getAxis(2).cross(objectB.getAxis(1)).normalize(), objectA.getAxis(2).cross(objectB.getAxis(2)).normalize() // Cross product axes with objectA's z-axis
+                objectA.getAxis(0).cross(objectB.getAxis(0)), objectA.getAxis(0).cross(objectB.getAxis(1)), objectA.getAxis(0).cross(objectB.getAxis(2)), // Cross product axes with objectA's x-axis
+                objectA.getAxis(1).cross(objectB.getAxis(0)), objectA.getAxis(1).cross(objectB.getAxis(1)), objectA.getAxis(1).cross(objectB.getAxis(2)), // Cross product axes with objectA's y-axis
+                objectA.getAxis(2).cross(objectB.getAxis(0)), objectA.getAxis(2).cross(objectB.getAxis(1)), objectA.getAxis(2).cross(objectB.getAxis(2)) // Cross product axes with objectA's z-axis
         };
 
         // Check if any axis is separating
@@ -76,7 +76,11 @@ public class CollisionDetector {
         int minAxisIndex = -1;
 
         for (int i = 0; i < axes.length; i++) {
-            if (axes[i].lengthSquared() < 1e-12) { continue; } // Skip (cross-product) axes that are unstable because the base axes are parallel
+            if (i > 5) { // Is cross product axis
+                if (axes[i].lengthSquared() < 1e-12) { continue; } // Skip cross-product axes that are unstable because the base axes are parallel
+                axes[i].normalize();
+            }
+
             overlap = getAxisOverlap(objectA, objectB, axes[i]);
             if (overlap < 0d) { return null; } // Separating axis found: No collision
             if (overlap < minOverlap) {

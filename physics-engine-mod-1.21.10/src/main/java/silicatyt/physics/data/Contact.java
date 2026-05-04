@@ -32,11 +32,10 @@ public abstract class Contact {
         this.featureB = featureB;
 
         // Add variable dependencies
-        contactVelocityVersion.addDependencies(
-                objectA.getPosVersion(),  objectB.getPosVersion(),
-                objectA.getLinearVelocityVersion(),  objectB.getLinearVelocityVersion(),
-                objectA.getAngularVelocityVersion(),  objectB.getAngularVelocityVersion()
-                );
+        contactVelocityVersion.addDependencies(contactPosVersion, objectA.getPosVersion(), objectA.getLinearVelocityVersion(), objectA.getAngularVelocityVersion());
+        if (objectB != null) {
+            contactVelocityVersion.addDependencies(objectB.getPosVersion(), objectB.getLinearVelocityVersion(), objectB.getAngularVelocityVersion());
+        }
     }
 
     public Vector3dc getContactPos() {
@@ -57,8 +56,24 @@ public abstract class Contact {
     protected abstract void updateContactNormal();
     protected abstract void updatePenetrationDepth();
     protected abstract void updateContactPos();
-    protected abstract void updateContactVelocity();
 
+    protected void updateContactVelocity() {
+        Vector3d relativeContactPos = new Vector3d();
+
+        // pointVelocityA
+        relativeContactPos.set(contactPos);
+        relativeContactPos.sub(objectA.getInternalPos());
+        Vector3d pointVelocityA = new Vector3d(objectA.getAngularVelocity()).cross(relativeContactPos);
+        pointVelocityA.add(objectA.getLinearVelocity());
+
+        // pointVelocityB
+        relativeContactPos.set(contactPos);
+        relativeContactPos.sub(objectB.getInternalPos());
+        Vector3d pointVelocityB = new Vector3d(objectB.getAngularVelocity()).cross(relativeContactPos);
+        pointVelocityB.add(objectB.getLinearVelocity());
+
+        contactVelocity.set(pointVelocityA.sub(pointVelocityB));
+    }
 
     public Vector3dc getContactVelocity() {
         contactVelocityVersion.updateIfNeeded();
@@ -67,23 +82,8 @@ public abstract class Contact {
 
     protected int getFeature(PhysicsObject object) { return object == objectA ? featureA : featureB; }
 
-    protected Vector3d calculateContactVelocity(PhysicsObject referenceObject) {
-        if (referenceObject != objectA && referenceObject != objectB) { throw new IllegalArgumentException("referenceObject must be the contact's objectA or objectB."); }
-        PhysicsObject otherObject = objectA == referenceObject ? objectB : objectA;
-        Vector3d relativeContactPos = new Vector3d();
 
-        // pointVelocityReference
-        relativeContactPos.set(contactPos);
-        relativeContactPos.sub(referenceObject.getInternalPos());
-        Vector3d pointVelocityReference = new Vector3d(referenceObject.getAngularVelocity()).cross(relativeContactPos);
-        pointVelocityReference.add(referenceObject.getLinearVelocity());
 
-        // pointVelocityOther
-        relativeContactPos.set(contactPos);
-        relativeContactPos.sub(otherObject.getInternalPos());
-        Vector3d pointVelocityOther = new Vector3d(otherObject.getAngularVelocity()).cross(relativeContactPos);
-        pointVelocityOther.add(otherObject.getLinearVelocity());
 
-        return pointVelocityReference.sub(pointVelocityOther);
     }
 }

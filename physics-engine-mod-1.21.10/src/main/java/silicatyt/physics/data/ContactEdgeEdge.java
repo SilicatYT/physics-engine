@@ -12,19 +12,15 @@ public class ContactEdgeEdge extends Contact {
         super(objectA, objectB, featureA, featureB);
 
         // Add variable dependencies
-        contactPosVersion.addDependencies(
-                objectA.getPosVersion(), objectB.getPosVersion(),
-                objectA.getOrientationVersion(), objectB.getOrientationVersion()
-                );
-        contactNormalVersion.addDependencies(
-                objectA.getPosVersion(), objectB.getPosVersion(),
-                objectA.getOrientationVersion(), objectB.getOrientationVersion()
-        );
-        penetrationDepthVersion.addDependencies(
-                objectA.getPosVersion(), objectB.getPosVersion(),
-                objectA.getOrientationVersion(), objectB.getOrientationVersion(),
-                contactNormalVersion
-        );
+        contactPosVersion.addDependencies(objectA.getPosVersion(), objectA.getOrientationVersion());
+        contactNormalVersion.addDependencies(objectA.getPosVersion(), objectA.getOrientationVersion());
+        penetrationDepthVersion.addDependencies(contactNormalVersion, objectA.getPosVersion(), objectA.getOrientationVersion());
+
+        if (objectB != null) {
+            contactPosVersion.addDependencies(objectB.getPosVersion(), objectB.getOrientationVersion());
+            contactNormalVersion.addDependencies(objectB.getPosVersion(), objectB.getOrientationVersion());
+            penetrationDepthVersion.addDependencies(objectB.getPosVersion(), objectB.getOrientationVersion());
+        }
     }
 
 
@@ -71,11 +67,6 @@ public class ContactEdgeEdge extends Contact {
         pointEdgeB.mul(t).add(edgeStartingPointB);
 
         contactPos.set(pointEdgeA).add(pointEdgeB).mul(0.5d);
-    }
-
-    @Override
-    public void updateContactVelocity() { // TODO: Check if the referenceObject is ALWAYS objectA
-        contactVelocity.set(calculateContactVelocity(objectA));
     }
 
 
