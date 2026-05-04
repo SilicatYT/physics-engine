@@ -78,6 +78,19 @@ public class ContactResolver {
     private static void resolvePenetration(Contact contact) {}
 
     private static void resolvePenetrationLinearProjection(Contact contact) { // Simple linear projection
+        PhysicsObject objectA = contact.objectA;
+        PhysicsObject objectB = null;
+        if (contact.objectB != null) { objectB = contact.objectB; }
+
+        double inverseMassTotal = objectB == null ? objectA.getInverseMass() : objectA.getInverseMass() + objectB.getInverseMass();
+        Vector3d linearMovementPerInverseMass = new Vector3d(contact.getContactNormal()).mul(contact.getPenetrationDepth()).div(inverseMassTotal);
+
+        Vector3d linearMovementA = new Vector3d(linearMovementPerInverseMass).mul(objectA.getInverseMass());
+        objectA.setInternalPos(linearMovementA.add(objectA.getInternalPos()));
+        if (objectB != null) {
+            Vector3d linearMovementB = new Vector3d(linearMovementPerInverseMass).mul(-1 * objectB.getInverseMass()); // TODO: I could optimize a few calculations by re-using previous objects that I no longer need, and calling them "linearMovement" for example. Not sure if that would be clean though.
+            objectB.setInternalPos(linearMovementB.add(objectB.getInternalPos()));
+        }
     }
 
 
