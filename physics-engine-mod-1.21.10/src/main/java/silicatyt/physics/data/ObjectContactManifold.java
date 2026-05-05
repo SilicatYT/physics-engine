@@ -24,14 +24,17 @@ public class ObjectContactManifold implements ContactManifold {
 
     @Override
     public void updateWithContact(Contact newContact) {
-        Iterator<Contact> it =  contacts.iterator();
+        Iterator<Contact> it = contacts.iterator();
         separatedForTicks = 0;
+        boolean foundSameContact = false;
 
         // Update previous contacts
         while (it.hasNext()) {
             Contact contact = it.next();
-            if (contact.featureA == newContact.featureA && contact.featureB == newContact.featureB) { // Remove the "newContact" if it already existed
-                it.remove();
+            contact.isActive = true;
+
+            if (contact.featureA == newContact.featureA && contact.featureB == newContact.featureB) { // Remove the old "newContact" if it already existed
+                foundSameContact = true; // TODO: Maybe carry over the new contact's data for a bit of extra performance
                 continue;
             }
 
@@ -44,11 +47,11 @@ public class ObjectContactManifold implements ContactManifold {
             }
 
             // Set the "isActive" status: Deactivate contacts where necessary (Ignored during resolution, but kept in case they become valid again)
-            contact.isActive = projection >= ACCUMULATION_PROJECTION_DEACTIVATION_THRESHOLD;
+            if (projection < ACCUMULATION_PROJECTION_DEACTIVATION_THRESHOLD || contact.getPenetrationDepth() < 0d) { contact.isActive = false; }
         }
 
         // Add new contact
-        contacts.add(newContact);
+        if (!foundSameContact) { contacts.add(newContact); } // I don't replace the old contact because I want to keep data like the accumulated impulse. I could manually carry it over, which would be slightly faster because the old contact's other values are dirty, but I do this for readability & maintainability purposes.
     }
 
     @Override
