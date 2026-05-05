@@ -15,6 +15,7 @@ public class ContactResolver {
     private static final int NOF_ITERATIONS = 10;
     private static final double MIN_CLOSING_VELOCITY = 0d;
     private static final double MIN_PENETRATION_DEPTH = 0d;
+    private static final double RESTITUTION_ACTIVATION_SPEED_THRESHOLD = 0.1d; // If the closing velocity is smaller than this, the coefficient of restitution will be set to 0
 
     public static void resolve(ContactManager manager) {
         List<Contact> contacts = manager.getContacts();
@@ -100,13 +101,15 @@ public class ContactResolver {
     // Helper methods (Velocity resolution)
     private static double calculateDesiredDeltaVelocity(Contact contact) {
         // desiredDeltaVelocity = closingVelocity + restitution * (closingVelocity + relativeVelocityFromAcceleration)
-        Vector3d relativeLinearVelocityFromAcceleration =  new Vector3d(contact.objectA.getLinearVelocityFromAcceleration());
-        if (contact.objectB != null) { relativeLinearVelocityFromAcceleration.sub(contact.objectB.getLinearVelocityFromAcceleration()); }
-        Vector3d deltaVelocity = new Vector3d(contact.getContactVelocity()).sub(relativeLinearVelocityFromAcceleration);
-        deltaVelocity.mul(contact.getRestitutionCoefficient());
-        deltaVelocity.add(contact.getContactVelocity());
-        deltaVelocity.negate();
+        Vector3d deltaVelocity = new Vector3d();
+        if (contact.getClosingVelocity() >= RESTITUTION_ACTIVATION_SPEED_THRESHOLD) {
+            Vector3d relativeLinearVelocityFromAcceleration = new Vector3d(contact.objectA.getLinearVelocityFromAcceleration());
+            if (contact.objectB != null) { relativeLinearVelocityFromAcceleration.sub(contact.objectB.getLinearVelocityFromAcceleration()); }
+            deltaVelocity.set(contact.getContactVelocity()).sub(relativeLinearVelocityFromAcceleration);
+            deltaVelocity.mul(-contact.getRestitutionCoefficient());
+        }
 
+        deltaVelocity.sub(contact.getContactVelocity());
         return deltaVelocity.dot(contact.getContactNormal());
     }
 
