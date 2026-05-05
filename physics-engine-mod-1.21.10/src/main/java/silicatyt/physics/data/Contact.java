@@ -8,7 +8,10 @@ import silicatyt.physics.entity.PhysicsObject;
 import silicatyt.physics.versioning.VersionNode;
 
 // TODO: You can currently access protected variables everywhere in the same package. Make it so those are exclusive to contact and its subclasses.
-// TODO: Maybe isActive should not be public? But I need to be able to set it in accumulation...
+// TODO: frictionCoefficient and restitutionCoefficient are not persisted, so their getters do not need dependencies, at least for now. But I do run getXYZ() on them more than once per tick...
+// TODO: Should I move the "calculateTargetVelocity()" logic here, so it's in one place? Or would that make it look like it needs dependencies and an automatically updated getter? It's technically resolution logic, but so are orthonormalBasis and inverseEffectiveMass, no?
+// TODO: Add setters and getters for targetClosingVelocity. Don't keep it public. Also verify if it's finite. How to make it clear that those getters do not automatically update?
+// TODO: Clean up method order
 
 public abstract class Contact {
     public final PhysicsObject objectA;
@@ -22,8 +25,10 @@ public abstract class Contact {
 
     private final Matrix3d orthonormalBasis = new Matrix3d();
     private final Vector3d inverseEffectiveMass = new Vector3d(); // effective mass along each axis of the orthonormal basis
+    private final Vector3d accumulatedImpulse = new Vector3d();
+    public double targetClosingVelocity; // It should not be updated except manually. Its whole point is being cached, so it has no dependencies.
 
-    public boolean isActive = true;
+    private boolean isActive = true;
 
     protected final VersionNode contactPosVersion = new VersionNode(this::updateContactPos);
     protected final VersionNode contactNormalVersion = new VersionNode(this::updateContactNormal);
@@ -123,40 +128,40 @@ public abstract class Contact {
         Vector3d axis = new Vector3d();
         double combinedEffectiveMass;
 
-        Vector3d relativeContactPos0 = new Vector3d();
-        Vector3d crossProduct0 = new Vector3d();
-        Vector3d angular0 = new Vector3d();
-        double term0;
+        Vector3d relativeContactPosA = new Vector3d();
+        Vector3d crossProductA = new Vector3d();
+        Vector3d angularA = new Vector3d();
+        double termA;
 
-        Vector3d relativeContactPos1 = null;
-        Vector3d crossProduct1 = null;
-        Vector3d angular1 = null;
-        double term1 = 0.0;
+        Vector3d relativeContactPosB = null;
+        Vector3d crossProductB = null;
+        Vector3d angularB = null;
+        double termB = 0.0;
         if (objectB != null) {
-            relativeContactPos1 = new Vector3d();
-            crossProduct1 = new Vector3d();
-            angular1 = new Vector3d();
+            relativeContactPosB = new Vector3d();
+            crossProductB = new Vector3d();
+            angularB = new Vector3d();
         }
 
         for (int i = 0; i < 3; i++) {
             orthonormalBasis.getColumn(i, axis);
 
             // For objectA
-            relativeContactPos0.set(contactPos).sub(objectA.getInternalPos());
-            crossProduct0.set(relativeContactPos0.cross(axis));
-            objectA.getInverseInertiaTensorWorld().transform(crossProduct0, angular0);
-            term0 = angular0.dot(crossProduct0) + objectA.getInverseMass();
+            relativeContactPosA.set(contactPos).sub(objectA.getInternalPos());
+            crossProductA.set(relativeContactPosA.cross(axis));
+            objectA.getInverseInertiaTensorWorld().transform(crossProductA, angularA);
+            termA = angularA.dot(crossProductA) + objectA.getInverseMass();
 
             // For objectB
             if (objectB != null) {
-                relativeContactPos1.set(contactPos).sub(objectB.getInternalPos());
-                crossProduct1.set(relativeContactPos1.cross(axis));
-                objectB.getInverseInertiaTensorWorld().transform(crossProduct1, angular1);
-                term1 = angular1.dot(crossProduct1) + objectB.getInverseMass();
+                relativeContactPosB.set(contactPos).sub(objectB.getInternalPos());
+                crossProductB.set(relativeContactPosB.cross(axis));
+                objectB.getInverseInertiaTensorWorld().transform(crossProductB, angularB);
+                termB = angularB.dot(crossProductB) + objectB.getInverseMass();
             }
 
             // Total
-            combinedEffectiveMass = 1.0 / (term0 + term1);
+            combinedEffectiveMass = 1.0 / (termA + termB);
             switch (i) {
                 case 0 -> inverseEffectiveMass.x = combinedEffectiveMass;
                 case 1 -> inverseEffectiveMass.y = combinedEffectiveMass;
@@ -169,4 +174,18 @@ public abstract class Contact {
         inverseEffectiveMassVersion.updateIfNeeded();
         return inverseEffectiveMass;
     }
+
+    public Vector3dc getAccumulatedImpulse() { return accumulatedImpulse; }
+
+    public void addAccumulatedImpulse(Vector3dc impulseDelta) {
+        if (!impulseDelta.isFinite()) { throw new IllegalArgumentException("Impulse delta must be finite"); }
+        accumulatedImpulse.add(impulseDelta);
+    }
+
+    public void setActivity(boolean isActive) {
+        if (!isActive) { accumulatedImpulse.zero(); }
+        this.isActive = isActive;
+    }
+
+    public boolean isActive() { return isActive; }
 }

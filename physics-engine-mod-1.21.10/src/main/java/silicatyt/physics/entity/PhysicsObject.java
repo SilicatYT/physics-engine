@@ -415,15 +415,15 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         lastEntityPos = getEntityPos();
     }
 
-    public void applyImpulse(Vector3dc impulse, double inverseMassTotal, Vector3dc contactPos) { // TODO: Maybe move this to a helper method in ContactResolver
+    public void applyImpulse(Vector3dc impulse, Vector3dc contactPos) {
         if (inverseMass == 0.0) { return; }
 
         // Linear part
-        Vector3d relativeContactPos =  new Vector3d(contactPos).sub(pos);
-        Vector3d linearVelocityChange = new Vector3d(impulse).mul(inverseMass);
+        Vector3d linearVelocityChange = new Vector3d(impulse).mul(getInverseMass());
         setLinearVelocity(linearVelocityChange.add(getLinearVelocity()));
 
         // Angular part
+        Vector3d relativeContactPos = new Vector3d(contactPos).sub(getInternalPos());
         Vector3d torque = new Vector3d(relativeContactPos).cross(impulse);
         Vector3d angularVelocityChange = getInverseInertiaTensorWorld().transform(torque);
         setAngularVelocity(angularVelocityChange.add(getAngularVelocity()));

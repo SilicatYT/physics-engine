@@ -1,6 +1,7 @@
 package silicatyt.physics.simulation;
 
 // TODO: Also add a resolver that prioritizes contacts with higher penetrationDepth and closingVelocity
+// TODO: I could optimize a few calculations by re-using previous objects that I no longer need, and calling them "linearMovement" for example. It would avoid some "new Vector3d(...)" calls, but I'm not sure if that would be clean.
 
 import org.joml.Matrix3dc;
 import org.joml.Vector3d;
@@ -12,21 +13,36 @@ import silicatyt.physics.entity.PhysicsObject;
 import java.util.List;
 
 public class ContactResolver {
-    private static final int NOF_ITERATIONS = 10;
-    private static final double MIN_CLOSING_VELOCITY = 0d;
-    private static final double MIN_PENETRATION_DEPTH = 0d;
-    private static final double RESTITUTION_ACTIVATION_SPEED_THRESHOLD = 0.1d; // If the closing velocity is smaller than this, the coefficient of restitution will be set to 0
+    private static final int NOF_VELOCITY_RESOLUTION_ITERATIONS = 10;
+    private static final int NOF_PENETRATION_RESOLUTION_ITERATIONS = 10;
+    private static final double MIN_DELTA_VELOCITY = 0.01d;
+    private static final double MIN_PENETRATION_DEPTH = 0.001d;
+    private static final double RESTITUTION_ACTIVATION_SPEED_THRESHOLD = 0.3d; // If the closing velocity is smaller than this, the coefficient of restitution will be set to 0
 
     public static void resolve(ContactManager manager) {
         List<Contact> contacts = manager.getContacts();
-        for (int i = 0; i < NOF_ITERATIONS; i++) {
+
+        // Preparations
+        for (Contact contact : contacts) {
+            // Calculate target closing velocity that is used for the remainder of the tick
+            contact.targetClosingVelocity = calculateTargetClosingVelocity(contact);
+
+            // Warm-starting
+            if (!contact.getAccumulatedImpulse().equals(0d, 0d, 0d)) {
+                Vector3d impulseWorld = new Vector3d(contact.getAccumulatedImpulse());
+                contact.getOrthonormalBasis().transform(impulseWorld); // TODO: Maybe I can optimize it so I don't need this extra transformation, for example if I store the accumulated impulse in world coordinates, and add some (cheaper) calculations in resolveVelocity()?
+                applyImpulse(contact, impulseWorld);
+            }
+        }
+
+        // Resolution
+        for (int i = 0; i < NOF_VELOCITY_RESOLUTION_ITERATIONS; i++) {
             for (Contact contact : contacts) {
-                if (contact.getClosingVelocity() < MIN_CLOSING_VELOCITY) { continue; }
                 resolveVelocity(contact);
             }
         }
 
-        for (int i = 0; i < NOF_ITERATIONS; i++) {
+        for (int i = 0; i < NOF_PENETRATION_RESOLUTION_ITERATIONS; i++) {
             for (Contact contact : contacts) {
                 if (contact.getPenetrationDepth() < MIN_PENETRATION_DEPTH) { continue; }
                 resolvePenetrationLinearProjection(contact);
@@ -36,44 +52,47 @@ public class ContactResolver {
 
     public static void resolveALT(ContactManager manager) {} // TODO: Same as resolve, but prioritize contacts with higher penetrationDepth and closingVelocity
 
-    private static void resolveVelocity(Contact contact) { // TODO: Clamp the normal impulse to positive values, and prepare warm starting by applying the accumulatedImpulse, not just the current one. Even if the normal impulse is negative, it should still account for the tangential impulses
-        PhysicsObject objectA = contact.objectA;
-        PhysicsObject objectB = contact.objectB;
+    private static void resolveVelocity(Contact contact) {
+        double deltaVelocity = calculateDeltaVelocity(contact);
+        if (Math.abs(deltaVelocity) < MIN_DELTA_VELOCITY) { return; }
 
-        double deltaVelocity = calculateDesiredDeltaVelocity(contact);
         Matrix3dc orthonormalBasis = contact.getOrthonormalBasis();
 
         Vector3d contactVelocityInContactSpace = new Vector3d(contact.getContactVelocity());
         orthonormalBasis.transformTranspose(contactVelocityInContactSpace);
 
         // Required impulse for velocity change
+        Vector3dc accumulatedImpulse =  contact.getAccumulatedImpulse();
+
         Vector3dc inverseEffectiveMass = contact.getInverseEffectiveMass();
         Vector3d impulse = new Vector3d();
         impulse.x = deltaVelocity * inverseEffectiveMass.x();
-        if (impulse.x <= 0.0) { return; } // TODO: TEMPORARY. DO NOT KEEP THIS, USE A MORE STABLE FORM FOR WARM STARTING
         impulse.y = -contactVelocityInContactSpace.y * inverseEffectiveMass.y();
         impulse.z = -contactVelocityInContactSpace.z * inverseEffectiveMass.z();
 
+        Vector3d combinedImpulse = new Vector3d(impulse).add(accumulatedImpulse);
+        combinedImpulse.x = Math.max(0.0, combinedImpulse.x); // Clamp the combined impulse (incl. the warm-starting impulse), so the total impulse for this tick does not go in the negatives. I only apply combinedImpulse - accumulatedImpulse each iteration.
+
         // Friction
-        double planarImpulseMagnitudeSquared = impulse.y*impulse.y + impulse.z*impulse.z;
-        double maxFriction = contact.getFrictionCoefficient() * impulse.x;
+        double planarImpulseMagnitudeSquared = combinedImpulse.y*combinedImpulse.y + combinedImpulse.z*combinedImpulse.z;
+        double maxFriction = contact.getFrictionCoefficient() * combinedImpulse.x;
 
         if (planarImpulseMagnitudeSquared > maxFriction*maxFriction) {
             // Use dynamic friction
             double scalingFactor = maxFriction / Math.sqrt(planarImpulseMagnitudeSquared);
-            impulse.y *= scalingFactor;
-            impulse.z *= scalingFactor;
+            combinedImpulse.y *= scalingFactor;
+            combinedImpulse.z *= scalingFactor;
         }
 
+        // Update accumulated impulse
+        Vector3d deltaImpulse = combinedImpulse.sub(accumulatedImpulse); // Same reference, just a different name for readability
+        contact.addAccumulatedImpulse(deltaImpulse);
+
         // Transform impulse to world coordinates
-        orthonormalBasis.transform(impulse);
+        orthonormalBasis.transform(deltaImpulse);
 
         // Apply impulse
-        double inverseMassTotal = objectA.getInverseMass();
-        if (objectB != null) { inverseMassTotal += objectB.getInverseMass(); }
-
-        objectA.applyImpulse(impulse, inverseMassTotal, contact.getContactPos()); // Calculates some things twice in exchange for readability and code re-use
-        if (objectB != null) { objectB.applyImpulse(impulse.negate(), inverseMassTotal, contact.getContactPos()); }
+        applyImpulse(contact, deltaImpulse);
     }
 
     private static void resolvePenetration(Contact contact) {}
@@ -89,7 +108,7 @@ public class ContactResolver {
         Vector3d linearMovementA = new Vector3d(linearMovementPerInverseMass).mul(objectA.getInverseMass());
         objectA.setInternalPos(linearMovementA.add(objectA.getInternalPos()));
         if (objectB != null) {
-            Vector3d linearMovementB = new Vector3d(linearMovementPerInverseMass).mul(-1 * objectB.getInverseMass()); // TODO: I could optimize a few calculations by re-using previous objects that I no longer need, and calling them "linearMovement" for example. Not sure if that would be clean though.
+            Vector3d linearMovementB = new Vector3d(linearMovementPerInverseMass).mul(-1 * objectB.getInverseMass());
             objectB.setInternalPos(linearMovementB.add(objectB.getInternalPos()));
         }
     }
@@ -99,19 +118,30 @@ public class ContactResolver {
 
 
     // Helper methods (Velocity resolution)
-    private static double calculateDesiredDeltaVelocity(Contact contact) {
-        // desiredDeltaVelocity = closingVelocity + restitution * (closingVelocity + relativeVelocityFromAcceleration)
-        Vector3d deltaVelocity = new Vector3d();
-        if (contact.getClosingVelocity() >= RESTITUTION_ACTIVATION_SPEED_THRESHOLD) {
-            Vector3d relativeLinearVelocityFromAcceleration = new Vector3d(contact.objectA.getLinearVelocityFromAcceleration());
-            if (contact.objectB != null) { relativeLinearVelocityFromAcceleration.sub(contact.objectB.getLinearVelocityFromAcceleration()); }
-            deltaVelocity.set(contact.getContactVelocity()).sub(relativeLinearVelocityFromAcceleration);
-            deltaVelocity.mul(-contact.getRestitutionCoefficient());
-        }
+    private static double calculateTargetClosingVelocity(Contact contact) {
+        // targetClosingVelocity = -restitution * (closingVelocity + relativeVelocityFromAcceleration.dot(contactNormal))
+        if (contact.getClosingVelocity() < RESTITUTION_ACTIVATION_SPEED_THRESHOLD) { return 0d; } // Ignore restitution if the speed is small, for stability
 
-        deltaVelocity.sub(contact.getContactVelocity());
-        return deltaVelocity.dot(contact.getContactNormal());
+        Vector3d relativeLinearVelocityFromAcceleration = new Vector3d(contact.objectA.getLinearVelocityFromAcceleration());
+        if (contact.objectB != null) { relativeLinearVelocityFromAcceleration.sub(contact.objectB.getLinearVelocityFromAcceleration()); }
+
+        return -contact.getRestitutionCoefficient() * (contact.getClosingVelocity() + relativeLinearVelocityFromAcceleration.dot(contact.getContactNormal()));
+    }
+
+    private static double calculateDeltaVelocity(Contact contact) {
+        // desiredDeltaVelocity = targetClosingVelocity - closingVelocity
+        return contact.getClosingVelocity() - contact.targetClosingVelocity;
+    }
+
+    private static void applyImpulse(Contact contact, Vector3dc impulse) {
+        contact.objectA.applyImpulse(impulse, contact.getContactPos());
+        if (contact.objectB != null) { contact.objectB.applyImpulse(new Vector3d(impulse).negate(), contact.getContactPos()); } // Does a few unnecessary calculations because I could use the same intermediate results
     }
 
     // Helper methods (Penetration resolution)
 }
+
+// TODO: Make closingVelocity go toward a target (calculated before accumulatedImpulse is applied), instead of targetting 0 closingVelocity
+// Literally precompute the target (incl RESTITUTION_ACTIVATION_SPEED_THRESHOLD), and then just run "desiredDeltaVelocity = target - closingVelocity" every iteration. Much faster, and also warm-starting-safe
+// TODO: Can I do the same for penetration resolution?
+// TODO: Bug: Can balance on its edges, which happens after bouncing after a fall. Is that intended? I think it's a byproduct of "single contact per tick", because it perfectly lands in the middle of the edge

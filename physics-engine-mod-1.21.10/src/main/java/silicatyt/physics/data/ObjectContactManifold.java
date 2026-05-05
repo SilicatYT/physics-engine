@@ -26,15 +26,16 @@ public class ObjectContactManifold implements ContactManifold {
     public void updateWithContact(Contact newContact) {
         Iterator<Contact> it = contacts.iterator();
         separatedForTicks = 0;
-        boolean foundSameContact = false;
+        Vector3dc oldContactAccumulatedImpulse = null;
 
         // Update previous contacts
         while (it.hasNext()) {
             Contact contact = it.next();
-            contact.isActive = true;
+            contact.setActivity(true);
 
             if (contact.featureA == newContact.featureA && contact.featureB == newContact.featureB) { // Remove the old "newContact" if it already existed
-                foundSameContact = true; // TODO: Maybe carry over the new contact's data for a bit of extra performance
+                oldContactAccumulatedImpulse = contact.getAccumulatedImpulse();
+                it.remove();
                 continue;
             }
 
@@ -47,11 +48,12 @@ public class ObjectContactManifold implements ContactManifold {
             }
 
             // Set the "isActive" status: Deactivate contacts where necessary (Ignored during resolution, but kept in case they become valid again)
-            if (projection < ACCUMULATION_PROJECTION_DEACTIVATION_THRESHOLD || contact.getPenetrationDepth() < 0d) { contact.isActive = false; }
+            if (projection < ACCUMULATION_PROJECTION_DEACTIVATION_THRESHOLD || contact.getPenetrationDepth() < 0d) { contact.setActivity(false); }
         }
 
         // Add new contact
-        if (!foundSameContact) { contacts.add(newContact); } // I don't replace the old contact because I want to keep data like the accumulated impulse. I could manually carry it over, which would be slightly faster because the old contact's other values are dirty, but I do this for readability & maintainability purposes.
+        if (oldContactAccumulatedImpulse != null) { newContact.addAccumulatedImpulse(oldContactAccumulatedImpulse); } // Carry over the old contact's data
+        contacts.add(newContact);
     }
 
     @Override
@@ -69,7 +71,7 @@ public class ObjectContactManifold implements ContactManifold {
         expandedLeftAABB[0].sub(ACCUMULATION_MAX_AABB_SEPARATION_THRESHOLD, ACCUMULATION_MAX_AABB_SEPARATION_THRESHOLD, ACCUMULATION_MAX_AABB_SEPARATION_THRESHOLD);
         expandedLeftAABB[1].add(ACCUMULATION_MAX_AABB_SEPARATION_THRESHOLD, ACCUMULATION_MAX_AABB_SEPARATION_THRESHOLD, ACCUMULATION_MAX_AABB_SEPARATION_THRESHOLD);
         if (isIntersectingAABB(expandedLeftAABB, rightAABB)) {
-            for (Contact contact : contacts) { contact.isActive = false; }
+            for (Contact contact : contacts) { contact.setActivity(false); }
             return true;
         }
         return false;
@@ -79,7 +81,7 @@ public class ObjectContactManifold implements ContactManifold {
     public List<Contact> getContacts() {
         List<Contact> result = new LinkedList<>();
         for (Contact contact : contacts) {
-            if (contact.isActive) { result.add(contact); }
+            if (contact.isActive()) { result.add(contact); }
         }
         return result;
     }
