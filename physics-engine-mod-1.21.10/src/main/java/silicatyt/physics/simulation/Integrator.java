@@ -20,13 +20,20 @@ public class Integrator {
         updateLinearVelocity(obj);
         updatePos(obj);
         updateAngularVelocity(obj);
-        updateOrientationExponentialMap(obj);
+        updateOrientationExponentialMap(obj, obj.getAngularVelocity());
     }
 
     public static void phaseTwo(PhysicsObject obj) { // Update visual state & reset accumulators
+        // Apply split-impulse
+        obj.setInternalPos(new Vector3d(obj.getInternalPos()).add(new Vector3d(obj.getLinearCorrection()).mul(DELTA_TIME)));
+        updateOrientationExponentialMap(obj, new Vector3d(obj.getAngularCorrection()).mul(DELTA_TIME)); // TODO: multiply by deltatime here? Add the regular linear velocity? I originally just had "add the correction"
+        obj.clearCorrection();
+
+        // Update visuals
         obj.updateVisuals();
         obj.updateEntityPos();
 
+        // Clear accumulators
         obj.accumulatedForce.zero();
         obj.accumulatedTorque.zero(); // The accumulatedForce and accumulatedTorque still need to be stored until now so I can subtract them from contactVelocity during contact generation. I could also precalculate the stuff in integration, but then I'd need an additional instance variable. I could also store the velocityPrev (which just wouldn't include the acceleration induced velocity), which would be even faster. BUT: Damping should NOT be removed from the velocity, so that makes it a tiny bit more complicated.
     }
@@ -66,8 +73,7 @@ public class Integrator {
         obj.setAngularVelocity(velocityFromAcceleration.add(obj.getAngularVelocity()).mul(DEFAULT_ANGULAR_DAMPING));
     }
 
-    private static void updateOrientationEuler(PhysicsObject obj) { // Approach: Euler integration (TODO: Less accurate but faster. How about in a datapack, where I can use entity rotation tricks to compute sin and cos quickly? What to choose there?)
-        Vector3dc angularVelocity = obj.getAngularVelocity();
+    private static void updateOrientationEuler(PhysicsObject obj, Vector3dc angularVelocity) { // Approach: Euler integration (TODO: Less accurate but faster. How about in a datapack, where I can use entity rotation tricks to compute sin and cos quickly? What to choose there?)
         Quaterniond orientation = new Quaterniond(obj.getOrientation());
         obj.setOrientation(
                 orientation.add(new Quaterniond(angularVelocity.x(), angularVelocity.y(), angularVelocity.z(), 0) // angularVelocity is treated as a quaternion
@@ -77,8 +83,7 @@ public class Integrator {
         ); // I don't normalize it here because setOrientation() already does that automatically
     }
 
-    private static void updateOrientationExponentialMap(PhysicsObject obj) { // Approach: Exponential map integration
-        Vector3d angularVelocity = new Vector3d(obj.getAngularVelocity());
+    private static void updateOrientationExponentialMap(PhysicsObject obj, Vector3dc angularVelocity) { // Approach: Exponential map integration (TODO: Maybe move into an "applyAngularVelocity()" method inside PhysicsObject?)
         double angularVelocityLength = angularVelocity.length();
         if (angularVelocityLength < 1e-12) { // No orientation change. Continuing here (normalizing at some point) would produce NaN. 1e-12 is used because it's "pretty much 0" and makes it ignore unstable divisors.
             return;
@@ -88,10 +93,10 @@ public class Integrator {
         double angle = angularVelocityLength * DELTA_TIME;
 
         // Normalize direction
-        angularVelocity.normalize();
+        Vector3d axis = new Vector3d(angularVelocity).normalize();
 
         // Create quaternion for the orientation change
-        Quaterniond orientationChange = new Quaterniond().fromAxisAngleRad(angularVelocity, angle); // angularVelocity normalized is the axis
+        Quaterniond orientationChange = new Quaterniond().fromAxisAngleRad(axis, angle); // angularVelocity normalized is the axis
 
         // Apply orientation change
         obj.setOrientation(orientationChange.mul(obj.getOrientation())); // setOrientation() automatically normalizes, but for this method it's not required. Still good to normalize every couple hundred ticks or so to avoid accumulated precision errors.

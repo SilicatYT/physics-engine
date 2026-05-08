@@ -51,6 +51,8 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     public final Vector3d accumulatedForce = new Vector3d();
     public final Vector3d accumulatedTorque = new Vector3d();
     private final Vector3d linearVelocityFromAcceleration = new Vector3d();
+    private final Vector3d linearCorrection = new Vector3d(); // Used for "split-impulse" penetration resolution
+    private final Vector3d angularCorrection = new Vector3d(); // Used for "split-impulse" penetration resolution
 
     // Variable Versioning (Transient)
     private final VersionNode inverseMassVersion = new VersionNode(() -> {}); // inverseMass is a directly settable field, so it has no update method. Instead, it directly bumps its version in the public setter method.
@@ -92,6 +94,8 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
 
 
+
+
     // Constructor
     public PhysicsObject(EntityType<?> type, World world) {
         super(type, world);
@@ -122,42 +126,67 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     }
 
 
-
-
-
     // Getters
-    public Vector3dc getInternalPos() { return pos; }
+    public Vector3dc getInternalPos() {
+        return pos;
+    }
 
-    public Vec3d getLastEntityPos() { return lastEntityPos; }
+    public Vec3d getLastEntityPos() {
+        return lastEntityPos;
+    }
 
-    public double getInverseMass() { return inverseMass; }
+    public double getInverseMass() {
+        return inverseMass;
+    }
 
-    public Vector3dc getLinearVelocity() { return linearVelocity; }
+    public Vector3dc getLinearVelocity() {
+        return linearVelocity;
+    }
 
-    public Vector3d getLinearVelocity(Vector3d dest) { return dest.set(linearVelocity); }
+    public Vector3d getLinearVelocity(Vector3d dest) {
+        return dest.set(linearVelocity);
+    }
 
-    public Vector3dc getAngularVelocity() { return angularVelocity; }
+    public Vector3dc getAngularVelocity() {
+        return angularVelocity;
+    }
 
-    public Vector3d getAngularVelocity(Vector3d dest) { return dest.set(angularVelocity); }
+    public Vector3d getAngularVelocity(Vector3d dest) {
+        return dest.set(angularVelocity);
+    }
 
-    public Quaterniondc getOrientation() { return orientation; }
+    public Quaterniondc getOrientation() {
+        return orientation;
+    }
 
-    public Quaterniond getOrientation(Quaterniond dest) { return dest.set(orientation); }
+    public Quaterniond getOrientation(Quaterniond dest) {
+        return dest.set(orientation);
+    }
 
-    public Vector3dc getScale() { return scale; }
+    public Vector3dc getScale() {
+        return scale;
+    }
 
-    public Vector3d getScale(Vector3d dest) { return dest.set(scale); }
+    public Vector3d getScale(Vector3d dest) {
+        return dest.set(scale);
+    }
 
-    public double getFrictionCoefficient() { return frictionCoefficient; }
+    public double getFrictionCoefficient() {
+        return frictionCoefficient;
+    }
 
-    public double getRestitutionCoefficient() { return restitutionCoefficient; }
+    public double getRestitutionCoefficient() {
+        return restitutionCoefficient;
+    }
 
     public Matrix3dc getInverseInertiaTensorWorld() {
         inverseInertiaTensorWorldVersion.updateIfNeeded();
         return inverseInertiaTensorWorld;
     }
 
-    public Matrix3d getInverseInertiaTensorWorld(Matrix3d dest) { return dest.set(getInverseInertiaTensorWorld()); }
+    public Matrix3d getInverseInertiaTensorWorld(Matrix3d dest) {
+        return dest.set(getInverseInertiaTensorWorld());
+    }
 
     public Vector3dc[] getCornerPosRelative() {
         cornerPosRelativeVersion.updateIfNeeded();
@@ -165,7 +194,9 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     }
 
     public Vector3d[] getCornerPosRelative(Vector3d[] dest) throws IllegalArgumentException {
-        if (dest.length != 8) { throw new IllegalArgumentException("Expected array length of 8, got " +  dest.length); }
+        if (dest.length != 8) {
+            throw new IllegalArgumentException("Expected array length of 8, got " + dest.length);
+        }
         Vector3dc[] cornerPos = getCornerPosRelative();
         for (int i = 0; i < 8; i++) {
             dest[i].set(cornerPos[i]);
@@ -178,7 +209,9 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         return cornerPosRelative[index];
     }
 
-    public Vector3d getCornerPosRelative(int index, Vector3d dest) { return dest.set(getCornerPosRelative(index)); }
+    public Vector3d getCornerPosRelative(int index, Vector3d dest) {
+        return dest.set(getCornerPosRelative(index));
+    }
 
     public Vector3dc[] getCornerPosAbsolute() {
         cornerPosAbsoluteVersion.updateIfNeeded();
@@ -186,7 +219,9 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     }
 
     public Vector3d[] getCornerPosAbsolute(Vector3d[] dest) throws IllegalArgumentException {
-        if (dest.length != 8) { throw new IllegalArgumentException("Expected array length of 8, got " +  dest.length); }
+        if (dest.length != 8) {
+            throw new IllegalArgumentException("Expected array length of 8, got " + dest.length);
+        }
         Vector3dc[] cornerPos = getCornerPosAbsolute();
         for (int i = 0; i < 8; i++) {
             dest[i].set(cornerPos[i]);
@@ -199,7 +234,9 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         return cornerPosAbsolute[index];
     }
 
-    public Vector3d getCornerPosAbsolute(int index, Vector3d dest) { return dest.set(getCornerPosAbsolute(index)); }
+    public Vector3d getCornerPosAbsolute(int index, Vector3d dest) {
+        return dest.set(getCornerPosAbsolute(index));
+    }
 
     public Vector3dc[] getBoundingBoxAbsolute() {
         boundingBoxAbsoluteVersion.updateIfNeeded();
@@ -207,7 +244,9 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     }
 
     public Vector3d[] getBoundingBoxAbsolute(Vector3d[] dest) throws IllegalArgumentException {
-        if (dest.length != 2) { throw new IllegalArgumentException("Expected array length of 2, got " +  dest.length); }
+        if (dest.length != 2) {
+            throw new IllegalArgumentException("Expected array length of 2, got " + dest.length);
+        }
         Vector3dc[] boundingBox = getBoundingBoxAbsolute();
         dest[0].set(boundingBox[0]);
         dest[1].set(boundingBox[1]);
@@ -225,75 +264,114 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
     public Vector3d getLinearVelocityFromAcceleration(Vector3d dest) { return dest.set(linearVelocityFromAcceleration); }
 
+    public Vector3dc getLinearCorrection() { return linearCorrection; }
 
-
+    public Vector3dc getAngularCorrection() { return angularCorrection; }
 
 
     // Setters
     public void setInternalPos(Vector3dc position) {
-        if (!position.isFinite()) { throw new IllegalArgumentException("Position must be finite"); }
+        if (!position.isFinite()) {
+            throw new IllegalArgumentException("Position must be finite");
+        }
         posVersion.increment();
         pos.set(position);
     }
 
-    public void setInternalPos(Vec3d position) { setInternalPos(new Vector3d(position.x, position.y, position.z)); }
+    public void setInternalPos(Vec3d position) {
+        setInternalPos(new Vector3d(position.x, position.y, position.z));
+    }
 
     public void setInverseMass(double inverseMass) throws IllegalArgumentException {
-        if (inverseMass < 0) { throw new IllegalArgumentException("Inverse mass must not be negative"); }
-        if (!Double.isFinite(inverseMass)) { throw new IllegalArgumentException("Inverse mass must be finite"); }
+        if (inverseMass < 0) {
+            throw new IllegalArgumentException("Inverse mass must not be negative");
+        }
+        if (!Double.isFinite(inverseMass)) {
+            throw new IllegalArgumentException("Inverse mass must be finite");
+        }
 
         inverseMassVersion.increment();
         this.inverseMass = inverseMass;
     }
 
     public void setLinearVelocity(Vector3dc linearVelocity) {
-        if (!linearVelocity.isFinite()) { throw new IllegalArgumentException("Linear velocity must be finite"); }
+        if (!linearVelocity.isFinite()) {
+            throw new IllegalArgumentException("Linear velocity must be finite");
+        }
 
         linearVelocityVersion.increment();
         this.linearVelocity.set(linearVelocity);
     }
 
     public void setAngularVelocity(Vector3dc angularVelocity) {
-        if (!angularVelocity.isFinite()) { throw new IllegalArgumentException("Angular velocity must be finite"); }
+        if (!angularVelocity.isFinite()) {
+            throw new IllegalArgumentException("Angular velocity must be finite");
+        }
 
         angularVelocityVersion.increment();
         this.angularVelocity.set(angularVelocity);
     }
 
     public void setOrientation(Quaterniond orientation) {
-        if (!isValidQuaternion(orientation)) { throw new  IllegalArgumentException("Orientation must have a finite, non-zero length"); }
+        if (!isValidQuaternion(orientation)) {
+            throw new IllegalArgumentException("Orientation must have a finite, non-zero length");
+        }
         orientationVersion.increment();
         this.orientation.set(orientation);
         this.orientation.normalize();
     }
 
     public void setScale(Vector3dc scale) throws IllegalArgumentException {
-        if (scale.x() < 0 || scale.y() < 0 || scale.z() < 0) { throw new IllegalArgumentException("Scale must not be negative"); }
-        if (!scale.isFinite()) { throw new IllegalArgumentException("Scale must be finite"); }
+        if (scale.x() < 0 || scale.y() < 0 || scale.z() < 0) {
+            throw new IllegalArgumentException("Scale must not be negative");
+        }
+        if (!scale.isFinite()) {
+            throw new IllegalArgumentException("Scale must be finite");
+        }
 
         scaleVersion.increment();
         this.scale.set(scale);
     }
 
     public void setFrictionCoefficient(double frictionCoefficient) throws IllegalArgumentException {
-        if (frictionCoefficient < 0 || frictionCoefficient > 1) { throw new IllegalArgumentException("Friction coefficient must be between 0 and 1"); }
-        if (!Double.isFinite(frictionCoefficient)) { throw new IllegalArgumentException("Friction coefficient must be finite"); }
+        if (frictionCoefficient < 0 || frictionCoefficient > 1) {
+            throw new IllegalArgumentException("Friction coefficient must be between 0 and 1");
+        }
+        if (!Double.isFinite(frictionCoefficient)) {
+            throw new IllegalArgumentException("Friction coefficient must be finite");
+        }
 
         frictionCoefficientVersion.increment();
         this.frictionCoefficient = frictionCoefficient;
     }
 
     public void setRestitutionCoefficient(double restitutionCoefficient) throws IllegalArgumentException {
-        if (restitutionCoefficient < 0 || restitutionCoefficient > 1) { throw new IllegalArgumentException("Restitution coefficient must be between 0 and 1"); }
-        if (!Double.isFinite(restitutionCoefficient)) { throw new IllegalArgumentException("Restitution coefficient must be finite"); }
+        if (restitutionCoefficient < 0 || restitutionCoefficient > 1) {
+            throw new IllegalArgumentException("Restitution coefficient must be between 0 and 1");
+        }
+        if (!Double.isFinite(restitutionCoefficient)) {
+            throw new IllegalArgumentException("Restitution coefficient must be finite");
+        }
 
         restitutionCoefficientVersion.increment();
         this.restitutionCoefficient = restitutionCoefficient;
     }
 
     public void setLinearVelocityFromAcceleration(Vector3dc linearVelocity) { // TODO: Maybe make "addAcceleration" its own method, so that linearVelocityFromAcceleration and linearVelocity are always consistent
-        if (!linearVelocity.isFinite()) { throw new IllegalArgumentException("linear velocity must be finite"); }
+        if (!linearVelocity.isFinite()) {
+            throw new IllegalArgumentException("Linear velocity must be finite");
+        }
         linearVelocityFromAcceleration.set(linearVelocity);
+    }
+
+    public void addLinearCorrection(Vector3dc linearCorrection) {
+        if (!linearCorrection.isFinite()) { throw new IllegalArgumentException("Linear correction must be finite"); }
+        this.linearCorrection.add(linearCorrection);
+    }
+
+    public void addAngularCorrection(Vector3dc angularCorrection) {
+        if (!angularCorrection.isFinite()) { throw new IllegalArgumentException("Angular correction must be finite"); }
+        this.angularCorrection.add(angularCorrection);
     }
 
 
@@ -416,17 +494,28 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     }
 
     public void applyImpulse(Vector3dc impulse, Vector3dc contactPos) {
-        if (inverseMass == 0.0) { return; }
+        if (getInverseMass() == 0.0) { return; }
 
         // Linear part
-        Vector3d linearVelocityChange = new Vector3d(impulse).mul(getInverseMass());
+        Vector3d linearVelocityChange = calculateImpulseLinearVelocity(impulse);
         setLinearVelocity(linearVelocityChange.add(getLinearVelocity()));
 
         // Angular part
-        Vector3d relativeContactPos = new Vector3d(contactPos).sub(getInternalPos());
-        Vector3d torque = new Vector3d(relativeContactPos).cross(impulse);
-        Vector3d angularVelocityChange = getInverseInertiaTensorWorld().transform(torque);
+        Vector3d angularVelocityChange = calculateImpulseAngularVelocity(impulse, contactPos);
         setAngularVelocity(angularVelocityChange.add(getAngularVelocity()));
+    }
+
+    public Vector3d calculateImpulseLinearVelocity(Vector3dc impulse) { return new Vector3d(impulse).mul(getInverseMass()); }
+
+    public Vector3d calculateImpulseAngularVelocity(Vector3dc impulse, Vector3dc contactPos) {
+        Vector3d relativeContactPos = new Vector3d(contactPos).sub(getInternalPos());
+        Vector3d torque = relativeContactPos.cross(impulse);
+        return getInverseInertiaTensorWorld().transform(torque);
+    }
+
+    public void clearCorrection() {
+        linearCorrection.zero();
+        angularCorrection.zero();
     }
 
     private static boolean isValidQuaternion(Quaterniondc quaternion) {
@@ -434,10 +523,8 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
         double lengthSquared = quaternion.x()*quaternion.x() + quaternion.y()*quaternion.y() + quaternion.z()*quaternion.z() + quaternion.w()*quaternion.w();
         return lengthSquared > 1e-24;
     }
-
-    // TODO (VERY IMPORTANT): Check whether it's more stable to calculate contactVelocity with "(velocityBeforeIntegration + acceleration) * dampingMultiplier) - acceleration" or "velocityBeforeIntegration * dampingMultiplier" (or maybe even "velocityBeforeIntegration"). Currently I use the former.
-
 }
 
 
-// TODO: Fix a bug where scale flickers (interpolates every tick after setting)
+// TODO: Fix a bug where scale or orientation flicker (interpolates every tick after setting)
+// TODO: Add min value for scale components

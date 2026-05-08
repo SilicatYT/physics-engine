@@ -6,11 +6,14 @@ package silicatyt.physics.simulation;
 import org.joml.Matrix3dc;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
+import silicatyt.physics.Physics;
 import silicatyt.physics.data.Contact;
 import silicatyt.physics.data.ContactManager;
 import silicatyt.physics.entity.PhysicsObject;
 
 import java.util.List;
+
+import static silicatyt.physics.simulation.Main.DELTA_TIME;
 
 public class ContactResolver {
     private static final int NOF_VELOCITY_RESOLUTION_ITERATIONS = 10;
@@ -18,14 +21,20 @@ public class ContactResolver {
     private static final double MIN_DELTA_VELOCITY = 0.01d;
     private static final double MIN_PENETRATION_DEPTH = 0.001d;
     private static final double RESTITUTION_ACTIVATION_SPEED_THRESHOLD = 0.3d; // If the closing velocity is smaller than this, the coefficient of restitution will be set to 0
+    private static final double PENETRATION_RESOLUTION_STRENGTH = 0.2d; // How much of the penetration is resolved per iteration (in the split-impulse method)
+    private static final double PENETRATION_RESOLUTION_SLOP = 0.001d;
 
     public static void resolve(ContactManager manager) {
         List<Contact> contacts = manager.getContacts();
 
         // Preparations
         for (Contact contact : contacts) {
-            // Calculate target closing velocity that is used for the remainder of the tick
+            // Calculate target closing velocity (velocity resolution) that is used for the rest of the tick
             contact.targetClosingVelocity = calculateTargetClosingVelocity(contact);
+
+            // Calculate the bias velocity (penetration resolution) that's used for the rest of the tick
+            contact.biasVelocity = calculateBiasVelocity(contact);
+            contact.clearAccumulatedSplitImpulse();
 
             // Warm-starting
             if (!contact.getAccumulatedImpulse().equals(0d, 0d, 0d)) {
@@ -45,7 +54,7 @@ public class ContactResolver {
         for (int i = 0; i < NOF_PENETRATION_RESOLUTION_ITERATIONS; i++) {
             for (Contact contact : contacts) {
                 if (contact.getPenetrationDepth() < MIN_PENETRATION_DEPTH) { continue; }
-                resolvePenetrationLinearProjection(contact);
+                resolvePenetration(contact);
             }
         }
     }
@@ -95,7 +104,28 @@ public class ContactResolver {
         applyImpulse(contact, deltaImpulse);
     }
 
-    private static void resolvePenetration(Contact contact) {}
+    private static void resolvePenetration(Contact contact) { // Split-impulse
+        double biasVelocity = contact.biasVelocity;
+        double deltaVelocity = biasVelocity - calculateSplitImpulseContactVelocity(contact).dot(contact.getContactNormal()); // TODO: Check the signs
+        //if (Math.abs(deltaVelocity) < MIN_PENETRATION_DEPTH) { return; } TODO: IMPROVE THIS CHECK. RN it's bugged because it compares meters with meters/second.
+
+        Physics.LOGGER.info("Resolving penetration. BiasVelocity: {}, DeltaVelocity: {}", biasVelocity, deltaVelocity);
+
+        Vector3d impulse = new Vector3d(); // TODO: Optimize (Using a whole Vector3d even though I only have a single component is maybe a little weird)
+        impulse.x = deltaVelocity * contact.getInverseEffectiveMass().x();
+
+        Vector3dc accumulatedImpulse = contact.getAccumulatedSplitImpulse();
+        Vector3d combinedImpulse = new Vector3d(impulse).add(accumulatedImpulse);
+        combinedImpulse.x = Math.max(0.0, combinedImpulse.x);
+
+        Vector3d deltaImpulse = combinedImpulse.sub(accumulatedImpulse); // Same reference
+        contact.addAccumulatedSplitImpulse(deltaImpulse);
+
+        contact.getOrthonormalBasis().transform(deltaImpulse);
+
+        // Apply impulse (Add it to linear & angular correction)
+        applySplitImpulse(contact, deltaImpulse);
+    }
 
     private static void resolvePenetrationLinearProjection(Contact contact) { // Simple linear projection
         PhysicsObject objectA = contact.objectA;
@@ -139,9 +169,48 @@ public class ContactResolver {
     }
 
     // Helper methods (Penetration resolution)
-}
+    private static double calculateBiasVelocity(Contact contact) { // Basically the targetClosingVelocity for split-impulse penetration resolution
+        return PENETRATION_RESOLUTION_STRENGTH * Math.max(contact.getPenetrationDepth() - PENETRATION_RESOLUTION_SLOP, 0.0) / DELTA_TIME;
+    }
 
-// TODO: Make closingVelocity go toward a target (calculated before accumulatedImpulse is applied), instead of targetting 0 closingVelocity
-// Literally precompute the target (incl RESTITUTION_ACTIVATION_SPEED_THRESHOLD), and then just run "desiredDeltaVelocity = target - closingVelocity" every iteration. Much faster, and also warm-starting-safe
-// TODO: Can I do the same for penetration resolution?
-// TODO: Bug: Can balance on its edges, which happens after bouncing after a fall. Is that intended? I think it's a byproduct of "single contact per tick", because it perfectly lands in the middle of the edge
+    private static void applySplitImpulse(Contact contact, Vector3d impulse) {
+        // ObjectA
+        Vector3dc linearDelta = contact.objectA.calculateImpulseLinearVelocity(impulse);
+        contact.objectA.addLinearCorrection(linearDelta);
+
+        Vector3dc angularDelta = contact.objectA.calculateImpulseAngularVelocity(impulse, contact.getContactPos()); // TODO: Maybe move these methods (calculateImpulseXYZVelocity) into a helper class?
+        Physics.LOGGER.info("Linear correction: {}", linearDelta.toString());
+        Physics.LOGGER.info("Angular correction: {}", angularDelta.toString());
+        contact.objectA.addAngularCorrection(angularDelta);
+
+        // ObjectB
+        if (contact.objectB == null) { return; }
+        linearDelta = contact.objectB.calculateImpulseLinearVelocity(impulse);
+        contact.objectB.addLinearCorrection(linearDelta);
+
+        angularDelta = contact.objectB.calculateImpulseAngularVelocity(impulse, contact.getContactPos());
+        contact.objectB.addAngularCorrection(angularDelta);
+    }
+
+    private static Vector3d calculateSplitImpulseContactVelocity(Contact contact) { // TODO: Clean up to remove duplicated code. Maybe make a util class, or move this to the Contact class?
+        PhysicsObject objectA = contact.objectA;
+        PhysicsObject objectB = contact.objectB;
+        Vector3dc contactPos = contact.getContactPos();
+
+        Vector3d relativeContactPos = new Vector3d();
+
+        // pointVelocityA
+        relativeContactPos.set(contactPos);
+        relativeContactPos.sub(objectA.getInternalPos());
+        Vector3d pointVelocityA = new Vector3d(objectA.getAngularVelocity()).add(objectA.getAngularCorrection()).cross(relativeContactPos);
+        pointVelocityA.add(objectA.getLinearVelocity()).add(objectA.getLinearCorrection());
+
+        // pointVelocityB
+        relativeContactPos.set(contactPos);
+        relativeContactPos.sub(objectB.getInternalPos());
+        Vector3d pointVelocityB = new Vector3d(objectB.getAngularVelocity()).add(objectB.getAngularCorrection()).cross(relativeContactPos);
+        pointVelocityB.add(objectB.getLinearVelocity()).add(objectA.getLinearCorrection());
+
+        return pointVelocityA.sub(pointVelocityB);
+    }
+}

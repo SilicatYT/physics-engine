@@ -181,3 +181,5 @@ public class ContactGenerator {
     }
 
 }
+
+// TODO: In point-face, generate a contact for every corner that matches, if there's not already a contact for that corner. Shouldn't be that expensive, but it would make landing flat on the floor much more stable. (But in reality, when is this ever gonna happen anyway?)

@@ -27,6 +27,8 @@ public abstract class Contact {
     private final Vector3d inverseEffectiveMass = new Vector3d(); // effective mass along each axis of the orthonormal basis
     private final Vector3d accumulatedImpulse = new Vector3d();
     public double targetClosingVelocity; // It should not be updated except manually. Its whole point is being cached, so it has no dependencies.
+    private final Vector3d accumulatedSplitImpulse = new Vector3d(); // TODO: Clean up
+    public double biasVelocity; // TODO: Same notes as for targetClosingVelocity
 
     private boolean isActive = true;
 
@@ -73,7 +75,7 @@ public abstract class Contact {
     protected abstract void updatePenetrationDepth();
     protected abstract void updateContactPos();
 
-    protected void updateContactVelocity() {
+    protected void updateContactVelocity() { // TODO: Rework so it works for terrain contacts too
         Vector3d relativeContactPos = new Vector3d();
 
         // pointVelocityA
@@ -181,6 +183,15 @@ public abstract class Contact {
         if (!impulseDelta.isFinite()) { throw new IllegalArgumentException("Impulse delta must be finite"); }
         accumulatedImpulse.add(impulseDelta);
     }
+
+    public Vector3dc getAccumulatedSplitImpulse() { return accumulatedSplitImpulse; }
+
+    public void addAccumulatedSplitImpulse(Vector3dc impulseDelta) {
+        if (!impulseDelta.isFinite()) { throw new IllegalArgumentException("Impulse delta must be finite"); }
+        accumulatedSplitImpulse.add(impulseDelta);
+    }
+
+    public void clearAccumulatedSplitImpulse() { accumulatedSplitImpulse.zero(); }
 
     public void setActivity(boolean isActive) {
         if (!isActive) { accumulatedImpulse.zero(); }
