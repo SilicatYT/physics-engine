@@ -4,6 +4,7 @@ import net.minecraft.util.math.Vec3d;
 import org.joml.Quaterniond;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
+import silicatyt.physics.Physics;
 import silicatyt.physics.entity.PhysicsObject;
 
 import static java.lang.Math.pow;
@@ -18,25 +19,28 @@ public class Integrator {
     public static void phaseOne(PhysicsObject obj) { // Update internal state
         fixEntityPos(obj);
         updateLinearVelocity(obj);
-        updatePos(obj);
         updateAngularVelocity(obj);
-        updateOrientationExponentialMap(obj, obj.getAngularVelocity());
+        predictMovement(obj);
     }
 
     public static void phaseTwo(PhysicsObject obj) { // Update visual state & reset accumulators
         // TEMPORARY (TODO: REMOVE)
         if (obj.getInverseMass() == 0d) { return; }
 
-        // Apply split-impulse
-        obj.setInternalPos(new Vector3d(obj.getInternalPos()).add(new Vector3d(obj.getLinearCorrection()).mul(DELTA_TIME)));
-        updateOrientationExponentialMap(obj, new Vector3d(obj.getAngularCorrection()).mul(DELTA_TIME)); // TODO: multiply by deltatime here? Add the regular linear velocity? I originally just had "add the correction"
-        obj.clearCorrection();
+        // Revert to original pos & orientation
+        obj.setInternalPos(obj.getBackupPos());
+        obj.setOrientation(obj.getBackupOrientation());
+
+        // Update internal values
+        updatePos(obj);
+        updateOrientationExponentialMap(obj);
 
         // Update visuals
         obj.updateVisuals();
         obj.updateEntityPos();
 
         // Clear accumulators
+        obj.clearCorrection();
         obj.accumulatedForce.zero();
         obj.accumulatedTorque.zero(); // The accumulatedForce and accumulatedTorque still need to be stored until now so I can subtract them from contactVelocity during contact generation. I could also precalculate the stuff in integration, but then I'd need an additional instance variable. I could also store the velocityPrev (which just wouldn't include the acceleration induced velocity), which would be even faster. BUT: Damping should NOT be removed from the velocity, so that makes it a tiny bit more complicated.
     }
@@ -66,8 +70,18 @@ public class Integrator {
     }
 
     private static void updatePos(PhysicsObject obj) {
-        Vector3d movement = new Vector3d(obj.getLinearVelocity()).mul(DELTA_TIME);
+        Vector3d movement = new Vector3d(obj.getLinearVelocity()).add(obj.getLinearCorrection()).mul(DELTA_TIME);
         obj.setInternalPos(movement.add(obj.getInternalPos()));
+    }
+
+    private static void predictMovement(PhysicsObject obj) {
+        // Create backups
+        obj.setBackupPos(obj.getInternalPos());
+        obj.setBackupOrientation(obj.getOrientation());
+
+        // Update predicted pos & orientation
+        updatePos(obj);
+        updateOrientationExponentialMap(obj);
     }
 
     private static void updateAngularVelocity(PhysicsObject obj) {
@@ -79,7 +93,7 @@ public class Integrator {
         obj.setAngularVelocity(velocityFromAcceleration.add(obj.getAngularVelocity()).mul(DEFAULT_ANGULAR_DAMPING));
     }
 
-    private static void updateOrientationEuler(PhysicsObject obj, Vector3dc angularVelocity) { // Approach: Euler integration (TODO: Less accurate but faster. How about in a datapack, where I can use entity rotation tricks to compute sin and cos quickly? What to choose there?)
+   /* private static void updateOrientationEuler(PhysicsObject obj, Vector3dc angularVelocity) { // Approach: Euler integration (TODO: Less accurate but faster. How about in a datapack, where I can use entity rotation tricks to compute sin and cos quickly? What to choose there?)
         Quaterniond orientation = new Quaterniond(obj.getOrientation());
         obj.setOrientation(
                 orientation.add(new Quaterniond(angularVelocity.x(), angularVelocity.y(), angularVelocity.z(), 0) // angularVelocity is treated as a quaternion
@@ -87,9 +101,11 @@ public class Integrator {
                         .scale(0.5d * DELTA_TIME)
                 )
         ); // I don't normalize it here because setOrientation() already does that automatically
-    }
+    }*/
 
-    private static void updateOrientationExponentialMap(PhysicsObject obj, Vector3dc angularVelocity) { // Approach: Exponential map integration (TODO: Maybe move into an "applyAngularVelocity()" method inside PhysicsObject?)
+    private static void updateOrientationExponentialMap(PhysicsObject obj) { // Approach: Exponential map integration (TODO: Maybe move into an "applyAngularVelocity()" method inside PhysicsObject?)
+        Vector3d angularVelocity = new Vector3d(obj.getAngularCorrection()).add(obj.getAngularVelocity());
+
         double angularVelocityLength = angularVelocity.length();
         if (angularVelocityLength < 1e-12) { // No orientation change. Continuing here (normalizing at some point) would produce NaN. 1e-12 is used because it's "pretty much 0" and makes it ignore unstable divisors.
             return;
@@ -109,3 +125,7 @@ public class Integrator {
     }
 
 }
+
+// TODO: Should I revert back to the original state as I do now, or just apply the corrections?
+// TODO: Should I interleave velocity and penetration resolution, or do penetration afterwards?
+// TODO: Why is it still so incredibly jittery, even with a lot of iterations and a small penetration resolution strength?

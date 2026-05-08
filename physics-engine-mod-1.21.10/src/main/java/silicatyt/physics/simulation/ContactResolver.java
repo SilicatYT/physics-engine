@@ -14,12 +14,11 @@ import java.util.List;
 import static silicatyt.physics.simulation.Main.DELTA_TIME;
 
 public class ContactResolver {
-    private static final int NOF_VELOCITY_RESOLUTION_ITERATIONS = 10;
-    private static final int NOF_PENETRATION_RESOLUTION_ITERATIONS = 10;
+    private static final int NOF_ITERATIONS = 40;
     private static final double MIN_DELTA_VELOCITY = 0.01d;
     private static final double MIN_PENETRATION_DEPTH = 0.001d;
     private static final double RESTITUTION_ACTIVATION_SPEED_THRESHOLD = 0.3d; // If the closing velocity is smaller than this, the coefficient of restitution will be set to 0
-    private static final double PENETRATION_RESOLUTION_STRENGTH = 0.2d; // How much of the penetration is resolved per iteration (in the split-impulse method)
+    private static final double PENETRATION_RESOLUTION_STRENGTH = 0.05d; // How much of the penetration is resolved per iteration (in the split-impulse method)
     private static final double PENETRATION_RESOLUTION_SLOP = 0.001d;
 
     public static void resolve(ContactManager manager) {
@@ -42,16 +41,10 @@ public class ContactResolver {
             }
         }
 
-        // Resolution
-        for (int i = 0; i < NOF_VELOCITY_RESOLUTION_ITERATIONS; i++) {
-            for (Contact contact : contacts) {
+        // Iterations
+        for (int i = 0; i < NOF_ITERATIONS; i++) { // Split-impulse needs the iterations to be combined
+            for (Contact contact : contacts) { // TODO: Doublecheck whether I should interleave
                 resolveVelocity(contact);
-            }
-        }
-
-        for (int i = 0; i < NOF_PENETRATION_RESOLUTION_ITERATIONS; i++) {
-            for (Contact contact : contacts) {
-                if (contact.getPenetrationDepth() < MIN_PENETRATION_DEPTH) { continue; }
                 resolvePenetration(contact);
             }
         }
@@ -120,22 +113,6 @@ public class ContactResolver {
         applySplitImpulse(contact, deltaImpulse);
     }
 
-    private static void resolvePenetrationLinearProjection(Contact contact) { // Simple linear projection
-        PhysicsObject objectA = contact.objectA;
-        PhysicsObject objectB = null;
-        if (contact.objectB != null) { objectB = contact.objectB; }
-
-        double inverseMassTotal = objectB == null ? objectA.getInverseMass() : objectA.getInverseMass() + objectB.getInverseMass();
-        Vector3d linearMovementPerInverseMass = new Vector3d(contact.getContactNormal()).mul(contact.getPenetrationDepth()).div(inverseMassTotal);
-
-        Vector3d linearMovementA = new Vector3d(linearMovementPerInverseMass).mul(objectA.getInverseMass());
-        objectA.setInternalPos(linearMovementA.add(objectA.getInternalPos()));
-        if (objectB != null) {
-            Vector3d linearMovementB = new Vector3d(linearMovementPerInverseMass).mul(-1 * objectB.getInverseMass());
-            objectB.setInternalPos(linearMovementB.add(objectB.getInternalPos()));
-        }
-    }
-
 
 
 
@@ -180,6 +157,7 @@ public class ContactResolver {
 
         // ObjectB
         if (contact.objectB == null) { return; }
+        impulse.negate();
         linearDelta = contact.objectB.calculateImpulseLinearVelocity(impulse);
         contact.objectB.addLinearCorrection(linearDelta);
 
@@ -188,6 +166,11 @@ public class ContactResolver {
     }
 
     private static Vector3d calculateSplitImpulseContactVelocity(Contact contact) {
-        return contact.calculateContactVelocity(contact.objectA.getLinearVelocity(), contact.objectA.getAngularVelocity(), contact.objectB.getLinearVelocity(), contact.objectB.getAngularVelocity());
+        return contact.calculateContactVelocity(
+                new Vector3d(contact.objectA.getLinearCorrection()),
+                new Vector3d(contact.objectA.getAngularCorrection()),
+                new Vector3d(contact.objectB.getLinearCorrection()),
+                new Vector3d(contact.objectB.getAngularCorrection())
+        );
     }
 }
