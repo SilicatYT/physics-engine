@@ -24,6 +24,9 @@ public class Integrator {
     }
 
     public static void phaseTwo(PhysicsObject obj) { // Update visual state & reset accumulators
+        // TEMPORARY (TODO: REMOVE)
+        if (obj.getInverseMass() == 0d) { return; }
+
         // Apply split-impulse
         obj.setInternalPos(new Vector3d(obj.getInternalPos()).add(new Vector3d(obj.getLinearCorrection()).mul(DELTA_TIME)));
         updateOrientationExponentialMap(obj, new Vector3d(obj.getAngularCorrection()).mul(DELTA_TIME)); // TODO: multiply by deltatime here? Add the regular linear velocity? I originally just had "add the correction"
@@ -49,9 +52,12 @@ public class Integrator {
     }
 
     private static void updateLinearVelocity(PhysicsObject obj) {
+        // TEMPORARY (TODO: REMOVE)
+        if (obj.getInverseMass() == 0d) { return; }
+
         // Apply accumulated force & gravity
         Vector3d velocityFromAcceleration = new Vector3d(obj.accumulatedForce).mul(obj.getInverseMass());
-        //velocityFromAcceleration.add(DEFAULT_GRAVITY);
+        velocityFromAcceleration.add(DEFAULT_GRAVITY);
         velocityFromAcceleration.mul(DELTA_TIME);
         obj.setLinearVelocityFromAcceleration(velocityFromAcceleration);
 

@@ -8,10 +8,6 @@ import silicatyt.physics.entity.PhysicsObject;
 import silicatyt.physics.versioning.VersionNode;
 
 // TODO: You can currently access protected variables everywhere in the same package. Make it so those are exclusive to contact and its subclasses.
-// TODO: frictionCoefficient and restitutionCoefficient are not persisted, so their getters do not need dependencies, at least for now. But I do run getXYZ() on them more than once per tick...
-// TODO: Should I move the "calculateTargetVelocity()" logic here, so it's in one place? Or would that make it look like it needs dependencies and an automatically updated getter? It's technically resolution logic, but so are orthonormalBasis and inverseEffectiveMass, no?
-// TODO: Add setters and getters for targetClosingVelocity. Don't keep it public. Also verify if it's finite. How to make it clear that those getters do not automatically update?
-// TODO: Clean up method order
 
 public abstract class Contact {
     public final PhysicsObject objectA;
@@ -26,9 +22,10 @@ public abstract class Contact {
     private final Matrix3d orthonormalBasis = new Matrix3d();
     private final Vector3d inverseEffectiveMass = new Vector3d(); // effective mass along each axis of the orthonormal basis
     private final Vector3d accumulatedImpulse = new Vector3d();
-    public double targetClosingVelocity; // It should not be updated except manually. Its whole point is being cached, so it has no dependencies.
-    private final Vector3d accumulatedSplitImpulse = new Vector3d(); // TODO: Clean up
-    public double biasVelocity; // TODO: Same notes as for targetClosingVelocity
+    private double targetClosingVelocity; // It should not be updated except manually. Its whole point is being cached, so it has no dependencies.
+
+    private double accumulatedSplitImpulse; // TODO: Clean up
+    private double biasVelocity; // TODO: Same notes as for targetClosingVelocity
 
     private boolean isActive = true;
 
@@ -38,6 +35,7 @@ public abstract class Contact {
     protected final VersionNode penetrationDepthVersion = new VersionNode(this::updatePenetrationDepth);
     private final VersionNode orthonormalBasisVersion = new VersionNode(this::updateOrthonormalBasis);
     private final VersionNode inverseEffectiveMassVersion = new VersionNode(this::updateInverseEffectiveMass);
+
 
     public Contact(PhysicsObject objectA, PhysicsObject objectB, int featureA, int featureB) {
         this.objectA = objectA;
@@ -56,6 +54,11 @@ public abstract class Contact {
         }
     }
 
+
+
+
+
+    // Field getters
     public Vector3dc getContactPos() {
         contactPosVersion.updateIfNeeded();
         return contactPos;
@@ -71,40 +74,57 @@ public abstract class Contact {
         return penetrationDepth;
     }
 
-    protected abstract void updateContactNormal();
-    protected abstract void updatePenetrationDepth();
-    protected abstract void updateContactPos();
-
-    protected void updateContactVelocity() { // TODO: Rework so it works for terrain contacts too
-        Vector3d relativeContactPos = new Vector3d();
-
-        // pointVelocityA
-        relativeContactPos.set(contactPos);
-        relativeContactPos.sub(objectA.getInternalPos());
-        Vector3d pointVelocityA = new Vector3d(objectA.getAngularVelocity()).cross(relativeContactPos);
-        pointVelocityA.add(objectA.getLinearVelocity());
-
-        // pointVelocityB
-        relativeContactPos.set(contactPos);
-        relativeContactPos.sub(objectB.getInternalPos());
-        Vector3d pointVelocityB = new Vector3d(objectB.getAngularVelocity()).cross(relativeContactPos);
-        pointVelocityB.add(objectB.getLinearVelocity());
-
-        contactVelocity.set(pointVelocityA.sub(pointVelocityB));
-    }
-
     public Vector3dc getContactVelocity() {
         contactVelocityVersion.updateIfNeeded();
         return contactVelocity;
     }
 
-    protected int getFeature(PhysicsObject object) { return object == objectA ? featureA : featureB; }
+    public Matrix3dc getOrthonormalBasis() {
+        orthonormalBasisVersion.updateIfNeeded();
+        return orthonormalBasis;
+    }
 
+    public Vector3dc getInverseEffectiveMass() {
+        inverseEffectiveMassVersion.updateIfNeeded();
+        return inverseEffectiveMass;
+    }
+
+    public Vector3dc getAccumulatedImpulse() { return accumulatedImpulse; }
+
+    public double getTargetClosingVelocity() { return targetClosingVelocity; }
+
+    public double getAccumulatedSplitImpulse() { return accumulatedSplitImpulse; }
+
+    public double getBiasVelocity() { return biasVelocity; }
+
+    public boolean isActive() { return isActive; }
+
+
+
+
+
+    // Other getters (i.e., for values that are not worth adding fields for)
     public double getClosingVelocity() { return -getContactVelocity().dot(getContactNormal()); }
+
+    protected int getFeature(PhysicsObject object) { return object == objectA ? featureA : featureB; }
 
     public double getRestitutionCoefficient() { return objectB == null ? objectA.getRestitutionCoefficient() : Math.min(objectA.getRestitutionCoefficient(), objectB.getRestitutionCoefficient()); } // TODO: Maybe change to avg or something else
 
     public double getFrictionCoefficient() { return objectB == null ? objectA.getFrictionCoefficient() : Math.min(objectA.getFrictionCoefficient(), objectB.getFrictionCoefficient()); } // TODO: Maybe change to avg or something else
+
+
+
+
+
+    // Updaters
+    protected abstract void updateContactNormal();
+    protected abstract void updatePenetrationDepth();
+    protected abstract void updateContactPos();
+
+    protected void updateContactVelocity() { // TODO: Rework so it works for terrain contacts too
+        Vector3d newVelocity = calculateContactVelocity(objectA.getLinearVelocity(), objectA.getAngularVelocity(), objectB.getLinearVelocity(), objectB.getAngularVelocity());
+        contactVelocity.set(newVelocity);
+    }
 
     private void updateOrthonormalBasis() { // TODO: Optimize if it's a terrain contact (Or in general: contactNormal is one of the world axes)
         Vector3d tangent1 = new Vector3d();
@@ -119,11 +139,6 @@ public abstract class Contact {
         }
         Vector3d tangent2 = new Vector3d(contactNormal).cross(tangent1);
         orthonormalBasis.set(contactNormal, tangent1, tangent2);
-    }
-
-    public Matrix3dc getOrthonormalBasis() {
-        orthonormalBasisVersion.updateIfNeeded();
-        return orthonormalBasis;
     }
 
     private void updateInverseEffectiveMass() {
@@ -172,31 +187,59 @@ public abstract class Contact {
         }
     }
 
-    public Vector3dc getInverseEffectiveMass() {
-        inverseEffectiveMassVersion.updateIfNeeded();
-        return inverseEffectiveMass;
+
+
+
+
+    // Setters
+    public void setTargetClosingVelocity(double targetClosingVelocity) {
+        if (!Double.isFinite(targetClosingVelocity)) { throw new IllegalArgumentException("Target closing velocity must be finite"); }
+        this.targetClosingVelocity = targetClosingVelocity;
     }
 
-    public Vector3dc getAccumulatedImpulse() { return accumulatedImpulse; }
-
-    public void addAccumulatedImpulse(Vector3dc impulseDelta) {
-        if (!impulseDelta.isFinite()) { throw new IllegalArgumentException("Impulse delta must be finite"); }
-        accumulatedImpulse.add(impulseDelta);
+    public void setBiasVelocity(double biasVelocity) {
+        if (!Double.isFinite(biasVelocity)) { throw new IllegalArgumentException("Bias velocity must be finite"); }
+        this.biasVelocity = biasVelocity;
     }
-
-    public Vector3dc getAccumulatedSplitImpulse() { return accumulatedSplitImpulse; }
-
-    public void addAccumulatedSplitImpulse(Vector3dc impulseDelta) {
-        if (!impulseDelta.isFinite()) { throw new IllegalArgumentException("Impulse delta must be finite"); }
-        accumulatedSplitImpulse.add(impulseDelta);
-    }
-
-    public void clearAccumulatedSplitImpulse() { accumulatedSplitImpulse.zero(); }
 
     public void setActivity(boolean isActive) {
         if (!isActive) { accumulatedImpulse.zero(); }
         this.isActive = isActive;
     }
 
-    public boolean isActive() { return isActive; }
+
+
+
+
+    // Other
+    public void addAccumulatedImpulse(Vector3dc impulseDelta) {
+        if (!impulseDelta.isFinite()) { throw new IllegalArgumentException("Impulse delta must be finite"); }
+        accumulatedImpulse.add(impulseDelta);
+    }
+
+    public void addAccumulatedSplitImpulse(double impulseDelta) {
+        if (!Double.isFinite(impulseDelta)) { throw new IllegalArgumentException("Impulse delta must be finite"); }
+        accumulatedSplitImpulse += impulseDelta;
+    }
+
+    public void clearAccumulatedSplitImpulse() { accumulatedSplitImpulse = 0d; }
+
+    public Vector3d calculateContactVelocity(Vector3dc linearVelocityA, Vector3dc angularVelocityA, Vector3dc linearVelocityB, Vector3dc angularVelocityB) {
+        Vector3d relativeContactPos = new Vector3d();
+
+        // pointVelocityA
+        relativeContactPos.set(contactPos);
+        relativeContactPos.sub(objectA.getInternalPos());
+        Vector3d pointVelocityA = new Vector3d(angularVelocityA).cross(relativeContactPos);
+        pointVelocityA.add(linearVelocityA);
+
+        // pointVelocityB
+        relativeContactPos.set(contactPos);
+        relativeContactPos.sub(objectB.getInternalPos());
+        Vector3d pointVelocityB = new Vector3d(angularVelocityB).cross(relativeContactPos);
+        pointVelocityB.add(linearVelocityB);
+
+        return pointVelocityA.sub(pointVelocityB);
+    }
+
 }
