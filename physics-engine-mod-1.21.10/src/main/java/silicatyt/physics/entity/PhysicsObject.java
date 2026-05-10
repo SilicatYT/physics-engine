@@ -54,9 +54,6 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     private final Vector3d linearCorrection = new Vector3d(); // Used for "split-impulse" penetration resolution
     private final Vector3d angularCorrection = new Vector3d(); // Used for "split-impulse" penetration resolution
 
-    private final Vector3d backupPos = new Vector3d();
-    private final Quaterniond backupOrientation = new Quaterniond();
-
     // Variable Versioning (Transient)
     private final VersionNode inverseMassVersion = new VersionNode(() -> {}); // inverseMass is a directly settable field, so it has no update method. Instead, it directly bumps its version in the public setter method.
     private final VersionNode orientationVersion = new VersionNode(() -> {});
@@ -271,10 +268,6 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
 
     public Vector3dc getAngularCorrection() { return angularCorrection; }
 
-    public Vector3dc getBackupPos() { return backupPos; }
-
-    public Quaterniondc getBackupOrientation() { return backupOrientation; }
-
 
 
 
@@ -382,21 +375,6 @@ public class PhysicsObject extends ItemDisplayEntity implements PolymerEntity {
     public void addAngularCorrection(Vector3dc angularCorrection) {
         if (!angularCorrection.isFinite()) { throw new IllegalArgumentException("Angular correction must be finite"); }
         this.angularCorrection.add(angularCorrection);
-    }
-
-    public void setBackupPos(Vector3dc position) {
-        if (!position.isFinite()) {
-            throw new IllegalArgumentException("Position must be finite");
-        }
-        backupPos.set(position);
-    }
-
-    public void setBackupOrientation(Quaterniondc orientation) {
-        if (!isValidQuaternion(orientation)) {
-            throw new IllegalArgumentException("Orientation must have a finite, non-zero length");
-        }
-        backupOrientation.set(orientation);
-        backupOrientation.normalize();
     }
 
 

@@ -19,28 +19,22 @@ public class Integrator {
     public static void phaseOne(PhysicsObject obj) { // Update internal state
         fixEntityPos(obj);
         updateLinearVelocity(obj);
+        updatePos(obj, obj.getLinearVelocity());
         updateAngularVelocity(obj);
-        predictMovement(obj);
+        updateOrientationExponentialMap(obj, obj.getAngularVelocity());
     }
 
-    public static void phaseTwo(PhysicsObject obj) { // Update visual state & reset accumulators
-        // TEMPORARY (TODO: REMOVE)
-        if (obj.getInverseMass() == 0d) { return; }
-
-        // Revert to original pos & orientation
-        obj.setInternalPos(obj.getBackupPos());
-        obj.setOrientation(obj.getBackupOrientation());
-
-        // Update internal values
-        updatePos(obj);
-        updateOrientationExponentialMap(obj);
+    public static void phaseTwo(PhysicsObject obj) {
+        // Apply split-impulse corrections
+        updatePos(obj, obj.getLinearCorrection());
+        updateOrientationExponentialMap(obj, obj.getAngularCorrection());
+        obj.clearCorrection();
 
         // Update visuals
         obj.updateVisuals();
         obj.updateEntityPos();
 
         // Clear accumulators
-        obj.clearCorrection();
         obj.accumulatedForce.zero();
         obj.accumulatedTorque.zero(); // The accumulatedForce and accumulatedTorque still need to be stored until now so I can subtract them from contactVelocity during contact generation. I could also precalculate the stuff in integration, but then I'd need an additional instance variable. I could also store the velocityPrev (which just wouldn't include the acceleration induced velocity), which would be even faster. BUT: Damping should NOT be removed from the velocity, so that makes it a tiny bit more complicated.
     }
@@ -69,19 +63,9 @@ public class Integrator {
         obj.setLinearVelocity(velocityFromAcceleration.add(obj.getLinearVelocity()).mul(DEFAULT_LINEAR_DAMPING));
     }
 
-    private static void updatePos(PhysicsObject obj) {
-        Vector3d movement = new Vector3d(obj.getLinearVelocity()).add(obj.getLinearCorrection()).mul(DELTA_TIME);
+    private static void updatePos(PhysicsObject obj, Vector3dc linearVelocity) {
+        Vector3d movement = new Vector3d(linearVelocity).mul(DELTA_TIME);
         obj.setInternalPos(movement.add(obj.getInternalPos()));
-    }
-
-    private static void predictMovement(PhysicsObject obj) {
-        // Create backups
-        obj.setBackupPos(obj.getInternalPos());
-        obj.setBackupOrientation(obj.getOrientation());
-
-        // Update predicted pos & orientation
-        updatePos(obj);
-        updateOrientationExponentialMap(obj);
     }
 
     private static void updateAngularVelocity(PhysicsObject obj) {
@@ -103,9 +87,7 @@ public class Integrator {
         ); // I don't normalize it here because setOrientation() already does that automatically
     }*/
 
-    private static void updateOrientationExponentialMap(PhysicsObject obj) { // Approach: Exponential map integration (TODO: Maybe move into an "applyAngularVelocity()" method inside PhysicsObject?)
-        Vector3d angularVelocity = new Vector3d(obj.getAngularCorrection()).add(obj.getAngularVelocity());
-
+    private static void updateOrientationExponentialMap(PhysicsObject obj, Vector3dc angularVelocity) { // Approach: Exponential map integration (TODO: Maybe move into an "applyAngularVelocity()" method inside PhysicsObject?)
         double angularVelocityLength = angularVelocity.length();
         if (angularVelocityLength < 1e-12) { // No orientation change. Continuing here (normalizing at some point) would produce NaN. 1e-12 is used because it's "pretty much 0" and makes it ignore unstable divisors.
             return;
@@ -129,3 +111,5 @@ public class Integrator {
 // TODO: Should I revert back to the original state as I do now, or just apply the corrections?
 // TODO: Should I interleave velocity and penetration resolution, or do penetration afterwards?
 // TODO: Why is it still so incredibly jittery, even with a lot of iterations and a small penetration resolution strength?
+// TODO: Objects slide down a slope even with friction of 1. Check the book to see how to fix it
+// TODO: Some spots of a giant rotated object seem to have no collision? -> Maybe caused by missing edge-edge, but not sure

@@ -7,19 +7,19 @@ import org.joml.Vector3d;
 import org.joml.Vector3dc;
 import silicatyt.physics.data.Contact;
 import silicatyt.physics.data.ContactManager;
-import silicatyt.physics.entity.PhysicsObject;
 
 import java.util.List;
 
 import static silicatyt.physics.simulation.Main.DELTA_TIME;
 
 public class ContactResolver {
-    private static final int NOF_ITERATIONS = 40;
+    private static final int NOF_VELOCITY_RESOLUTION_ITERATIONS = 10;
+    private static final int NOF_PENETRATION_RESOLUTION_ITERATIONS = 10;
     private static final double MIN_DELTA_VELOCITY = 0.01d;
-    private static final double MIN_PENETRATION_DEPTH = 0.001d;
+    private static final double MIN_PENETRATION_DEPTH = 0.01d;
     private static final double RESTITUTION_ACTIVATION_SPEED_THRESHOLD = 0.3d; // If the closing velocity is smaller than this, the coefficient of restitution will be set to 0
-    private static final double PENETRATION_RESOLUTION_STRENGTH = 0.05d; // How much of the penetration is resolved per iteration (in the split-impulse method)
-    private static final double PENETRATION_RESOLUTION_SLOP = 0.001d;
+    private static final double PENETRATION_RESOLUTION_STRENGTH = 0.25d; // How much of the penetration is resolved per iteration
+    private static final double PENETRATION_RESOLUTION_SLOP = 0.01d;
 
     public static void resolve(ContactManager manager) {
         List<Contact> contacts = manager.getContacts();
@@ -41,10 +41,16 @@ public class ContactResolver {
             }
         }
 
-        // Iterations
-        for (int i = 0; i < NOF_ITERATIONS; i++) { // Split-impulse needs the iterations to be combined
-            for (Contact contact : contacts) { // TODO: Doublecheck whether I should interleave
+        // Velocity resolution
+        for (int i = 0; i < NOF_VELOCITY_RESOLUTION_ITERATIONS; i++) {
+            for (Contact contact : contacts) {
                 resolveVelocity(contact);
+            }
+        }
+
+        // Penetration resolution
+        for (int i = 0; i < NOF_PENETRATION_RESOLUTION_ITERATIONS; i++) {
+            for (Contact contact : contacts) {
                 resolvePenetration(contact);
             }
         }
@@ -96,7 +102,8 @@ public class ContactResolver {
 
     private static void resolvePenetration(Contact contact) { // Split-impulse
         double biasVelocity = contact.getBiasVelocity();
-        double deltaVelocity = biasVelocity - calculateSplitImpulseContactVelocity(contact).dot(contact.getContactNormal());
+        //double deltaVelocity = biasVelocity - calculateSplitImpulseContactVelocity(contact).dot(contact.getContactNormal());
+        double deltaVelocity = PENETRATION_RESOLUTION_STRENGTH * (biasVelocity - calculateSplitImpulseContactVelocity(contact).dot(contact.getContactNormal()));
         //if (Math.abs(deltaVelocity) < MIN_PENETRATION_DEPTH) { return; } TODO: IMPROVE THIS CHECK. RN it's bugged because it compares meters with meters/second.
 
         double impulse = deltaVelocity * contact.getInverseEffectiveMass().x(); // Only the component along the contact normal
@@ -144,7 +151,8 @@ public class ContactResolver {
 
     // Helper methods (Penetration resolution)
     private static double calculateBiasVelocity(Contact contact) { // Basically the targetClosingVelocity for split-impulse penetration resolution
-        return PENETRATION_RESOLUTION_STRENGTH * Math.max(contact.getPenetrationDepth() - PENETRATION_RESOLUTION_SLOP, 0.0) / DELTA_TIME;
+        //return PENETRATION_RESOLUTION_STRENGTH * Math.max(contact.getPenetrationDepth() - PENETRATION_RESOLUTION_SLOP, 0.0) / DELTA_TIME;
+        return Math.max(contact.getPenetrationDepth() - PENETRATION_RESOLUTION_SLOP, 0.0) / DELTA_TIME;
     }
 
     private static void applySplitImpulse(Contact contact, Vector3d impulse) {
@@ -174,3 +182,16 @@ public class ContactResolver {
         );
     }
 }
+
+// TODO: Do I really need slop?
+// TODO: Should I really fix 100% of the penetration each tick, or multiply biasVelocity by some percentage?
+// TODO: Should I really make it so each iteration only resolves a fraction of the current tick's penetration, so that multiple iterations are necessary?
+// TODO: Why do objects visually clip into the ground for 1 tick after falling? Shouldn't all the correction be applied before the visual update? Or are corrections delayed by 1 tick?
+// TODO: The sliding & rotating also happened with linear projection, and it's improved by fixing the restitution threshold (so it ignores gravity). But maybe the rotation is slightly stronger with split-impulse (while the general stability is higher)? Is it caused by velocity or penetration resolution?
+// TODO: Objects are stable shortly after falling to the ground. Then, it takes a while until they start jittering/sliding. What's the problem here?
+// TODO: Is it a problem that my orthonormal basis can completely change from one tick to the next, could this affect warm-starting? Is this the reason why my objects start jittering at some point?
+// TODO: SETTING FRICTION TO 0 MAKES THE JITTER AND DRIFTING DISAPPEAR! INVESTIGATE!
+
+
+
+// TODO: In warm-starting, I transform the impulse from contact coordinates to world coordinates before I apply it. I store it in contact coordinates, but in the current tick's. The next tick, transforming back will mean something else, because the normal has maybe changed.
