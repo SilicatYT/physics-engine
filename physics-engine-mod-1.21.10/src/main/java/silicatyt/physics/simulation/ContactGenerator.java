@@ -20,8 +20,7 @@ public class ContactGenerator {
 
     public static Contact generateContact(PhysicsObject objectA, ObjectCollision collision) {
         if (collision.axisOfMinOverlapIndex() < 6) { return generateContactPointFace(objectA, collision); }
-        //return generateContactEdgeEdge(objectA, collision);
-        return null; // TODO: TEMPORARY
+        return generateContactEdgeEdge(objectA, collision);
     }
 
     private static ContactPointFace generateContactPointFace(PhysicsObject objectA, ObjectCollision collision) {
@@ -131,11 +130,9 @@ public class ContactGenerator {
 
     // Helper Methods (Edge-Edge)
     public static void correctContactNormalDirectionEdgeEdge(Vector3d contactNormal, PhysicsObject objectA, PhysicsObject objectB) { // Modifies the input contactNormal, making sure it always points from B to A.
-        double[] projectionObjectA = projectObjectOntoAxis(objectA, contactNormal);
-        double[] projectionObjectB = projectObjectOntoAxis(objectB, contactNormal);
-        if (projectionObjectB[0] < projectionObjectA[0]) { // TODO: Change so it uses the closest points to the other axis as reference instead, or maybe something else. Research!
-            contactNormal.mul(-1d);
-        }
+        Vector3d relativePosition = new Vector3d(objectA.getInternalPos()).sub(objectB.getInternalPos());
+        double projection = relativePosition.dot(contactNormal);
+        if (projection < 0) { contactNormal.negate(); }
     }
 
     private static int getObjectEdgeIndex(PhysicsObject object, int axisOfMinOverlapIndex, Vector3dc contactNormal, boolean isObjectA) {
@@ -149,7 +146,7 @@ public class ContactGenerator {
 
         for (int i = 0; i < 4; i++) { // Which edge has the deepest projection (most positive) onto the contact normal? Basically "Which one is equal to projectionObjectA[1]", but I must consider floating point errors.
             projection = corners[edgeStartingPointIndices[i]].dot(contactNormal);
-            if (!isObjectA) { projection *= -1; } // Deepest projection for objectB is the most negative
+            if (isObjectA) { projection *= -1; } // Deepest projection for objectA is the most negative TODO: I INVERTED THE CHECK AND THE COMMENT. IS THAT CORRECT?
             if (projection > maxProjection) {
                 maxProjection = projection;
                 feature = 20 + i + 4 * axisIndex; // Edges have IDs 20 - 31 (4 edges for x, 4 edges for y, and 4 edges for z)
@@ -182,4 +179,5 @@ public class ContactGenerator {
 
 }
 
-// TODO: In point-face, generate a contact for every corner that matches, if there's not already a contact for that corner. Shouldn't be that expensive, but it would make landing flat on the floor much more stable. (But in reality, when is this ever gonna happen anyway?)
+// TODO: In point-face, generate a contact for every corner that matches, if there's not already a contact for that corner. Shouldn't be that expensive, but it would make landing flat on the floor much more stable.
+// TODO: ^ do I need something like this for edge-edge too? How would that work?

@@ -30,13 +30,22 @@ public class ContactEdgeEdge extends Contact {
     // Updates
     @Override
     public void updateContactNormal() {
-        getAxis(objectA).cross(getAxis(objectB)).normalize(contactNormal);
-        correctContactNormalDirectionEdgeEdge(contactNormal, objectA, objectB);
+        Vector3d rawContactNormal = getAxis(objectA).cross(getAxis(objectB), new Vector3d());
+        double lengthSquared = rawContactNormal.lengthSquared();
+
+        if (lengthSquared < 1e-12) { // Degenerate contact normal
+            setActivity(false);
+            return;
+        }
+
+        rawContactNormal.normalize();
+        correctContactNormalDirectionEdgeEdge(rawContactNormal, objectA, objectB);
+        contactNormal.set(rawContactNormal);
     }
 
     @Override
     public void updatePenetrationDepth() { // In the datapack, I will directly work with the projections and subtract those (mathematically equivalent) because I already calculate them earlier.
-        penetrationDepth = new Vector3d(getEdgeStartingPoint(objectA)).sub(getEdgeStartingPoint(objectB)).dot(contactNormal);
+        penetrationDepth = new Vector3d(getEdgeStartingPoint(objectB)).sub(getEdgeStartingPoint(objectA)).dot(contactNormal);
     }
 
     @Override
@@ -52,13 +61,21 @@ public class ContactEdgeEdge extends Contact {
         Vector3dc edgeStartingPointB = getEdgeStartingPoint(objectB);
 
         double c = axisA.dot(axisB);
-        Vector3d startingPointDifference = new Vector3d();
-        edgeStartingPointA.sub(edgeStartingPointB, startingPointDifference);
+        double denominator = 1.0 - c*c; // AB - CC
+        if (denominator < 1e-12) { // Degenerate contact normal
+            setActivity(false);
+            return;
+        }
+        Vector3d startingPointDifference = edgeStartingPointA.sub(edgeStartingPointB, new Vector3d());
         double d = axisA.dot(startingPointDifference);
         double e = axisB.dot(startingPointDifference);
-        double denominator = 1.0 - c*c; // AB - CC
         double s = (c*e - d) / denominator;
         double t = (e - c*d) / denominator;
+
+        double axisAScale = objectA.getScale().get(getAxisIndex(featureA));
+        double axisBScale = objectB.getScale().get(getAxisIndex(featureB));
+        s = Math.clamp(s, 0, axisAScale);
+        t = Math.clamp(t, 0, axisBScale);
 
         Vector3d pointEdgeA = new Vector3d(axisA);
         pointEdgeA.mul(s).add(edgeStartingPointA);
