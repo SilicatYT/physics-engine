@@ -12,8 +12,8 @@ import static silicatyt.physics.simulation.Main.DELTA_TIME;
 
 public class Integrator {
     public static final Vector3d DEFAULT_GRAVITY = new Vector3d(0d, -9.81d, 0d);
-    public static final double DEFAULT_LINEAR_DAMPING = pow(0.7d, DELTA_TIME); // "After 1 second, this much of its linear velocity should remain".
-    public static final double DEFAULT_ANGULAR_DAMPING = pow(0.7d, DELTA_TIME);
+    public static final double DEFAULT_LINEAR_DAMPING = pow(0.9d, DELTA_TIME); // "After 1 second, this much of its linear velocity should remain".
+    public static final double DEFAULT_ANGULAR_DAMPING = pow(0.9d, DELTA_TIME);
 
     // Phases
     public static void phaseOne(PhysicsObject obj) { // Update internal state
@@ -53,6 +53,9 @@ public class Integrator {
         // TEMPORARY (TODO: REMOVE)
         if (obj.getInverseMass() == 0d) { return; }
 
+        // Apply linear damping
+        Vector3d dampedVelocity = new Vector3d(obj.getLinearVelocity()).mul(DEFAULT_LINEAR_DAMPING);
+
         // Apply accumulated force & gravity
         Vector3d velocityFromAcceleration = new Vector3d(obj.accumulatedForce).mul(obj.getInverseMass());
         velocityFromAcceleration.add(DEFAULT_GRAVITY);
@@ -60,7 +63,7 @@ public class Integrator {
         obj.setLinearVelocityFromAcceleration(velocityFromAcceleration);
 
         // Apply linear damping
-        obj.setLinearVelocity(velocityFromAcceleration.add(obj.getLinearVelocity()).mul(DEFAULT_LINEAR_DAMPING));
+        obj.setLinearVelocity(dampedVelocity.add(velocityFromAcceleration));
     }
 
     private static void updatePos(PhysicsObject obj, Vector3dc linearVelocity) {
@@ -69,12 +72,15 @@ public class Integrator {
     }
 
     private static void updateAngularVelocity(PhysicsObject obj) {
+        // Apply angular damping
+        Vector3d dampedVelocity = new Vector3d(obj.getAngularVelocity()).mul(DEFAULT_ANGULAR_DAMPING);
+
         // Apply accumulated torque
         Vector3d scaledTorque = new Vector3d(obj.accumulatedTorque).mul(DELTA_TIME);
         Vector3d velocityFromAcceleration = obj.getInverseInertiaTensorWorld().transform(scaledTorque);
 
         // Apply angular damping
-        obj.setAngularVelocity(velocityFromAcceleration.add(obj.getAngularVelocity()).mul(DEFAULT_ANGULAR_DAMPING));
+        obj.setAngularVelocity(dampedVelocity.add(velocityFromAcceleration));
     }
 
    /* private static void updateOrientationEuler(PhysicsObject obj, Vector3dc angularVelocity) { // Approach: Euler integration (TODO: Less accurate but faster. How about in a datapack, where I can use entity rotation tricks to compute sin and cos quickly? What to choose there?)

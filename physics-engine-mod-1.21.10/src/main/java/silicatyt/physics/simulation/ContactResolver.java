@@ -1,13 +1,15 @@
 package silicatyt.physics.simulation;
 
-// TODO: Also add a resolver that prioritizes contacts with higher penetrationDepth and closingVelocity
+// TODO: I could optimize a few calculations by re-using previous objects that I no longer need, and calling them "linearMovement" for example. It would avoid some "new Vector3d(...)" calls, but I'm not sure if that would be clean.
 
 import org.joml.Matrix3dc;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
 import silicatyt.physics.data.Contact;
 import silicatyt.physics.data.ContactManager;
+import silicatyt.physics.entity.PhysicsObject;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import static silicatyt.physics.simulation.Main.DELTA_TIME;
@@ -16,13 +18,21 @@ public class ContactResolver {
     private static final int NOF_VELOCITY_RESOLUTION_ITERATIONS = 10;
     private static final int NOF_PENETRATION_RESOLUTION_ITERATIONS = 10;
     private static final double MIN_DELTA_VELOCITY = 0.01d;
-    private static final double MIN_PENETRATION_DEPTH = 0.01d;
+    private static final double MIN_PENETRATION_DEPTH = 0.001d;
     private static final double RESTITUTION_ACTIVATION_SPEED_THRESHOLD = 0.3d; // If the closing velocity is smaller than this, the coefficient of restitution will be set to 0
-    private static final double PENETRATION_RESOLUTION_STRENGTH = 0.25d; // How much of the penetration is resolved per iteration
-    private static final double PENETRATION_RESOLUTION_SLOP = 0.01d;
 
     public static void resolve(ContactManager manager) {
         List<Contact> contacts = manager.getContacts();
+
+        List<Contact> contactsSortedByVelocity = new LinkedList<>(contacts); // Sorted descending
+        contactsSortedByVelocity.sort((a, b) -> Double.compare(
+                b.getAccumulatedImpulseWorld().dot(b.getContactNormal()),
+                a.getAccumulatedImpulseWorld().dot(a.getContactNormal())));
+
+        List<Contact> contactsSortedByPenetration = new LinkedList<>(contacts); // Sorted descending
+        contactsSortedByPenetration.sort((a, b) -> Double.compare(
+                b.getAccumulatedSplitImpulse(),
+                a.getAccumulatedSplitImpulse()));
 
         // Preparations
         for (Contact contact : contacts) {
@@ -37,30 +47,30 @@ public class ContactResolver {
             if (!contact.getAccumulatedImpulse().equals(0d, 0d, 0d)) {
                 Vector3d impulseWorld = new Vector3d(contact.getAccumulatedImpulse());
                 contact.getOrthonormalBasis().transform(impulseWorld); // TODO: Maybe I can optimize it so I don't need this extra transformation, for example if I store the accumulated impulse in world coordinates, and add some (cheaper) calculations in resolveVelocity()?
+            if (contact.getAccumulatedImpulseWorld().lengthSquared() >= MIN_DELTA_VELOCITY*MIN_DELTA_VELOCITY) {
+                Vector3d impulseWorld = new Vector3d(contact.getAccumulatedImpulseWorld());
                 applyImpulse(contact, impulseWorld);
             }
         }
 
         // Velocity resolution
         for (int i = 0; i < NOF_VELOCITY_RESOLUTION_ITERATIONS; i++) {
-            for (Contact contact : contacts) {
+            for (Contact contact : contactsSortedByVelocity) {
                 resolveVelocity(contact);
             }
         }
 
         // Penetration resolution
         for (int i = 0; i < NOF_PENETRATION_RESOLUTION_ITERATIONS; i++) {
-            for (Contact contact : contacts) {
+            for (Contact contact : contactsSortedByPenetration) {
                 resolvePenetration(contact);
             }
         }
     }
 
-    public static void resolveALT(ContactManager manager) {} // TODO: Same as resolve, but prioritize contacts with higher penetrationDepth and closingVelocity
-
     private static void resolveVelocity(Contact contact) {
         double deltaVelocity = calculateDeltaVelocity(contact);
-        if (Math.abs(deltaVelocity) < MIN_DELTA_VELOCITY) { return; }
+        //if (Math.abs(deltaVelocity) < MIN_DELTA_VELOCITY) { return; } // TODO: Can't return early, messes with friction. Need to separate the friction early-return (coulomb) with this one (for tangential) so I can still benefit of a performance boost
 
         Matrix3dc orthonormalBasis = contact.getOrthonormalBasis();
 
@@ -68,9 +78,7 @@ public class ContactResolver {
         orthonormalBasis.transformTranspose(contactVelocityInContactSpace);
 
         // Required impulse for velocity change
-        Vector3dc accumulatedImpulse =  contact.getAccumulatedImpulse();
-
-        Vector3dc inverseEffectiveMass = contact.getInverseEffectiveMass();
+        Vector3dc inverseEffectiveMass = contact.getEffectiveMass();
         Vector3d impulse = new Vector3d();
         impulse.x = deltaVelocity * inverseEffectiveMass.x();
         impulse.y = -contactVelocityInContactSpace.y * inverseEffectiveMass.y();
@@ -89,12 +97,12 @@ public class ContactResolver {
             combinedImpulse.z *= scalingFactor;
         }
 
-        // Update accumulated impulse
-        Vector3d deltaImpulse = combinedImpulse.sub(accumulatedImpulse); // Same reference, just a different name for readability
-        contact.addAccumulatedImpulse(deltaImpulse);
-
         // Transform impulse to world coordinates
+        Vector3d deltaImpulse = combinedImpulse.sub(accumulatedImpulse); // Same reference, just a different name for readability
         orthonormalBasis.transform(deltaImpulse);
+
+        // Update the accumulatedImpulse
+        contact.addAccumulatedImpulseWorld(deltaImpulse);
 
         // Apply impulse
         applyImpulse(contact, deltaImpulse);
@@ -105,6 +113,7 @@ public class ContactResolver {
         //double deltaVelocity = biasVelocity - calculateSplitImpulseContactVelocity(contact).dot(contact.getContactNormal());
         double deltaVelocity = PENETRATION_RESOLUTION_STRENGTH * (biasVelocity - calculateSplitImpulseContactVelocity(contact).dot(contact.getContactNormal()));
         //if (Math.abs(deltaVelocity) < MIN_PENETRATION_DEPTH) { return; } TODO: IMPROVE THIS CHECK. RN it's bugged because it compares meters with meters/second.
+        double deltaVelocity = biasVelocity - calculateSplitImpulseContactVelocity(contact).dot(contact.getContactNormal());
 
         double impulse = deltaVelocity * contact.getInverseEffectiveMass().x(); // Only the component along the contact normal
         double accumulatedImpulse = contact.getAccumulatedSplitImpulse();
@@ -128,9 +137,13 @@ public class ContactResolver {
     private static double calculateTargetClosingVelocity(Contact contact) {
         // targetClosingVelocity = -restitution * (closingVelocity + relativeVelocityFromAcceleration.dot(contactNormal))
         if (contact.getClosingVelocity() < RESTITUTION_ACTIVATION_SPEED_THRESHOLD) { return 0d; } // Ignore restitution if the speed is small, for stability
+        //if (contact.getClosingVelocity() < RESTITUTION_ACTIVATION_SPEED_THRESHOLD) { return 0d; } // Ignore restitution if the speed is small, for stability
+        // TODO: ^ vielleicht (closingVelocity + velocityFromAcceleration) < ... ? Dann wäre gravity egal für restitution und würde ignoriert werden, oder?
 
         Vector3d relativeLinearVelocityFromAcceleration = new Vector3d(contact.objectA.getLinearVelocityFromAcceleration());
         if (contact.objectB != null) { relativeLinearVelocityFromAcceleration.sub(contact.objectB.getLinearVelocityFromAcceleration()); }
+
+        if (contact.getClosingVelocity() + relativeLinearVelocityFromAcceleration.dot(contact.getContactNormal()) < RESTITUTION_ACTIVATION_SPEED_THRESHOLD) { return 0d; } // Ignore restitution if the speed is small, for stability
 
         return -contact.getRestitutionCoefficient() * (contact.getClosingVelocity() + relativeLinearVelocityFromAcceleration.dot(contact.getContactNormal()));
     }
@@ -151,8 +164,7 @@ public class ContactResolver {
 
     // Helper methods (Penetration resolution)
     private static double calculateBiasVelocity(Contact contact) { // Basically the targetClosingVelocity for split-impulse penetration resolution
-        //return PENETRATION_RESOLUTION_STRENGTH * Math.max(contact.getPenetrationDepth() - PENETRATION_RESOLUTION_SLOP, 0.0) / DELTA_TIME;
-        return Math.max(contact.getPenetrationDepth() - PENETRATION_RESOLUTION_SLOP, 0.0) / DELTA_TIME;
+        return Math.max(contact.getPenetrationDepth(), 0.0) / DELTA_TIME;
     }
 
     private static void applySplitImpulse(Contact contact, Vector3d impulse) {
@@ -183,15 +195,36 @@ public class ContactResolver {
     }
 }
 
-// TODO: Do I really need slop?
-// TODO: Should I really fix 100% of the penetration each tick, or multiply biasVelocity by some percentage?
-// TODO: Should I really make it so each iteration only resolves a fraction of the current tick's penetration, so that multiple iterations are necessary?
-// TODO: Why do objects visually clip into the ground for 1 tick after falling? Shouldn't all the correction be applied before the visual update? Or are corrections delayed by 1 tick?
-// TODO: The sliding & rotating also happened with linear projection, and it's improved by fixing the restitution threshold (so it ignores gravity). But maybe the rotation is slightly stronger with split-impulse (while the general stability is higher)? Is it caused by velocity or penetration resolution?
 // TODO: Objects are stable shortly after falling to the ground. Then, it takes a while until they start jittering/sliding. What's the problem here?
 // TODO: Is it a problem that my orthonormal basis can completely change from one tick to the next, could this affect warm-starting? Is this the reason why my objects start jittering at some point?
 // TODO: SETTING FRICTION TO 0 MAKES THE JITTER AND DRIFTING DISAPPEAR! INVESTIGATE!
 
 
 
-// TODO: In warm-starting, I transform the impulse from contact coordinates to world coordinates before I apply it. I store it in contact coordinates, but in the current tick's. The next tick, transforming back will mean something else, because the normal has maybe changed.
+// TODO: In warm-starting, I transform the impulse from contact coordinates to world coordinates before I apply it. I store it in contact coordinates, but in the current tick's. The next tick, transforming back will mean something else, because the normal has maybe changed.// TODO: When I disable warm-starting (while the temporary fix of "if tangential movement is small, set the impulse to 0" is active), the random sliding stops, but friction seems to be strongly reduced, so objects slide as if on ice.
+// TODO: => It looks like warm-starting messes with things in that the previously accumulated impulse is applied while the object is rotated slightly differently from before, causing the impulse that's being applied to be incorrect? But warm-starting is only a "first draft" for the resolution, so it should get overwritten by future resolutions, no?
+// TODO: => Also, disabling both warm-starting AND the temporary fix still has the objects slide around randomly.
+// TODO: => Overall. I'm very unsure as to what the problem is...
+
+
+
+// TODO: Stacks of 3 or more are not stable (They slide around)
+
+
+
+// TODO: => The sliding bug was mainly caused by the early return in velocity resolution, BUT warm-starting still makes objects slide *once* after some time and then stop?? If the problem is outdated contact bases, why would it stop? Warm-starting also breaks stability for stacks (objects slide very fast)
+// TODO: => And do I need penetration slop or not?
+
+
+
+
+
+// TODO: --------------------------
+
+// TODO: I just changed accumulatedImpulse to be in world coordinates, but it's mathmatically the same as before. The bug (objects slide a little bit after a few seconds before stabilizing) is LIKELY in the orthonormalBasis calculation, I need to change it so its "seam" isn't as obvious on a flat floor.
+// TODO: Not sure why stacked objects are so unstable, even though I've sorted my contacts. Even if I decrease deltatime and increase the number of iterations. Does it properly create 4 contacts on the ground, or is there an issue with that?
+// TODO: Maybe carry over accumulatedImpulse both in world and contact space, so I don't need any transformations? Or maybe keep the basis from the previous tick if it's similar enough, so I don't have drift?
+// TODO: Add early outs for velocity and penetration resolution (velocity resolution's early exit needs to be separate for tangential and normal)
+// TODO: Why do objects visually clip into the ground for 1 tick after falling? Shouldn't all the correction be applied before the visual update?
+// TODO: Clean up everything, optimize some operations (to remove new Vector3d(...)), add more helper methods so each method only does one thing, replace setters with "add..." where appropriate to remove a new() call
+// TODO: Why do objects slide down slopes with frictionCoefficient 1?

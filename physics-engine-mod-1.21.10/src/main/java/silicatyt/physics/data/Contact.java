@@ -22,10 +22,13 @@ public abstract class Contact {
     private final Matrix3d orthonormalBasis = new Matrix3d();
     private final Vector3d inverseEffectiveMass = new Vector3d(); // effective mass along each axis of the orthonormal basis
     private final Vector3d accumulatedImpulse = new Vector3d();
+    private final Vector3d accumulatedImpulseWorld = new Vector3d(); // In world space
     private double targetClosingVelocity; // It should not be updated except manually. Its whole point is being cached, so it has no dependencies.
 
     private double accumulatedSplitImpulse; // TODO: Clean up
     private double biasVelocity; // TODO: Same notes as for targetClosingVelocity
+    private double accumulatedSplitImpulse;
+    private double biasVelocity;
 
     private boolean isActive = true;
 
@@ -89,7 +92,7 @@ public abstract class Contact {
         return inverseEffectiveMass;
     }
 
-    public Vector3dc getAccumulatedImpulse() { return accumulatedImpulse; }
+    public Vector3dc getAccumulatedImpulseWorld() { return accumulatedImpulseWorld; }
 
     public double getTargetClosingVelocity() { return targetClosingVelocity; }
 
@@ -203,7 +206,7 @@ public abstract class Contact {
     }
 
     public void setActivity(boolean isActive) {
-        if (!isActive) { accumulatedImpulse.zero(); }
+        if (!isActive) { accumulatedImpulseWorld.zero(); }
         this.isActive = isActive;
     }
 
@@ -212,9 +215,9 @@ public abstract class Contact {
 
 
     // Other
-    public void addAccumulatedImpulse(Vector3dc impulseDelta) {
+    public void addAccumulatedImpulseWorld(Vector3dc impulseDelta) {
         if (!impulseDelta.isFinite()) { throw new IllegalArgumentException("Impulse delta must be finite"); }
-        accumulatedImpulse.add(impulseDelta);
+        accumulatedImpulseWorld.add(impulseDelta);
     }
 
     public void addAccumulatedSplitImpulse(double impulseDelta) {
