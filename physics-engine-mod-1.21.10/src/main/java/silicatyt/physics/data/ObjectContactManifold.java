@@ -34,12 +34,14 @@ public class ObjectContactManifold implements ContactManifold {
             contact.setActivity(true);
 
             if (contact.featureA == newContact.featureA && contact.featureB == newContact.featureB) { // Remove the old "newContact" if it already existed
-                oldContactAccumulatedImpulse = contact.getAccumulatedImpulse();
+                oldContactAccumulatedImpulse = contact.getAccumulatedImpulseWorld();
                 it.remove();
                 continue;
             }
 
             double projection = new Vector3d(contact.getContactNormal()).dot(newContact.getContactNormal());
+            Vector3dc contactNormal = contact.getContactNormal(); // TODO: This can set activity to false. Add an early out so it doesn't do the rest.
+            double projection = contactNormal.dot(newContact.getContactNormal());
 
             // Discard contacts where necessary
             if (projection < ACCUMULATION_PROJECTION_DISCARD_THRESHOLD || contact.getPenetrationDepth() < ACCUMULATION_MIN_PENETRATION_DEPTH_THRESHOLD) { // No longer relevant, or too far away
@@ -52,7 +54,7 @@ public class ObjectContactManifold implements ContactManifold {
         }
 
         // Add new contact
-        if (oldContactAccumulatedImpulse != null) { newContact.addAccumulatedImpulse(oldContactAccumulatedImpulse); } // Carry over the old contact's data
+        if (oldContactAccumulatedImpulse != null) { newContact.addAccumulatedImpulseWorld(oldContactAccumulatedImpulse); } // Carry over the old contact's data
         contacts.add(newContact);
     }
 

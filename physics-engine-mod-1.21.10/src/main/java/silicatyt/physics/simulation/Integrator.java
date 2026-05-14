@@ -83,7 +83,7 @@ public class Integrator {
         obj.setAngularVelocity(dampedVelocity.add(velocityFromAcceleration));
     }
 
-   /* private static void updateOrientationEuler(PhysicsObject obj, Vector3dc angularVelocity) { // Approach: Euler integration (TODO: Less accurate but faster. How about in a datapack, where I can use entity rotation tricks to compute sin and cos quickly? What to choose there?)
+   /*private static void updateOrientationEuler(PhysicsObject obj, Vector3dc angularVelocity) { // Approach: Euler integration (TODO: Less accurate but faster. How about in a datapack, where I can use entity rotation tricks to compute sin and cos quickly? What to choose there?)
         Quaterniond orientation = new Quaterniond(obj.getOrientation());
         obj.setOrientation(
                 orientation.add(new Quaterniond(angularVelocity.x(), angularVelocity.y(), angularVelocity.z(), 0) // angularVelocity is treated as a quaternion

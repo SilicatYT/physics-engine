@@ -48,10 +48,5 @@ public class Main {
         }
 
         checkedObjects.clear();
-
-        // DEBUG
-        //Debug.showObjectAxes();
-        //Debug.showContactPoint();
-        //Debug.showContactNormal();
     }
 }

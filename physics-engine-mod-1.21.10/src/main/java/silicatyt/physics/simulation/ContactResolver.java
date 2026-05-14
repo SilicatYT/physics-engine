@@ -44,9 +44,6 @@ public class ContactResolver {
             contact.clearAccumulatedSplitImpulse();
 
             // Warm-starting
-            if (!contact.getAccumulatedImpulse().equals(0d, 0d, 0d)) {
-                Vector3d impulseWorld = new Vector3d(contact.getAccumulatedImpulse());
-                contact.getOrthonormalBasis().transform(impulseWorld); // TODO: Maybe I can optimize it so I don't need this extra transformation, for example if I store the accumulated impulse in world coordinates, and add some (cheaper) calculations in resolveVelocity()?
             if (contact.getAccumulatedImpulseWorld().lengthSquared() >= MIN_DELTA_VELOCITY*MIN_DELTA_VELOCITY) {
                 Vector3d impulseWorld = new Vector3d(contact.getAccumulatedImpulseWorld());
                 applyImpulse(contact, impulseWorld);
@@ -84,6 +81,9 @@ public class ContactResolver {
         impulse.y = -contactVelocityInContactSpace.y * inverseEffectiveMass.y();
         impulse.z = -contactVelocityInContactSpace.z * inverseEffectiveMass.z();
 
+        Vector3d accumulatedImpulse = new Vector3d(contact.getAccumulatedImpulseWorld());
+        contact.getOrthonormalBasis().transformTranspose(accumulatedImpulse); // TODO: Can I remove some transformations by calculating the impulse with the world space contactVelocity first, so I don't have to transform the accumulatedImpulse?
+
         Vector3d combinedImpulse = new Vector3d(impulse).add(accumulatedImpulse);
         combinedImpulse.x = Math.max(0.0, combinedImpulse.x); // Clamp the combined impulse (incl. the warm-starting impulse), so the total impulse for this tick does not go in the negatives. I only apply combinedImpulse - accumulatedImpulse each iteration.
 
@@ -110,12 +110,10 @@ public class ContactResolver {
 
     private static void resolvePenetration(Contact contact) { // Split-impulse
         double biasVelocity = contact.getBiasVelocity();
-        //double deltaVelocity = biasVelocity - calculateSplitImpulseContactVelocity(contact).dot(contact.getContactNormal());
-        double deltaVelocity = PENETRATION_RESOLUTION_STRENGTH * (biasVelocity - calculateSplitImpulseContactVelocity(contact).dot(contact.getContactNormal()));
-        //if (Math.abs(deltaVelocity) < MIN_PENETRATION_DEPTH) { return; } TODO: IMPROVE THIS CHECK. RN it's bugged because it compares meters with meters/second.
         double deltaVelocity = biasVelocity - calculateSplitImpulseContactVelocity(contact).dot(contact.getContactNormal());
+        //if (Math.abs(deltaVelocity) < MIN_PENETRATION_DEPTH / DELTA_TIME) { return; } TODO: IMPROVE THIS CHECK. RN it's bugged because it compares meters with meters/second.
 
-        double impulse = deltaVelocity * contact.getInverseEffectiveMass().x(); // Only the component along the contact normal
+        double impulse = deltaVelocity * contact.getEffectiveMass().x(); // Only the component along the contact normal
         double accumulatedImpulse = contact.getAccumulatedSplitImpulse();
 
         double combinedImpulse = Math.max(0d, impulse + accumulatedImpulse);
@@ -136,7 +134,6 @@ public class ContactResolver {
     // Helper methods (Velocity resolution)
     private static double calculateTargetClosingVelocity(Contact contact) {
         // targetClosingVelocity = -restitution * (closingVelocity + relativeVelocityFromAcceleration.dot(contactNormal))
-        if (contact.getClosingVelocity() < RESTITUTION_ACTIVATION_SPEED_THRESHOLD) { return 0d; } // Ignore restitution if the speed is small, for stability
         //if (contact.getClosingVelocity() < RESTITUTION_ACTIVATION_SPEED_THRESHOLD) { return 0d; } // Ignore restitution if the speed is small, for stability
         // TODO: ^ vielleicht (closingVelocity + velocityFromAcceleration) < ... ? Dann wäre gravity egal für restitution und würde ignoriert werden, oder?
 

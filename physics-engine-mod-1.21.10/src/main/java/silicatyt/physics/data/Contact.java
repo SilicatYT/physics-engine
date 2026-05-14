@@ -20,8 +20,7 @@ public abstract class Contact {
     protected double penetrationDepth;
 
     private final Matrix3d orthonormalBasis = new Matrix3d();
-    private final Vector3d inverseEffectiveMass = new Vector3d(); // effective mass along each axis of the orthonormal basis
-    private final Vector3d accumulatedImpulse = new Vector3d();
+    private final Vector3d effectiveMass = new Vector3d(); // Along each axis of the orthonormal basis
     private final Vector3d accumulatedImpulseWorld = new Vector3d(); // In world space
     private double targetClosingVelocity; // It should not be updated except manually. Its whole point is being cached, so it has no dependencies.
 
@@ -37,7 +36,7 @@ public abstract class Contact {
     protected final VersionNode contactVelocityVersion = new VersionNode(this::updateContactVelocity);
     protected final VersionNode penetrationDepthVersion = new VersionNode(this::updatePenetrationDepth);
     private final VersionNode orthonormalBasisVersion = new VersionNode(this::updateOrthonormalBasis);
-    private final VersionNode inverseEffectiveMassVersion = new VersionNode(this::updateInverseEffectiveMass);
+    private final VersionNode effectiveMassVersion = new VersionNode(this::updateEffectiveMass);
 
 
     public Contact(PhysicsObject objectA, PhysicsObject objectB, int featureA, int featureB) {
@@ -49,11 +48,11 @@ public abstract class Contact {
         // Add variable dependencies
         contactVelocityVersion.addDependencies(contactPosVersion, objectA.getPosVersion(), objectA.getLinearVelocityVersion(), objectA.getAngularVelocityVersion());
         orthonormalBasisVersion.addDependencies(contactNormalVersion);
-        inverseEffectiveMassVersion.addDependencies(contactPosVersion, orthonormalBasisVersion, objectA.getInverseMassVersion(), objectA.getPosVersion(), objectA.getInverseInertiaTensorWorldVersion());
+        effectiveMassVersion.addDependencies(contactPosVersion, orthonormalBasisVersion, objectA.getInverseMassVersion(), objectA.getPosVersion(), objectA.getInverseInertiaTensorWorldVersion());
 
         if (objectB != null) {
             contactVelocityVersion.addDependencies(objectB.getPosVersion(), objectB.getLinearVelocityVersion(), objectB.getAngularVelocityVersion());
-            inverseEffectiveMassVersion.addDependencies(objectB.getInverseMassVersion(), objectB.getPosVersion(), objectB.getInverseInertiaTensorWorldVersion());
+            effectiveMassVersion.addDependencies(objectB.getInverseMassVersion(), objectB.getPosVersion(), objectB.getInverseInertiaTensorWorldVersion());
         }
     }
 
@@ -87,9 +86,9 @@ public abstract class Contact {
         return orthonormalBasis;
     }
 
-    public Vector3dc getInverseEffectiveMass() {
-        inverseEffectiveMassVersion.updateIfNeeded();
-        return inverseEffectiveMass;
+    public Vector3dc getEffectiveMass() {
+        effectiveMassVersion.updateIfNeeded();
+        return effectiveMass;
     }
 
     public Vector3dc getAccumulatedImpulseWorld() { return accumulatedImpulseWorld; }
@@ -144,7 +143,7 @@ public abstract class Contact {
         orthonormalBasis.set(contactNormal, tangent1, tangent2);
     }
 
-    private void updateInverseEffectiveMass() {
+    private void updateEffectiveMass() {
         Vector3d axis = new Vector3d();
         double combinedEffectiveMass;
 
@@ -182,11 +181,7 @@ public abstract class Contact {
 
             // Total
             combinedEffectiveMass = 1.0 / (termA + termB);
-            switch (i) {
-                case 0 -> inverseEffectiveMass.x = combinedEffectiveMass;
-                case 1 -> inverseEffectiveMass.y = combinedEffectiveMass;
-                case 2 -> inverseEffectiveMass.z = combinedEffectiveMass;
-            }
+            effectiveMass.setComponent(i, combinedEffectiveMass);
         }
     }
 
