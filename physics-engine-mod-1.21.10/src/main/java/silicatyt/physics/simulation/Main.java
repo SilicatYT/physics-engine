@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Set;
 
 import static silicatyt.physics.Physics.LOADED_PHYSICS_OBJECTS;
-import static silicatyt.physics.simulation.ContactGenerator.generateContact;
+import static silicatyt.physics.simulation.ContactGenerator.generateContacts;
 
 public class Main {
     public static final double DELTA_TIME = 1.0 / 20.0;
@@ -33,9 +33,9 @@ public class Main {
             // Collision Detection
             List<ObjectCollision> objectCollisions = CollisionDetector.getObjectCollisions(obj, checkedObjects);
             for (ObjectCollision collision : objectCollisions) {
-                Contact newContact = generateContact(obj, collision);
-                if (newContact == null) { continue; }
-                CONTACT_MANAGER.accumulateContacts(newContact);
+                Set<Contact> newContacts = generateContacts(obj, collision);
+                if (newContacts == null) { continue; }
+                CONTACT_MANAGER.accumulateContacts(newContacts);
             }
         }
 

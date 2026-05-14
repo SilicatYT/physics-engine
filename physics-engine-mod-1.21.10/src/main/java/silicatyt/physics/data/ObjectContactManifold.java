@@ -7,6 +7,7 @@ import silicatyt.physics.entity.PhysicsObject;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import static silicatyt.physics.simulation.CollisionDetector.isIntersectingAABB;
 import static silicatyt.physics.simulation.ContactGenerator.*;
@@ -23,42 +24,39 @@ public class ObjectContactManifold implements ContactManifold {
     }
 
     @Override
-    public void updateWithContact(Contact newContact) {
+    public void updateWithContacts(Set<Contact> newContacts) { // TODO: Make it so the new contact's data is kept (except accumulatedImpulse), small optimization
         Iterator<Contact> it = contacts.iterator();
+        Vector3dc newContactNormal = newContacts.iterator().next().getContactNormal(); // Assumption: Every new contact has the same normal
         separatedForTicks = 0;
-        Vector3dc oldContactAccumulatedImpulse = null;
 
         // Update previous contacts
         while (it.hasNext()) {
             Contact contact = it.next();
             contact.setActivity(true);
 
-            if (contact.featureA == newContact.featureA && contact.featureB == newContact.featureB) { // Remove the old "newContact" if it already existed
-                oldContactAccumulatedImpulse = contact.getAccumulatedImpulseWorld();
-                it.remove();
-                continue;
-            }
+            if (newContacts.remove(contact)) { continue; } // Keep any old versions of the new contacts
 
-            Vector3dc contactNormal = contact.getContactNormal(); // TODO: This can set activity to false. Add an early out so it doesn't do the rest.
-            double projection = contactNormal.dot(newContact.getContactNormal());
+            Vector3dc contactNormal = contact.getContactNormal();
+            if (!contact.isActive()) { continue; } // getContactNormal() can set activity to false for edge-edge
 
             // Discard contacts where necessary
-            if (projection < ACCUMULATION_PROJECTION_DISCARD_THRESHOLD || contact.getPenetrationDepth() < ACCUMULATION_MIN_PENETRATION_DEPTH_THRESHOLD) { // No longer relevant, or too far away
+            double normalSimilarity = contactNormal.dot(newContactNormal);
+            double penetrationDepth = contact.getPenetrationDepth();
+            if (normalSimilarity < ACCUMULATION_PROJECTION_DISCARD_THRESHOLD || penetrationDepth < ACCUMULATION_MIN_PENETRATION_DEPTH_THRESHOLD) { // No longer relevant, or too far away
                 it.remove();
                 continue;
             }
 
             // Set the "isActive" status: Deactivate contacts where necessary (Ignored during resolution, but kept in case they become valid again)
-            if (projection < ACCUMULATION_PROJECTION_DEACTIVATION_THRESHOLD || contact.getPenetrationDepth() < 0d) { contact.setActivity(false); }
+            if (normalSimilarity < ACCUMULATION_PROJECTION_DEACTIVATION_THRESHOLD || penetrationDepth < 0d) { contact.setActivity(false); }
         }
 
-        // Add new contact
-        if (oldContactAccumulatedImpulse != null) { newContact.addAccumulatedImpulseWorld(oldContactAccumulatedImpulse); } // Carry over the old contact's data
-        contacts.add(newContact);
+        // Add new contacts
+        contacts.addAll(newContacts);
     }
 
     @Override
-    public boolean updateWithoutContact() { // Returns true if the manifold should be kept for the current tick (But with its contacts marked as inactive)
+    public boolean updateWithoutContacts() { // Returns true if the manifold should be kept for the current tick (But with its contacts marked as inactive)
         if (objectA.isRemoved() || objectB.isRemoved()) { return false; }
 
         // Check if the manifold has been out of touch for too long

@@ -1,5 +1,7 @@
 package silicatyt.physics.data;
 
+import silicatyt.physics.entity.PhysicsObject;
+
 import java.util.*;
 
 public class ContactManager {
@@ -9,19 +11,23 @@ public class ContactManager {
     private final Map<ObjectContactKey, ObjectContactManifold> previousObjectManifolds = new HashMap<>();
     private final Map<ObjectContactKey, ObjectContactManifold> currentObjectManifolds = new HashMap<>();
 
-    public void accumulateContacts(Contact newContact) { // Take the previous tick's contacts and update and carry them over, or discard them
-        if (newContact.objectB == null) { // Terrain contact
+    public void accumulateContacts(Set<Contact> newContacts) { // Take the previous tick's contacts and update and carry them over, or discard them
+        Contact arbitraryContact = newContacts.iterator().next();
+        PhysicsObject objectA = arbitraryContact.objectA;
+        PhysicsObject objectB = arbitraryContact.objectB;
+
+        if (objectB == null) { // Terrain contact
             // TODO: For terrain contacts, create new manifolds each tick to keep the old ones, because I have to carry over the hitboxContactManifolds individually like objectContactManifolds. If I kept the same terrainContactManifolds, every hitboxContactManifold would automatically get carried over too, even if those hitboxes no longer overlap.
             // ...
         } else { // Object contact
             // Carry over contacts for the affected manifold (or create a new one), and remove it from the previous tick
-            ObjectContactKey key = new ObjectContactKey(newContact.objectA, newContact.objectB);
-            ObjectContactManifold manifold = previousObjectManifolds.getOrDefault(key, new ObjectContactManifold(newContact.objectA, newContact.objectB));
+            ObjectContactKey key = new ObjectContactKey(objectA, objectB);
+            ObjectContactManifold manifold = previousObjectManifolds.getOrDefault(key, new ObjectContactManifold(objectA, objectB));
             previousObjectManifolds.remove(key);
             currentObjectManifolds.put(key, manifold);
 
-            // Update the carried over manifold & add the new contact to it
-            manifold.updateWithContact(newContact);
+            // Update the carried over manifold & add the new contacts to it
+            manifold.updateWithContacts(newContacts);
         }
     }
 
@@ -30,7 +36,7 @@ public class ContactManager {
         // TODO: Do the same for terrain manifolds
         for (Map.Entry<ObjectContactKey, ObjectContactManifold> entry : previousObjectManifolds.entrySet()) {
             ObjectContactManifold manifold = entry.getValue();
-            if (manifold.updateWithoutContact()) { currentObjectManifolds.put(entry.getKey(), manifold); }
+            if (manifold.updateWithoutContacts()) { currentObjectManifolds.put(entry.getKey(), manifold); }
         }
         previousTerrainManifolds.clear();
         previousObjectManifolds.clear();

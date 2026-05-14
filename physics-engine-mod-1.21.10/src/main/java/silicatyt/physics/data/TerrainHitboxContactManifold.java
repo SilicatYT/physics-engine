@@ -4,6 +4,7 @@ import net.minecraft.util.math.Vec3i;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 public class TerrainHitboxContactManifold implements ContactManifold {
     public final int hitboxId;
@@ -16,12 +17,12 @@ public class TerrainHitboxContactManifold implements ContactManifold {
     }
 
     @Override
-    public void updateWithContact(Contact newContact) {
+    public void updateWithContacts(Set<Contact> newContact) {
 
     }
 
     @Override
-    public boolean updateWithoutContact() {
+    public boolean updateWithoutContacts() {
         return false;
     }
 

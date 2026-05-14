@@ -6,6 +6,7 @@ import silicatyt.physics.entity.PhysicsObject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class TerrainContactManifold implements ContactManifold {
     private final PhysicsObject object;
@@ -18,12 +19,12 @@ public class TerrainContactManifold implements ContactManifold {
     }
 
     @Override
-    public void updateWithContact(Contact newContact) {
+    public void updateWithContacts(Set<Contact> newContact) {
 
     }
 
     @Override
-    public boolean updateWithoutContact() {
+    public boolean updateWithoutContacts() {
         return false;
     }
 

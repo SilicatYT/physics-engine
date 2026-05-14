@@ -2,9 +2,11 @@ package silicatyt.physics.simulation;
 
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
-import silicatyt.physics.Physics;
 import silicatyt.physics.data.*;
 import silicatyt.physics.entity.PhysicsObject;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import static silicatyt.physics.simulation.CollisionDetector.projectObjectOntoAxis;
 
@@ -18,12 +20,12 @@ public class ContactGenerator {
 
     private static final double CONTACT_EPSILON = 1e-7;
 
-    public static Contact generateContact(PhysicsObject objectA, ObjectCollision collision) {
-        if (collision.axisOfMinOverlapIndex() < 6) { return generateContactPointFace(objectA, collision); }
-        return generateContactEdgeEdge(objectA, collision);
+    public static Set<Contact> generateContacts(PhysicsObject objectA, ObjectCollision collision) {
+        if (collision.axisOfMinOverlapIndex() < 6) { return generateContactsPointFace(objectA, collision); }
+        return generateContactsEdgeEdge(objectA, collision);
     }
 
-    private static ContactPointFace generateContactPointFace(PhysicsObject objectA, ObjectCollision collision) {
+    private static Set<Contact> generateContactsPointFace(PhysicsObject objectA, ObjectCollision collision) { // Generate all possible contacts for that face
         PhysicsObject objectB = collision.objectB();
 
         // Select faceObject and cornerObject
@@ -35,7 +37,7 @@ public class ContactGenerator {
         Vector3d outwardFacingContactNormal = new Vector3d(collision.axisOfMinOverlap());
         int chosenFace = 11 + (collision.axisOfMinOverlapIndex() % 3) * 2;
 
-        double[] faceObjectProjection = projectObjectOntoAxis(faceObject, outwardFacingContactNormal);
+        double[] faceObjectProjection = projectObjectOntoAxis(faceObject, outwardFacingContactNormal); // TODO: Rework these calculations
         double[] cornerObjectProjection = projectObjectOntoAxis(cornerObject, outwardFacingContactNormal);
 
         double penetrationDepthPositive = faceObjectProjection[1] - cornerObjectProjection[0];
@@ -47,8 +49,8 @@ public class ContactGenerator {
         }
 
         // Try to find the deepest corner that matches
-        int chosenCorner = tryToFindCorner(cornerObject, faceObject, chosenFace,  outwardFacingContactNormal); // TODO: Make it so it tries as the object with the smaller face area first (Small optimization)
-        if (chosenCorner == -1) { // No corner found (Likely because a small object is perfectly parallel to a large floor object): Try swapping the roles as a fallback
+        Set<Integer> chosenCorners = tryToFindCorners(cornerObject, faceObject, chosenFace, outwardFacingContactNormal); // TODO: Make it so it tries as the object with the smaller face area first (Small optimization)
+        if (chosenCorners.isEmpty()) { // No corner found (Likely because a small object is perfectly parallel to a large floor object): Try swapping the roles as a fallback
             cornerObject = faceObject;
             faceObject = faceObject == objectA ? objectB : objectA;
             outwardFacingContactNormal.negate();
@@ -57,19 +59,23 @@ public class ContactGenerator {
             } else {
                 chosenFace--;
             }
-            chosenCorner = tryToFindCorner(cornerObject, faceObject, chosenFace,  outwardFacingContactNormal);
-            if (chosenCorner == -1) { return null; } // Still no corner found: Give up
+            chosenCorners = tryToFindCorners(cornerObject, faceObject, chosenFace, outwardFacingContactNormal);
+
+            if (chosenCorners.isEmpty()) { return null; } // Still no corner found: Give up
+            isObjectATheFaceObject = !isObjectATheFaceObject;
         }
 
-        // Create contact
-        if (faceObject == objectA) {
-            return new ContactPointFace(objectA, objectB, chosenFace, chosenCorner);
-        } else {
-            return new ContactPointFace(objectA, objectB, chosenCorner, chosenFace);
+        // Create contacts
+        Set<Contact> newContacts = new HashSet<>();
+        for (int corner : chosenCorners) {
+            newContacts.add(isObjectATheFaceObject
+                            ? new ContactPointFace(objectA, objectB, chosenFace, corner)
+                            : new ContactPointFace(objectA, objectB, corner, chosenFace));
         }
+        return newContacts;
     }
 
-    private static ContactEdgeEdge generateContactEdgeEdge(PhysicsObject objectA, ObjectCollision collision) {
+    private static Set<Contact> generateContactsEdgeEdge(PhysicsObject objectA, ObjectCollision collision) { // Only generates a single contact
         PhysicsObject objectB = collision.objectB();
 
         // Invert the contact normal if necessary
@@ -83,7 +89,9 @@ public class ContactGenerator {
         int featureB = getObjectEdgeIndex(objectB, collision.axisOfMinOverlapIndex(), contactNormal, false);
 
         // Create contact
-        return new ContactEdgeEdge(objectA, objectB, featureA, featureB);
+        HashSet<Contact> newContacts = new HashSet<>();
+        newContacts.add(new ContactEdgeEdge(objectA, objectB, featureA, featureB));
+        return newContacts;
     }
 
 
@@ -91,23 +99,22 @@ public class ContactGenerator {
 
 
     // Helper Methods (Point-Face)
-    private static int tryToFindCorner(PhysicsObject cornerObject, PhysicsObject faceObject, int chosenFace, Vector3dc outwardFacingContactNormal) { // TODO: The fallback to "try the other object if both are perfectly parallel" would not be necessary with manifold clipping
-        // Select the correct corner (The one with the most negative projection onto the normal)
+    private static Set<Integer> tryToFindCorners(PhysicsObject cornerObject, PhysicsObject faceObject, int chosenFace, Vector3dc outwardFacingContactNormal) { // TODO: The fallback to "try the other object if both are perfectly parallel" would not be necessary with manifold clipping
+        // Select all corners that can generate a contact with the given face
         Vector3dc[] corners = cornerObject.getCornerPosAbsolute();
-        double projection;
-        double minProjection = Double.MAX_VALUE;
-        int chosenCorner = -1;
+        Set<Integer> chosenCorners = new HashSet<>();
+
         int normalAxisIndex = (chosenFace - 10) / 2;
+        double faceProjection = chosenFace % 2 == 0 ? faceObject.getCornerPosAbsolute(0).dot(outwardFacingContactNormal) : faceObject.getCornerPosAbsolute(7).dot(outwardFacingContactNormal); // TODO: This is already calculated in the method calling it. Optimize
+
+        double cornerProjection;
         for (int i = 0; i < 8; i++) {
             if (isPointInsideTangentialBounds(corners[i], faceObject, normalAxisIndex)) { // Don't check for whether the corner is inside the boundaries for the contactNormal axis, because corners could pass through thin objects very easily, leading to 0 found corners otherwise.
-                projection = corners[i].dot(outwardFacingContactNormal);
-                if (projection < minProjection) {
-                    minProjection = projection;
-                    chosenCorner = i;
-                }
+                cornerProjection = corners[i].dot(outwardFacingContactNormal);
+                if (cornerProjection < faceProjection) { chosenCorners.add(i); } // Add corner if penetration is positive
             }
         }
-        return chosenCorner;
+        return chosenCorners;
     }
 
     private static boolean isPointInsideTangentialBounds(Vector3dc point, PhysicsObject obj, int normalAxisIndex) {

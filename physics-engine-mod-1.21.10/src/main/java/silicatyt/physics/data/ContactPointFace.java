@@ -45,7 +45,7 @@ public class ContactPointFace extends Contact {
 
     @Override
     protected void updatePenetrationDepth() { // (TODO: Verify if this comment is still correct, now that the contactNormal points from B -> A): On new contacts, the selected corner's projection is the minProjection. That's not guaranteed afterwards (i.e., when updating the previous tick's contacts).
-        double[] faceObjectProjection = projectObjectOntoAxis(getFaceObject(), contactNormal);
+        double[] faceObjectProjection = projectObjectOntoAxis(getFaceObject(), contactNormal); // TODO: Optimize. It currently projects all 8 corners instead of the 2 needed ones
         double cornerProjection = getCornerPos().dot(contactNormal);
         if (getFaceObject() == objectA) {
             penetrationDepth = cornerProjection - faceObjectProjection[0];

@@ -7,6 +7,8 @@ import org.joml.Vector3dc;
 import silicatyt.physics.entity.PhysicsObject;
 import silicatyt.physics.versioning.VersionNode;
 
+import java.util.Objects;
+
 // TODO: You can currently access protected variables everywhere in the same package. Make it so those are exclusive to contact and its subclasses.
 
 public abstract class Contact {
@@ -52,6 +54,22 @@ public abstract class Contact {
             contactVelocityVersion.addDependencies(objectB.getPosVersion(), objectB.getLinearVelocityVersion(), objectB.getAngularVelocityVersion());
             effectiveMassVersion.addDependencies(objectB.getInverseMassVersion(), objectB.getPosVersion(), objectB.getInverseInertiaTensorWorldVersion());
         }
+    }
+
+
+
+
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Contact contact = (Contact) o;
+        return featureA == contact.featureA && featureB == contact.featureB && Objects.equals(objectA, contact.objectA) && Objects.equals(objectB, contact.objectB);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(objectA, objectB, featureA, featureB);
     }
 
 
