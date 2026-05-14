@@ -127,6 +127,22 @@ public class ContactResolver {
         applySplitImpulse(contact, deltaImpulse);
     }
 
+    private static void resolvePenetrationLinearProjection(Contact contact) { // Simple linear projection
+        PhysicsObject objectA = contact.objectA;
+        PhysicsObject objectB = null;
+        if (contact.objectB != null) { objectB = contact.objectB; }
+
+        double inverseMassTotal = objectB == null ? objectA.getInverseMass() : objectA.getInverseMass() + objectB.getInverseMass();
+        Vector3d linearMovementPerInverseMass = new Vector3d(contact.getContactNormal()).mul(contact.getPenetrationDepth()).div(inverseMassTotal);
+
+        Vector3d linearMovementA = new Vector3d(linearMovementPerInverseMass).mul(objectA.getInverseMass());
+        objectA.setInternalPos(linearMovementA.add(objectA.getInternalPos()));
+        if (objectB != null) {
+            Vector3d linearMovementB = new Vector3d(linearMovementPerInverseMass).mul(-1 * objectB.getInverseMass());
+            objectB.setInternalPos(linearMovementB.add(objectB.getInternalPos()));
+        }
+    }
+
 
 
 

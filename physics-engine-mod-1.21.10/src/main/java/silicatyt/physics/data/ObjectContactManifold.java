@@ -39,7 +39,6 @@ public class ObjectContactManifold implements ContactManifold {
                 continue;
             }
 
-            double projection = new Vector3d(contact.getContactNormal()).dot(newContact.getContactNormal());
             Vector3dc contactNormal = contact.getContactNormal(); // TODO: This can set activity to false. Add an early out so it doesn't do the rest.
             double projection = contactNormal.dot(newContact.getContactNormal());
 

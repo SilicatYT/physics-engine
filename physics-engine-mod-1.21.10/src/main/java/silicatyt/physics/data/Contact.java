@@ -24,8 +24,6 @@ public abstract class Contact {
     private final Vector3d accumulatedImpulseWorld = new Vector3d(); // In world space
     private double targetClosingVelocity; // It should not be updated except manually. Its whole point is being cached, so it has no dependencies.
 
-    private double accumulatedSplitImpulse; // TODO: Clean up
-    private double biasVelocity; // TODO: Same notes as for targetClosingVelocity
     private double accumulatedSplitImpulse;
     private double biasVelocity;
 
