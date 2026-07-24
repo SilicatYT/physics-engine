@@ -50,7 +50,6 @@ public class ObjectContactManifold implements ContactManifold {
             // Set the "isActive" status: Deactivate contacts where necessary (Ignored during resolution, but kept in case they become valid again)
             if (normalSimilarity < ACCUMULATION_PROJECTION_DEACTIVATION_THRESHOLD || penetrationDepth < 0d) { contact.setActivity(false); }
         }
-
         // Add new contacts
         contacts.addAll(newContacts);
     }

@@ -4,7 +4,6 @@ import net.minecraft.util.math.Vec3d;
 import org.joml.Quaterniond;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
-import silicatyt.physics.Physics;
 import silicatyt.physics.entity.PhysicsObject;
 
 import static java.lang.Math.pow;
@@ -12,8 +11,8 @@ import static silicatyt.physics.simulation.Main.DELTA_TIME;
 
 public class Integrator {
     public static final Vector3d DEFAULT_GRAVITY = new Vector3d(0d, -9.81d, 0d);
-    public static final double DEFAULT_LINEAR_DAMPING = pow(0.9d, DELTA_TIME); // "After 1 second, this much of its linear velocity should remain".
-    public static final double DEFAULT_ANGULAR_DAMPING = pow(0.9d, DELTA_TIME);
+    public static final double DEFAULT_LINEAR_DAMPING = pow(0.95d, DELTA_TIME); // "After 1 second, this much of its linear velocity should remain".
+    public static final double DEFAULT_ANGULAR_DAMPING = pow(0.95d, DELTA_TIME);
 
     // Phases
     public static void phaseOne(PhysicsObject obj) { // Update internal state

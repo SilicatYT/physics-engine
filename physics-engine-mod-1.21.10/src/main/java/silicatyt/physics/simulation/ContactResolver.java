@@ -81,6 +81,11 @@ public class ContactResolver {
         impulse.y = -contactVelocityInContactSpace.y * inverseEffectiveMass.y();
         impulse.z = -contactVelocityInContactSpace.z * inverseEffectiveMass.z();
 
+        /*if ((contactVelocityInContactSpace.y*contactVelocityInContactSpace.y + contactVelocityInContactSpace.z*contactVelocityInContactSpace.z) < 0.2) { // TODO: TEMPORARY "FIX" FOR FRICTION CAUSING SLIDING
+            impulse.y = 0d;
+            impulse.z = 0d;
+        }*/
+
         Vector3d accumulatedImpulse = new Vector3d(contact.getAccumulatedImpulseWorld());
         contact.getOrthonormalBasis().transformTranspose(accumulatedImpulse); // TODO: Can I remove some transformations by calculating the impulse with the world space contactVelocity first, so I don't have to transform the accumulatedImpulse?
 
@@ -156,6 +161,7 @@ public class ContactResolver {
         Vector3d relativeLinearVelocityFromAcceleration = new Vector3d(contact.objectA.getLinearVelocityFromAcceleration());
         if (contact.objectB != null) { relativeLinearVelocityFromAcceleration.sub(contact.objectB.getLinearVelocityFromAcceleration()); }
 
+        // TODO: Entfernen (oder behalten? Überprüfen! Müsste dann natürlich optimieren, so dass ich nicht 2x das ".dot()" habe)
         if (contact.getClosingVelocity() + relativeLinearVelocityFromAcceleration.dot(contact.getContactNormal()) < RESTITUTION_ACTIVATION_SPEED_THRESHOLD) { return 0d; } // Ignore restitution if the speed is small, for stability
 
         return -contact.getRestitutionCoefficient() * (contact.getClosingVelocity() + relativeLinearVelocityFromAcceleration.dot(contact.getContactNormal()));
@@ -177,7 +183,7 @@ public class ContactResolver {
 
     // Helper methods (Penetration resolution)
     private static double calculateBiasVelocity(Contact contact) { // Basically the targetClosingVelocity for split-impulse penetration resolution
-        return Math.max(contact.getPenetrationDepth(), 0.0) / DELTA_TIME;
+        return Math.max(contact.getPenetrationDepth() - 0.01, 0.0) / DELTA_TIME; // TODO: Add a slop constant. Slop is necessary so that all contacts are penetrating at all times, otherwise stacks become unstable.
     }
 
     private static void applySplitImpulse(Contact contact, Vector3d impulse) {
@@ -208,36 +214,34 @@ public class ContactResolver {
     }
 }
 
-// TODO: Objects are stable shortly after falling to the ground. Then, it takes a while until they start jittering/sliding. What's the problem here?
-// TODO: Is it a problem that my orthonormal basis can completely change from one tick to the next, could this affect warm-starting? Is this the reason why my objects start jittering at some point?
-// TODO: SETTING FRICTION TO 0 MAKES THE JITTER AND DRIFTING DISAPPEAR! INVESTIGATE!
 
 
-
-// TODO: In warm-starting, I transform the impulse from contact coordinates to world coordinates before I apply it. I store it in contact coordinates, but in the current tick's. The next tick, transforming back will mean something else, because the normal has maybe changed.// TODO: When I disable warm-starting (while the temporary fix of "if tangential movement is small, set the impulse to 0" is active), the random sliding stops, but friction seems to be strongly reduced, so objects slide as if on ice.
-// TODO: => It looks like warm-starting messes with things in that the previously accumulated impulse is applied while the object is rotated slightly differently from before, causing the impulse that's being applied to be incorrect? But warm-starting is only a "first draft" for the resolution, so it should get overwritten by future resolutions, no?
-// TODO: => Also, disabling both warm-starting AND the temporary fix still has the objects slide around randomly.
-// TODO: => Overall. I'm very unsure as to what the problem is...
-
-
-
-// TODO: Stacks of 3 or more are not stable (They slide around)
-
-
-
-// TODO: => The sliding bug was mainly caused by the early return in velocity resolution, BUT warm-starting still makes objects slide *once* after some time and then stop?? If the problem is outdated contact bases, why would it stop? Warm-starting also breaks stability for stacks (objects slide very fast)
-// TODO: => And do I need penetration slop or not?
-
-
-
-
-
-// TODO: --------------------------
-
-// TODO: I just changed accumulatedImpulse to be in world coordinates, but it's mathmatically the same as before. The bug (objects slide a little bit after a few seconds before stabilizing) is LIKELY in the orthonormalBasis calculation, I need to change it so its "seam" isn't as obvious on a flat floor.
-// TODO: Not sure why stacked objects are so unstable, even though I've sorted my contacts. Even if I decrease deltatime and increase the number of iterations. Does it properly create 4 contacts on the ground, or is there an issue with that?
+// TODO: I just changed accumulatedImpulse to be in world coordinates, but it's mathematically the same as before. The bug (objects slide a little bit after a few seconds before stabilizing) is LIKELY in the orthonormalBasis calculation, I need to change it so its "seam" isn't as obvious on a flat floor.
+// TODO: Not sure why stacked objects are so unstable, even though I've sorted my contacts. Even if I decrease deltaTime and increase the number of iterations. Does it properly create 4 contacts on the ground, or is there an issue with that?
 // TODO: Maybe carry over accumulatedImpulse both in world and contact space, so I don't need any transformations? Or maybe keep the basis from the previous tick if it's similar enough, so I don't have drift?
 // TODO: Add early outs for velocity and penetration resolution (velocity resolution's early exit needs to be separate for tangential and normal)
 // TODO: Why do objects visually clip into the ground for 1 tick after falling? Shouldn't all the correction be applied before the visual update?
 // TODO: Clean up everything, optimize some operations (to remove new Vector3d(...)), add more helper methods so each method only does one thing, replace setters with "add..." where appropriate to remove a new() call
 // TODO: Why do objects slide down slopes with frictionCoefficient 1?
+
+
+
+
+// TODO: After adding multiple contacts per tick, it seems like the old contacts don't get deactivated properly? If I create a stack and make one object slide off the other, the object doesn't fall off until the last corner is no longer penetrating
+// TODO: Stacks are incredibly unstable, and the number of active contacts fluctuates insanely. If I spawn a 20x2x20 object, with a 2x2x2 ontop, it alternates between 4 and 8 contacts, even though it should always have 8. So the top object doesn't detect any contacts with the 20x2x20 one every other tick.
+// TODO: ^ The issue is mostly accumulation (not checking for tangential bounds). Now that I generate every contact every tick, I don't need to accumulate pointFace, so it's much more stable. BUT: The more objects are ontop of another, regardless of stack height, the more unstable it gets. Can this be fixed?
+// TODO: ^ if I remove accumulation for pointFace, will I suffer a performance loss?
+
+
+// TODO: Idea: If I can't fix warm-starting, only warm-start the normal component
+// TODO: Should I clear splitImpulse between every tick, or keep it? It's just a position correction, so I think keeping it would be suboptimal
+
+// TODO: WAIT, shouldn't I check whether the contact is in-bounds (or at least for the tangential axes) during accumulation? Did I forget to do that...?
+// TODO: Check if the tangential bounds check in ContactGenerator (pointFace) actually checks for the OBB, or just the AABB. It *MIGHT* generate contacts for points that don't actually penetrate, leaving objects floating.
+// TODO: ^ for edge-edge, maybe no such equivalent check is needed? Either that, or a full "is inside OBB" check.
+
+// TODO: Potential bug: It could potentially generate AND KEEP both sets of corner contacts (the original, and the fallback) if it changes without removing the old contacts. The problem is that it will also reset the accumulatedImpulse
+// TODO: ^ maybe that actually happens. It might alternate because of small angle differences? Though it shouldn't, because only one object's corners are actually in-bounds... Still, I need to check this. It's definitely a bug anyway
+
+
+// TODO: I think it's relatively stable if I sort ascending and disable warm-starting and make 40 iterations.

@@ -26,7 +26,7 @@ public class Main {
             Integrator.phaseOne(obj);
         }
 
-        Set<PhysicsObject> checkedObjects = new HashSet<>();
+        Set<PhysicsObject> checkedObjects = new HashSet<>(); // TODO: Make it so it doesn't create a new one each tick. Right now, ".clear()" is unnecessary
         for (PhysicsObject obj : loadedObjects) {
             if (obj.getInverseMass() == 0d) { continue; } // Don't search for collisions if you're a static object. Static objects can only appear as ObjectB because they can't move.
 
