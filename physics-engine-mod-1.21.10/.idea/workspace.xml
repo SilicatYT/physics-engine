@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="9180dfe4-e306-48c1-9ea5-549a33c9e81b" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.gitattributes" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.github/workflows/build.yml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/LICENSE" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradle.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.jar" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.properties" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradlew" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradlew.bat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/settings.gradle" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/client/java/silicatyt/physics/PhysicsClient.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/client/java/silicatyt/physics/PhysicsDataGenerator.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/client/java/silicatyt/physics/mixin/client/ExampleClientMixin.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/client/resources/physics.client.mixins.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/silicatyt/physics/Physics.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/silicatyt/physics/data/Contact.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/silicatyt/physics/data/ContactEdgeEdge.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/silicatyt/physics/data/ContactManager.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/silicatyt/physics/data/ContactManifold.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/silicatyt/physics/data/ContactPointFace.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/silicatyt/physics/data/Material.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/silicatyt/physics/data/ObjectCollision.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/silicatyt/physics/data/ObjectContactKey.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/silicatyt/physics/data/ObjectContactManifold.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/silicatyt/physics/data/TerrainCollision.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/silicatyt/physics/data/TerrainContactKey.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/silicatyt/physics/data/TerrainContactManifold.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/silicatyt/physics/data/TerrainHitboxContactManifold.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/silicatyt/physics/entity/ModEntities.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/silicatyt/physics/entity/PhysicsObject.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/silicatyt/physics/mixin/ExampleMixin.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/silicatyt/physics/simulation/CollisionDetector.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/silicatyt/physics/simulation/ContactGenerator.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/silicatyt/physics/simulation/ContactResolver.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/silicatyt/physics/simulation/Integrator.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/silicatyt/physics/simulation/Main.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/silicatyt/physics/versioning/DependencyNode.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/silicatyt/physics/versioning/VersionNode.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/silicatyt/physics/versioning/VersionSource.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/assets/physics/icon.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/fabric.mod.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/physics.mixins.json" beforeDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="ExternalProjectsManager">
+    <system id="GRADLE">
+      <state>
+        <projects_view>
+          <tree_state>
+            <expand>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="physics-engine-mod-1.21.10" type="f1a62948:ProjectNode" />
+              </path>
+            </expand>
+            <select />
+          </tree_state>
+        </projects_view>
+      </state>
+    </system>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Enum" />
+        <option value="Interface" />
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/src/main/java/silicatyt/physics/data/ObjectContactManifold.java" root0="SKIP_INSPECTION" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 5,
+  &quot;fromUser&quot;: false
+}</component>
+  <component name="ProjectId" id="3CwW2jRTUh3JxfkFQCyt5w6Q7A5" />
+  <component name="ProjectViewState">
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Application.Minecraft Client.executor": "Run",
+    "Gradle.Upgrade Gradle wrapper.executor": "Run",
+    "Gradle.physics-engine-mod-1.21.10 [:net.fabricmc.devlaunchinjector.Main.main()].executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "git-widget-placeholder": "rewrite-and-cleanup",
+    "ignore.virus.scanning.warn.message": "true",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "C:/Users/SilicatYT/Documents/physics-engine/physics-engine-mod-1.21.10",
+    "node.js.detected.package.eslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.lookFeel"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyClassDialog.RECENTS_KEY">
+      <recent name="silicatyt.physics.data" />
+      <recent name="silicatyt.physics.simulation" />
+      <recent name="silicatyt.physics.versioning" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Application.Minecraft Client">
+    <list>
+      <item itemvalue="Application.Data Generation" />
+      <item itemvalue="Application.Minecraft Client" />
+      <item itemvalue="Application.Minecraft Server" />
+    </list>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-34e2839f716b-intellij.indexing.shared.core-IU-262.9437.185" />
+        <option value="bundled-js-predefined-d6986cc7102b-4abd2a77f808-JavaScript-IU-262.9437.185" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="9180dfe4-e306-48c1-9ea5-549a33c9e81b" name="Changes" comment="" />
+      <created>1777296908125</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1777296908125</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

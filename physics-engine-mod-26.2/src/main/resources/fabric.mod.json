@@ -1,0 +1,34 @@
+{
+	"schemaVersion": 1,
+	"id": "physicsengine",
+	"version": "${version}",
+	"name": "Physics Engine",
+	"description": "Rigid-body physics engine for cuboids",
+	"authors": [
+		"Me!"
+	],
+	"contact": {
+		"homepage": "https://github.com/SilicatYT",
+		"sources": "https://github.com/SilicatYT/physics-engine"
+	},
+	"license": "MIT-License",
+	"icon": "assets/physicsengine/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			"net.silicatyt.physicsengine.PhysicsEngine"
+		],
+		"fabric-datagen": [
+			"net.silicatyt.physicsengine.PhysicsEngineDataGenerator"
+		]
+	},
+	"mixins": [
+		"physicsengine.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.19.3",
+		"minecraft": "~26.2",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}
