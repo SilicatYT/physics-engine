@@ -12,14 +12,14 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
-import net.silicatyt.physicsengine.versioning.PhysicsObjectVersions;
-import net.silicatyt.physicsengine.versioning.PhysicsObjectVersionsView;
+import net.silicatyt.physicsengine.versioning.physicsobject.PhysicsObjectVersions;
+import net.silicatyt.physicsengine.versioning.physicsobject.PhysicsObjectVersionsView;
 import org.joml.*;
 import org.jspecify.annotations.NonNull;
 
 import static net.silicatyt.physicsengine.data.PhysicsObjectCodecs.*;
 
-public class PhysicsObject extends Display.ItemDisplay implements PolymerEntity {
+public final class PhysicsObject extends Display.ItemDisplay implements PolymerEntity {
     private static final double DEFAULT_INVERSE_MASS = 0.001;
     private static final Vector3d DEFAULT_SCALE = new Vector3d(1.0, 1.0, 1.0);
     private static final double DEFAULT_FRICTION_COEFFICIENT = 0.5;

@@ -1,6 +1,9 @@
-package net.silicatyt.physicsengine.versioning;
+package net.silicatyt.physicsengine.versioning.physicsobject;
 
-public class PhysicsObjectVersions implements PhysicsObjectVersionsView {
+import net.silicatyt.physicsengine.versioning.VersionNode;
+import net.silicatyt.physicsengine.versioning.VersionSource;
+
+public final class PhysicsObjectVersions implements PhysicsObjectVersionsView {
     // VersionNodes that are directly accessible via setters don't need an updater method. Only fields accessible with a getter need a VersionSource.
     public final VersionNode inverseMass = new VersionNode(() -> {});
     public final VersionNode linearVelocity = new VersionNode(() -> {});
@@ -13,6 +16,8 @@ public class PhysicsObjectVersions implements PhysicsObjectVersionsView {
     public final VersionNode rotationMatrix;
     public final VersionNode inverseInertiaTensorLocal;
     public final VersionNode inverseInertiaTensorWorld;
+
+    public final VersionNode internalPos = new VersionNode(() -> {});
 
 
     public PhysicsObjectVersions(
@@ -40,4 +45,6 @@ public class PhysicsObjectVersions implements PhysicsObjectVersionsView {
     @Override public VersionSource restitutionCoefficient() { return restitutionCoefficient; }
 
     @Override public VersionSource inverseInertiaTensorWorld() { return inverseInertiaTensorWorld; }
+
+    @Override public VersionSource internalPos() { return internalPos; }
 }

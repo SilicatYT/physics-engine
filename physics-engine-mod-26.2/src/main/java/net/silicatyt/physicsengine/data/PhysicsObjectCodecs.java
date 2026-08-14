@@ -10,7 +10,7 @@ import java.util.function.Function;
 
 import static net.silicatyt.physicsengine.entity.PhysicsObject.MIN_SCALE;
 
-public class PhysicsObjectCodecs {
+public final class PhysicsObjectCodecs {
     private static <T> Codec<T> validatedDoubleList(
         int size,
         Function<List<Double>, DataResult<T>> decoder,

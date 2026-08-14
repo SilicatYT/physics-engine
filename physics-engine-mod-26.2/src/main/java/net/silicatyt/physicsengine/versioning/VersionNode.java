@@ -3,7 +3,7 @@ package net.silicatyt.physicsengine.versioning;
 import java.util.LinkedList;
 import java.util.List;
 
-public class VersionNode implements VersionSource {
+public final class VersionNode implements VersionSource {
     private long version = 0;
     private final Runnable update;
     private final List<DependencyNode> dependencies = new LinkedList<>();

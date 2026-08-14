@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import eu.pb4.polymer.core.api.entity.PolymerEntityUtils;
 
 
-public class PhysicsEngine implements ModInitializer {
+public final class PhysicsEngine implements ModInitializer {
 	public static final String MOD_ID = "physicsengine";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 

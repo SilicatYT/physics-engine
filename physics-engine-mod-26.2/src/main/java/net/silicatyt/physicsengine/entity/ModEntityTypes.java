@@ -11,7 +11,7 @@ import net.silicatyt.physicsengine.PhysicsEngine;
 
 import static net.silicatyt.physicsengine.PhysicsEngine.id;
 
-public class ModEntityTypes {
+public final class ModEntityTypes {
     public static final EntityType<PhysicsObject> PHYSICS_OBJECT = register(
             "physics_object",
             EntityType.Builder.of(PhysicsObject::new, MobCategory.MISC)
