@@ -12,8 +12,8 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.ValueInput;
 import net.minecraft.world.level.storage.ValueOutput;
 import net.minecraft.world.phys.Vec3;
-import net.silicatyt.physicsengine.versioning.VersionNode;
-import net.silicatyt.physicsengine.versioning.VersionSource;
+import net.silicatyt.physicsengine.versioning.PhysicsObjectVersions;
+import net.silicatyt.physicsengine.versioning.PhysicsObjectVersionsView;
 import org.joml.*;
 import org.jspecify.annotations.NonNull;
 
@@ -30,15 +30,8 @@ public class PhysicsObject extends Display.ItemDisplay implements PolymerEntity 
 
     public PhysicsObject(EntityType<?> type, Level world) {
         super(type, world);
-
-        // Default values ('internalPos' is set in Integration.phaseOne)
         setTransformationInterpolationDuration(1);
         setPosRotInterpolationDuration(1);
-
-        // Variable dependencies
-        rotationMatrixVersion.addDependencies(orientationVersion);
-        inverseInertiaTensorLocalVersion.addDependencies(inverseMassVersion, scaleVersion);
-        inverseInertiaTensorWorldVersion.addDependencies(rotationMatrixVersion, inverseInertiaTensorLocalVersion);
     }
 
     @Override
@@ -90,18 +83,9 @@ public class PhysicsObject extends Display.ItemDisplay implements PolymerEntity 
     // Other transient data
     private final Vector3d internalPos = new Vector3d(); // Easy and consistent access without needing to move (and risk unloading) the entity mid-tick
 
-    // Versioning (VersionNodes that are directly accessible via setters don't need an updater method. Only fields accessible with a getter need a VersionSource.)
-    private final VersionNode inverseMassVersion = new VersionNode(() -> {});
-    private final VersionNode linearVelocityVersion = new VersionNode(() -> {});
-    private final VersionNode angularVelocityVersion = new VersionNode(() -> {});
-    private final VersionNode orientationVersion = new VersionNode(() -> {});
-    private final VersionNode scaleVersion = new VersionNode(() -> {});
-    private final VersionNode frictionCoefficientVersion = new VersionNode(() -> {});
-    private final VersionNode restitutionCoefficientVersion = new VersionNode(() -> {});
-
-    public final VersionNode rotationMatrixVersion = new VersionNode(this::updateRotationMatrix);
-    public final VersionNode inverseInertiaTensorLocalVersion = new VersionNode(this::updateInverseInertiaTensorLocal);
-    public final VersionNode inverseInertiaTensorWorldVersion = new VersionNode(this::updateInverseInertiaTensorWorld);
+    // Versioning
+    private final PhysicsObjectVersions versions = new PhysicsObjectVersions(this::updateRotationMatrix, this::updateInverseInertiaTensorLocal, this::updateInverseInertiaTensorWorld);
+    public PhysicsObjectVersionsView getVersions() { return versions; }
 
     // Getters
     public double getInverseMass() { return inverseMass; }
@@ -119,21 +103,21 @@ public class PhysicsObject extends Display.ItemDisplay implements PolymerEntity 
         if (d < 0.0) throw new IllegalArgumentException("Inverse mass must be >= 0");
         if (!Double.isFinite(d)) throw new IllegalArgumentException("Inverse mass must be finite");
         if (inverseMass == d) return;
-        inverseMassVersion.increment();
+        versions.inverseMass.increment();
         inverseMass = d;
     }
 
     public void setLinearVelocity(@NonNull Vector3d v) throws IllegalArgumentException {
         if (!v.isFinite()) throw new IllegalArgumentException("Linear velocity must be finite");
         if (linearVelocity.equals(v)) return;
-        linearVelocityVersion.increment();
+        versions.linearVelocity.increment();
         linearVelocity.set(v);
     }
 
     public void setAngularVelocity(@NonNull Vector3d v) throws IllegalArgumentException {
         if (!v.isFinite()) throw new IllegalArgumentException("Angular velocity must be finite");
         if (angularVelocity.equals(v)) return;
-        angularVelocityVersion.increment();
+        versions.angularVelocity.increment();
         angularVelocity.set(v);
     }
 
@@ -141,7 +125,7 @@ public class PhysicsObject extends Display.ItemDisplay implements PolymerEntity 
         if (!q.isFinite()) throw new IllegalArgumentException("Orientation must be finite");
         if (q.lengthSquared() < 1e-24) throw new IllegalArgumentException("Orientation must not be degenerate");
         if (orientation.equals(q)) return;
-        orientationVersion.increment();
+        versions.orientation.increment();
         orientation.set(q);
         orientation.normalize();
     }
@@ -150,7 +134,7 @@ public class PhysicsObject extends Display.ItemDisplay implements PolymerEntity 
         if (v.x < MIN_SCALE || v.y < MIN_SCALE || v.z < MIN_SCALE) throw new IllegalArgumentException("Scale must be >= " + MIN_SCALE);
         if (!v.isFinite()) throw new IllegalArgumentException("Scale must be finite");
         if (scale.equals(v)) return;
-        scaleVersion.increment();
+        versions.scale.increment();
         scale.set(v);
     }
 
@@ -158,7 +142,7 @@ public class PhysicsObject extends Display.ItemDisplay implements PolymerEntity 
         if (d < 0.0 || d > 1.0) throw new IllegalArgumentException("Friction coefficient must be between 0 and 1");
         if (!Double.isFinite(d)) throw new IllegalArgumentException("Friction coefficient must be finite");
         if (frictionCoefficient == d) return;
-        frictionCoefficientVersion.increment();
+        versions.frictionCoefficient.increment();
         frictionCoefficient = d;
     }
 
@@ -166,7 +150,7 @@ public class PhysicsObject extends Display.ItemDisplay implements PolymerEntity 
         if (d < 0.0 || d > 1.0) throw new IllegalArgumentException("Restitution coefficient must be between 0 and 1");
         if (!Double.isFinite(d)) throw new IllegalArgumentException("Restitution coefficient must be finite");
         if (restitutionCoefficient == d) return;
-        restitutionCoefficientVersion.increment();
+        versions.restitutionCoefficient.increment();
         restitutionCoefficient = d;
     }
 

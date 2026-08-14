@@ -10,8 +10,6 @@ public final class DependencyNode {
     }
 
     public DependencyNode(VersionSource source) { this(source, false); }
-
     public boolean hasChanged() { return source.getVersion() != lastSeenVersion; }
-
     public void markSeen() { lastSeenVersion = source.getVersion(); }
 }
