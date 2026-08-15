@@ -31,7 +31,6 @@ public class Integrator {
 
     public static void phaseTwo(PhysicsObject obj) {
         obj.updateTransformation();
-        obj.updateEntityPos();
         obj.clearAccumulators();
     }
 
