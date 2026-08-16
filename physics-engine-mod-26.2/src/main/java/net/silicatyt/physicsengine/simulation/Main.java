@@ -2,6 +2,7 @@ package net.silicatyt.physicsengine.simulation;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerTickRateManager;
+import net.silicatyt.physicsengine.data.Island;
 import net.silicatyt.physicsengine.entity.PhysicsObject;
 
 import java.util.List;
@@ -22,6 +23,8 @@ public final class Main {
         PHYSICS_POOL.submit(
                 () -> loadedObjects.parallelStream().forEach(Integrator::phaseOne)
         ).join();
+
+        List<Island> islands = CollisionDetector.findIslands(loadedObjects, PHYSICS_POOL);
 
         PHYSICS_POOL.submit(
                 () -> loadedObjects.parallelStream().forEach(Integrator::phaseTwo)

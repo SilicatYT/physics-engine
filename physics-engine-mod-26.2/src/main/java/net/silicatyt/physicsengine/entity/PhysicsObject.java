@@ -17,7 +17,8 @@ import net.silicatyt.physicsengine.versioning.physicsobject.PhysicsObjectVersion
 import org.joml.*;
 import org.jspecify.annotations.NonNull;
 
-import static net.silicatyt.physicsengine.data.PhysicsObjectCodecs.*;
+import static java.lang.Math.abs;
+import static net.silicatyt.physicsengine.serialization.PhysicsObjectCodecs.*;
 import static net.silicatyt.physicsengine.simulation.Integrator.EPSILON_SQUARED;
 import static net.silicatyt.physicsengine.simulation.Main.DELTA_TIME;
 
@@ -83,6 +84,18 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
     private final Matrix3d rotationMatrixTranspose = new Matrix3d();
     private final Matrix3d inverseInertiaTensorLocal = new Matrix3d();
     private final Matrix3d inverseInertiaTensorWorld = new Matrix3d();
+    private final Vector3d[] axes = new Vector3d[]{
+            new Vector3d(),
+            new Vector3d(),
+            new Vector3d()
+    };
+    private final Vector3d[] halfExtentAxisProjections = new Vector3d[]{ // TODO: It's used in at least 2 calculations, but re-calculating might be roughly as fast as running the dependency checks with the versioning system. Check whether it's only used for aabb & relativeCorners, or also in ContactGeneration or Resolution (and would therefore benefit more from the caching). If it weren't for the versioning system, it would be guaranteed to be faster. DEFINITELY use this in the Datapack.
+            new Vector3d(),
+            new Vector3d(),
+            new Vector3d()
+    };
+    private final Vector3d aabbMin = new Vector3d(); // AABB is relative to center of mass
+    private final Vector3d aabbMax = new Vector3d();
 
 
     // Other transient data
@@ -94,7 +107,14 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
 
 
     // Versioning
-    private final PhysicsObjectVersions versions = new PhysicsObjectVersions(this::updateRotationMatrix, this::updateInverseInertiaTensorLocal, this::updateInverseInertiaTensorWorld);
+    private final PhysicsObjectVersions versions = new PhysicsObjectVersions( // TODO: Rework to shorten the parameter list
+            this::updateRotationMatrix,
+            this::updateInverseInertiaTensorLocal,
+            this::updateInverseInertiaTensorWorld,
+            this::updateAxes,
+            this::updateHalfExtentAxisProjections,
+            this::updateAabb
+    );
     public PhysicsObjectVersionsView getVersions() { return versions; }
 
 
@@ -110,6 +130,14 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
     public Matrix3dc getInverseInertiaTensorWorld() {
         versions.inverseInertiaTensorWorld.updateIfNeeded();
         return inverseInertiaTensorWorld;
+    }
+    public Vector3dc getAabbMin() {
+        versions.aabb.updateIfNeeded();
+        return aabbMin;
+    }
+    public Vector3dc getAabbMax() {
+        versions.aabb.updateIfNeeded();
+        return aabbMax;
     }
 
     public Vector3dc getInternalPos() { return internalPos; }
@@ -179,7 +207,7 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
         restitutionCoefficient = d;
         versions.restitutionCoefficient.increment();
     }
-    
+
     public void setInternalPos(double x, double y, double z) throws IllegalArgumentException { // TODO: Maybe check if the entity needs to be in-bounds (Might crash?)
         if (!Double.isFinite(x) || !Double.isFinite(y) || !Double.isFinite(z)) throw new IllegalArgumentException("Internal pos must be finite");
         if (internalPos.equals(x, y, z)) return;
@@ -205,6 +233,20 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
     }
 
     private void updateInverseInertiaTensorWorld() { rotationMatrix.mul(inverseInertiaTensorLocal, inverseInertiaTensorWorld).mul(rotationMatrixTranspose, inverseInertiaTensorWorld); }
+
+    private void updateAxes() { for (int i = 0; i < 3; i++) rotationMatrix.getColumn(i, axes[i]); }
+
+    private void updateHalfExtentAxisProjections() { for (int i = 0; i < 3; i++) halfExtentAxisProjections[i].set(axes[i]).mul(scale.get(i) * 0.5); }
+
+    private void updateAabb() {
+        for (int i = 0; i < 3; i++) {
+            aabbMax.setComponent(
+                    i,
+                    abs(halfExtentAxisProjections[0].get(i)) + abs(halfExtentAxisProjections[1].get(i)) + abs(halfExtentAxisProjections[2].get(i))
+            );
+        }
+        aabbMin.set(aabbMax).negate();
+    }
 
 
     // Other
@@ -246,8 +288,10 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
         versions.orientation.increment(); // TODO: Should I use a setter so I don't need this explicitly? Would add more overhead, but I wouldn't have to increment the version in several places?
     }
 
-    //public void addLinearCorrection(@NonNull Vector3dc v) throws IllegalArgumentException {
-    //    if (!v.isFinite()) throw new IllegalArgumentException("Linear correction must be finite");
+    public void clearAccumulators() {
+        accumulatedForce.zero();
         accumulatedTorque.zero();
     }
 }
+
+// TODO: Maybe split PhysicsObject into the minecraft entity and "PhysicsBody", single-responsibility?

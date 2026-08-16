@@ -1,4 +1,4 @@
-package net.silicatyt.physicsengine.data;
+package net.silicatyt.physicsengine.serialization;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
