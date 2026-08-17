@@ -22,7 +22,7 @@ import java.util.Set;
 public final class PhysicsEngine implements ModInitializer {
 	public static final String MOD_ID = "physicsengine";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
-	public static final Set<PhysicsObject> LOADED_PHYSICS_OBJECTS = new HashSet<>(); // TODO: Optimize the data structure so only objects with shared chunks test for collisions against each other
+	public static final Set<PhysicsObject> LOADED_PHYSICS_OBJECTS = new HashSet<>();
 
 	@Override
 	public void onInitialize() {

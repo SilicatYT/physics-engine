@@ -89,13 +89,13 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
             new Vector3d(),
             new Vector3d()
     };
-    private final Vector3d[] halfExtentAxisProjections = new Vector3d[]{ // TODO: It's used in at least 2 calculations, but re-calculating might be roughly as fast as running the dependency checks with the versioning system. Check whether it's only used for aabb & relativeCorners, or also in ContactGeneration or Resolution (and would therefore benefit more from the caching). If it weren't for the versioning system, it would be guaranteed to be faster. DEFINITELY use this in the Datapack.
+    private final Vector3d[] halfExtentAxisProjections = new Vector3d[]{
             new Vector3d(),
             new Vector3d(),
             new Vector3d()
     };
-    private final Vector3d aabbMin = new Vector3d(); // AABB is relative to center of mass
-    private final Vector3d aabbMax = new Vector3d();
+    private final Vector3d aabbRelativeMin = new Vector3d();
+    private final Vector3d aabbRelativeMax = new Vector3d();
 
 
     // Other transient data
@@ -113,7 +113,7 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
             this::updateInverseInertiaTensorWorld,
             this::updateAxes,
             this::updateHalfExtentAxisProjections,
-            this::updateAabb
+            this::updateAabbRelative
     );
     public PhysicsObjectVersionsView getVersions() { return versions; }
 
@@ -131,13 +131,21 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
         versions.inverseInertiaTensorWorld.updateIfNeeded();
         return inverseInertiaTensorWorld;
     }
-    public Vector3dc getAabbMin() {
-        versions.aabb.updateIfNeeded();
-        return aabbMin;
+    public Vector3dc getAxis(int axisIndex) {
+        versions.axes.updateIfNeeded();
+        return axes[axisIndex];
     }
-    public Vector3dc getAabbMax() {
-        versions.aabb.updateIfNeeded();
-        return aabbMax;
+    public Vector3dc getAabbRelativeMin() {
+        versions.aabbRelative.updateIfNeeded();
+        return aabbRelativeMin;
+    }
+    public Vector3dc getAabbRelativeMax() {
+        versions.aabbRelative.updateIfNeeded();
+        return aabbRelativeMax;
+    }
+    public Vector3dc getHalfExtentAxisProjection(int axisIndex) {
+        versions.halfExtentAxisProjections.updateIfNeeded();
+        return halfExtentAxisProjections[axisIndex];
     }
 
     public Vector3dc getInternalPos() { return internalPos; }
@@ -238,14 +246,14 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
 
     private void updateHalfExtentAxisProjections() { for (int i = 0; i < 3; i++) halfExtentAxisProjections[i].set(axes[i]).mul(scale.get(i) * 0.5); }
 
-    private void updateAabb() {
+    private void updateAabbRelative() {
         for (int i = 0; i < 3; i++) {
-            aabbMax.setComponent(
+            aabbRelativeMax.setComponent(
                     i,
                     abs(halfExtentAxisProjections[0].get(i)) + abs(halfExtentAxisProjections[1].get(i)) + abs(halfExtentAxisProjections[2].get(i))
             );
         }
-        aabbMin.set(aabbMax).negate();
+        aabbRelativeMin.set(aabbRelativeMax).negate();
     }
 
 

@@ -20,11 +20,12 @@ public class PairFinder { // AI-generated
         return collectUniquePairs(buckets);
     }
 
-    private static Long2ObjectOpenHashMap<List<PhysicsObject>> buildBuckets(List<PhysicsObject> objects) {  // AI-generated (Building buckets for each chunk, for fast object pair creation)
+    private static Long2ObjectOpenHashMap<List<PhysicsObject>> buildBuckets(List<PhysicsObject> objects) {  // Building buckets for each chunk, for fast object pair creation
+        // TODO: Maybe use something octree-like with more buckets, or at least make the chunks cubic
         Long2ObjectOpenHashMap<List<PhysicsObject>> buckets = new Long2ObjectOpenHashMap<>();
         for (PhysicsObject obj : objects) {
             Vector3dc pos = obj.getInternalPos();
-            Vector3dc min = obj.getAabbMin(), max = obj.getAabbMax(); // Relative to center of mass
+            Vector3dc min = obj.getAabbRelativeMin(), max = obj.getAabbRelativeMax(); // Relative to center of mass
             int chunkMinX = floorDiv((int) floor(min.x() + pos.x()), 16);
             int chunkMaxX = floorDiv((int) floor(max.x() + pos.x()), 16);
             int chunkMinZ = floorDiv((int) floor(min.z() + pos.z()), 16);
@@ -41,7 +42,7 @@ public class PairFinder { // AI-generated
         return buckets;
     }
 
-    private static List<PhysicsObjectPair> collectUniquePairs(Long2ObjectOpenHashMap<List<PhysicsObject>> buckets) { // AI-generated (Sequential because "pairs" can't be safely written to in parallel)
+    private static List<PhysicsObjectPair> collectUniquePairs(Long2ObjectOpenHashMap<List<PhysicsObject>> buckets) { // Sequential because "pairs" can't be safely written to in parallel
         long estimatedPairs = 0; // To prevent excessive doubling as new entries are added to 'tested' and 'pairs'
         for (List<PhysicsObject> bucket : buckets.values()) {
             long n = bucket.size();
@@ -54,7 +55,7 @@ public class PairFinder { // AI-generated
             for (int i = 0; i < bucket.size(); i++) {
                 for (int j = i + 1; j < bucket.size(); j++) {
                     PhysicsObject a = bucket.get(i), b = bucket.get(j);
-                    if (tested.add(PairKey.packUnordered(a.getId(), b.getId()))) pairs.add(new PhysicsObjectPair(a, b)); // The higher object id is put first, which is how it deduplicates
+                    if (tested.add(PairKey.packUnordered(a.getId(), b.getId()))) pairs.add(new PhysicsObjectPair(a, b)); // The larger object id is put first, which is how it deduplicates
                 }
             }
         }

@@ -7,7 +7,7 @@ import java.util.List;
 public final class VersionNode implements VersionSource {
     private long version = 0;
     private final Runnable update;
-    private final List<DependencyNode> dependencies = new ArrayList<>(); // TODO: There are many dependency checks throughout the logic, each one allocating an iterator object. Reduce the number of checks where possible. Each one uses 2 enhanced for-loops, which creates 2 iterator objects. I could change to an indexed loop, but the checks themselves are more meaningful.
+    private final List<DependencyNode> dependencies = new ArrayList<>(); // TODO: There are many dependency checks throughout the logic, each one allocating an iterator object. Reduce the number of checks where possible (for example, getting a different single element of an array 3x, such as getHalfExtentAxisProjections(i), runs the dependency checks 3x as well). Each one uses 2 enhanced for-loops, which creates 2 iterator objects. I could change to an indexed loop, but the checks themselves are more meaningful.
 
     public VersionNode(Runnable update) { this.update = update; }
 
