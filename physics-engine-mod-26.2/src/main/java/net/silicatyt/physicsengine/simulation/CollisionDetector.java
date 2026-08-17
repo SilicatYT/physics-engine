@@ -1,10 +1,7 @@
 package net.silicatyt.physicsengine.simulation;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import net.silicatyt.physicsengine.data.Island;
-import net.silicatyt.physicsengine.data.Manifold;
-import net.silicatyt.physicsengine.data.PhysicsObjectPair;
-import net.silicatyt.physicsengine.data.SatResult;
+import net.silicatyt.physicsengine.data.*;
 import net.silicatyt.physicsengine.entity.PhysicsObject;
 import net.silicatyt.physicsengine.util.PairKey;
 import org.joml.Vector3d;
@@ -84,10 +81,10 @@ public final class CollisionDetector {
         Manifold lastTickManifold = lastTick.get(PairKey.packUnordered(a.getId(), b.getId()));
         int persistedAxisIndex = lastTickManifold != null ? lastTickManifold.getPersistedAxisIndex() : -1;
         Vector3dc persistedAxis = null;
-        double persistedAxisOverlap;
+        double persistedAxisOverlap = Double.MAX_VALUE;
 
-        int candidateAxisIndex;
-        Vector3dc candidateAxis = null;
+        int candidateAxisIndex = -1;
+        Vector3d candidateAxis = new Vector3d(); // Can't re-assign vectors as I go because of the cross products (Mutable vector, can't use "=")
         double candidateAxisOverlap = Double.MAX_VALUE;
 
         Vector3dc axis;
@@ -95,7 +92,7 @@ public final class CollisionDetector {
 
         // a's axes
         Vector3dc scaleA = a.getScale();
-        for (int i = 0; i < 3; i++) { // TODO: Pack the contents of the for-loop into a helper method (or 3). But how to do it cleanly, I can't pass 'double' references in Java.
+        for (int i = 0; i < 3; i++) { // TODO: Put the contents of the for-loop into a helper method (or 3). But how to do it cleanly, I can't pass 'double' references in Java.
             axis = a.getAxis(i);
             axisOverlap = calculateAxisOverlap(scaleA.get(i) * 0.5, calculateRelativeMaxProjectionOntoAxis(b, axis), axis, dx, dy, dz);
             if (axisOverlap <= 0.0) return Optional.empty();
@@ -105,7 +102,7 @@ public final class CollisionDetector {
             }
             if (axisOverlap < candidateAxisOverlap) {
                 candidateAxisIndex = i;
-                candidateAxis = axis;
+                candidateAxis.set(axis);
                 candidateAxisOverlap = axisOverlap;
             }
         }
@@ -122,7 +119,7 @@ public final class CollisionDetector {
             }
             if (axisOverlap < candidateAxisOverlap) {
                 candidateAxisIndex = i;
-                candidateAxis = axis;
+                candidateAxis.set(axis);
                 candidateAxisOverlap = axisOverlap;
             }
         }
@@ -145,15 +142,21 @@ public final class CollisionDetector {
                 }
                 if (axisOverlap < candidateAxisOverlap) {
                     candidateAxisIndex = axisIndex;
-                    candidateAxis = mutableAxis; // Technically can run multiple times, even though only once it's necessary, because it's a reference
+                    candidateAxis.set(mutableAxis);
                     candidateAxisOverlap = axisOverlap;
                 }
             }
         }
 
-
-        // TODO: Create SatResult
-        return Optional.empty();
+        Optional<PersistedAxisData> persisted = persistedAxisIndex == -1 ? Optional.empty() : Optional.of(new PersistedAxisData(
+                persistedAxisIndex, persistedAxisOverlap, persistedAxis, lastTickManifold.isPersistedAxisFacingOutward(), lastTickManifold.isPersistedAxisFacingB()
+        ));
+        return Optional.of(
+                new SatResult(
+                        new AxisData(candidateAxisIndex, candidateAxisOverlap, candidateAxis),
+                        persisted
+                )
+        );
     }
 
     private static double calculateRelativeMaxProjectionOntoAxis(PhysicsObject obj, Vector3dc axis) {

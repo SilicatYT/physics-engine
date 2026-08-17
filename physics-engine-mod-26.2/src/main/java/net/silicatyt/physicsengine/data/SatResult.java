@@ -1,3 +1,5 @@
 package net.silicatyt.physicsengine.data;
 
-public record SatResult() {} // TODO
+import java.util.Optional;
+
+public record SatResult(AxisData candidateAxisData, Optional<PersistedAxisData> persistedAxisData) {}
