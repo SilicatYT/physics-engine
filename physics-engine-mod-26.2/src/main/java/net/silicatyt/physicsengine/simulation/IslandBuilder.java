@@ -12,12 +12,12 @@ import java.util.Map;
 public final class IslandBuilder { // AI-generated
     public static List<Island> buildIslands(List<Manifold> manifolds) {
         UnionFind uf = new UnionFind();
-        for (Manifold m : manifolds) uf.union(m.a.getId(), m.b.getId()); // int IDs instead of object references because Int2IntOpenHashMap in the UnionFind is faster than using object references
+        for (Manifold m : manifolds) uf.union(m.a().getId(), m.b().getId()); // int IDs instead of object references because Int2IntOpenHashMap in the UnionFind is faster than using object references
 
         Map<Integer, List<Manifold>> manifoldsByRoot = new HashMap<>();
         for (Manifold m : manifolds) {
             manifoldsByRoot.computeIfAbsent(
-                uf.find(m.a.getId()),
+                uf.find(m.a().getId()),
                 k -> new ArrayList<>()
             ).add(m);
         }

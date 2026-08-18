@@ -29,7 +29,7 @@ public final class CollisionDetector {
         Long2ObjectOpenHashMap<Manifold> cache = new Long2ObjectOpenHashMap<>(manifolds.size());
         for (Manifold m : manifolds) {
             cache.put(
-                    PairKey.packUnordered(m.a.getId(), m.b.getId()),
+                    PairKey.packUnordered(m.a().getId(), m.b().getId()),
                     m
             );
         }
@@ -55,12 +55,9 @@ public final class CollisionDetector {
         double dy = posA.y() - posB.y();
         double dz = posA.z() - posB.z();
 
-        if (!testAabb(a, b, dx, dy, dz)) return Optional.empty();
+        if (!testAabb(a, b, dx, dy, dz)) return Optional.empty(); // TODO: Maybe somehow get rid of the many parameters (dx, dy, dz). But how? I want to avoid allocating objects on the heap.
         Optional<SatResult> collision = testSat(a, b, dx, dy, dz, lastTick);
-        if (collision.isEmpty()) return Optional.empty();
-        //return ContactGenerator.generateManifold(a, b, collision.get(), dx, dy, dz);
-        // TODO ^
-        return Optional.empty();
+        return collision.flatMap(satResult -> ContactGenerator.generateManifold(a, b, satResult, dx, dy, dz));
     }
 
     private static boolean testAabb(PhysicsObject a, PhysicsObject b, double dx, double dy, double dz) {
@@ -79,7 +76,7 @@ public final class CollisionDetector {
 
     private static Optional<SatResult> testSat(PhysicsObject a, PhysicsObject b, double dx, double dy, double dz, Long2ObjectOpenHashMap<Manifold> lastTick) { // Half extents could also be pre-calculated in PhysicsObject, but with my versioning system, that's absolutely not worth it
         Manifold lastTickManifold = lastTick.get(PairKey.packUnordered(a.getId(), b.getId()));
-        int persistedAxisIndex = lastTickManifold != null ? lastTickManifold.getPersistedAxisIndex() : -1;
+        int persistedAxisIndex = lastTickManifold != null ? lastTickManifold.persistedAxisIndex() : -1;
         Vector3dc persistedAxis = null;
         double persistedAxisOverlap = Double.MAX_VALUE;
 
@@ -149,11 +146,11 @@ public final class CollisionDetector {
         }
 
         Optional<PersistedAxisData> persisted = persistedAxisIndex == -1 ? Optional.empty() : Optional.of(new PersistedAxisData(
-                persistedAxisIndex, persistedAxisOverlap, persistedAxis, lastTickManifold.isPersistedAxisFacingOutward(), lastTickManifold.isPersistedAxisFacingB()
+                persistedAxisIndex, persistedAxisOverlap, persistedAxis, lastTickManifold.persistedAxisFacingOutward(), lastTickManifold.persistedAxisFacingB()
         ));
         return Optional.of(
                 new SatResult(
-                        new AxisData(candidateAxisIndex, candidateAxisOverlap, candidateAxis),
+                        new CandidateAxisData(candidateAxisIndex, candidateAxisOverlap, candidateAxis),
                         persisted
                 )
         );
