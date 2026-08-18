@@ -15,20 +15,21 @@ public final class VersionNode implements VersionSource {
     public long getVersion() { return version; }
 
     @Override
-    public void updateIfNeeded() {
+    public void updateIfNeeded() { // Read-only unless an update happens
         boolean isDirty = false;
 
         for (DependencyNode dependency : dependencies) {
             dependency.source.updateIfNeeded();
-            if (dependency.hasChanged()) isDirty = true;
+            if (dependency.hasChanged()) {
+                isDirty = true;
+                dependency.markSeen();
+            }
         }
 
         if (isDirty) {
             update.run();
             increment();
         }
-
-        for (DependencyNode dependency : dependencies) dependency.markSeen(); // I could merge hasChanged and markSeen to get rid of this loop, but it might be good to have separation there
     }
 
     public void addDependencies(VersionSource source, VersionSource... sources) throws IllegalArgumentException {

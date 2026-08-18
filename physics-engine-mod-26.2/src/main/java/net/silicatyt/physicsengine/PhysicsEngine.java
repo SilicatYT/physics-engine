@@ -42,8 +42,11 @@ public final class PhysicsEngine implements ModInitializer {
 			}
 		});
 
+		ServerLifecycleEvents.SERVER_STARTING.register(_ -> Main.createPhysicsPool());
+
 		ServerLifecycleEvents.SERVER_STOPPING.register(_ -> {
 			LOADED_PHYSICS_OBJECTS.clear();
+			Main.shutdownPhysicsPool();
 		});
 	}
 

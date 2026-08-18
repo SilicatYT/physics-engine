@@ -2,17 +2,20 @@ package net.silicatyt.physicsengine.simulation;
 
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ServerTickRateManager;
+import net.silicatyt.physicsengine.PhysicsEngine;
 import net.silicatyt.physicsengine.data.Island;
 import net.silicatyt.physicsengine.entity.PhysicsObject;
 
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.TimeUnit;
 
 import static net.silicatyt.physicsengine.PhysicsEngine.LOADED_PHYSICS_OBJECTS;
 
 public final class Main {
     public static final double DELTA_TIME = 1.0 / 20.0;
-    private static final ForkJoinPool PHYSICS_POOL = new ForkJoinPool(Math.max(1, Runtime.getRuntime().availableProcessors() - 1)); // TODO: Double-check this value
+    private static ForkJoinPool PHYSICS_POOL;
+    private static final long SHUTDOWN_TIMEOUT = 5;
 
     public static void tick(MinecraftServer server) {
         ServerTickRateManager tickRateManager = server.tickRateManager();
@@ -29,6 +32,31 @@ public final class Main {
         PHYSICS_POOL.submit(
                 () -> loadedObjects.parallelStream().forEach(Integrator::phaseTwo)
         ).join();
-        for (PhysicsObject obj : loadedObjects) obj.updateEntityPos(); // Can't be part of phaseTwo because it can't run parallel. Crossing chunk borders affects a data structure that contains other entities.
+        for (PhysicsObject obj : loadedObjects) {
+            obj.updateTransformation(); // Assumes it's run on the server thread, so I took it out of phaseTwo to be safe
+            obj.updateEntityPos(); // Can't be part of phaseTwo because it can't run parallel. Crossing chunk borders affects a data structure that contains other entities.
+        }
+    }
+
+    public static void createPhysicsPool() {
+        if (PHYSICS_POOL == null || PHYSICS_POOL.isShutdown()) {
+            PHYSICS_POOL = new ForkJoinPool(Math.max(1, Runtime.getRuntime().availableProcessors() - 1)); // TODO: Double-check this value
+        }
+    }
+    public static void shutdownPhysicsPool() { // AI-generated
+        if (PHYSICS_POOL == null) return;
+        PHYSICS_POOL.shutdown();
+        try {
+            if (!PHYSICS_POOL.awaitTermination(5, TimeUnit.SECONDS)) {
+                PhysicsEngine.LOGGER.warn("Physics pool didn't terminate in time, forcing shutdown");
+                PHYSICS_POOL.shutdownNow();
+                if (!PHYSICS_POOL.awaitTermination(2, TimeUnit.SECONDS)) {
+                    PhysicsEngine.LOGGER.error("Physics pool still hasn't terminated after shutdownNow()");
+                }
+            }
+        } catch (InterruptedException e) {
+            PHYSICS_POOL.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
     }
 }

@@ -38,12 +38,16 @@ public final class CollisionDetector {
 
     private static List<Manifold> generateManifolds(List<PhysicsObjectPair> uniquePairs, ForkJoinPool pool) {
         Long2ObjectOpenHashMap<Manifold> lastTick = previousManifolds; // For safety: To make sure the parallel stream always uses the correct manifolds, even if 'previousManifolds' gets re-assigned and the code order changes
-        return pool.submit(() ->
+
+        // Temporary (Serial)
+        return uniquePairs.stream().map(pair -> processPair(pair, lastTick)).flatMap(Optional::stream).toList();
+
+        /*return pool.submit(() -> // TODO: Fix the bug where parallel parts use getters (which are not read-only due to the lazy update system), causing data races between PhysicsObjectPairs that share objects
                 uniquePairs.parallelStream()
                         .map(pair -> processPair(pair, lastTick))
                         .flatMap(Optional::stream)
                         .toList()
-        ).join();
+        ).join();*/
     }
 
     private static Optional<Manifold> processPair(PhysicsObjectPair pair, Long2ObjectOpenHashMap<Manifold> lastTick) {
