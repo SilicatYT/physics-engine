@@ -114,6 +114,8 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
     private final Vector3d accumulatedForce = new Vector3d();
     private final Vector3d accumulatedTorque = new Vector3d();
     private final Vector3d linearVelocityFromAcceleration = new Vector3d();
+    private final Vector3d preSolveLinearVelocity = new Vector3d(); // Needed so warm-starting doesn't affect some solver pre-calculations
+    private final Vector3d preSolveAngularVelocity = new Vector3d();
 
 
     // Versioning
@@ -169,6 +171,8 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
     public Vector3dc getAccumulatedForce() { return accumulatedForce; }
     public Vector3dc getAccumulatedTorque() { return accumulatedTorque; }
     public Vector3dc getLinearVelocityFromAcceleration() { return linearVelocityFromAcceleration; }
+    public Vector3dc getPreSolveLinearVelocity() { return preSolveLinearVelocity; }
+    public Vector3d getPreSolveAngularVelocity() { return preSolveAngularVelocity; }
 
 
     // Setters
@@ -312,7 +316,7 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
         versions.linearVelocity.increment();
     }
 
-    public void applyTorque(Vector3dc torque) throws IllegalArgumentException {
+    public void applyTorque(@NonNull Vector3dc torque) throws IllegalArgumentException {
         if (!torque.isFinite()) throw new IllegalArgumentException("Torque must be finite");
         if (torque.equals(0.0, 0.0, 0.0)) return;
         double x = angularVelocity.x();
@@ -324,7 +328,7 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
         versions.angularVelocity.increment(); // TODO: Should I use setAngularVelocity here? Same reason as for rotateOrientation()
     }
 
-    public void rotateOrientation(double angle, Vector3dc axis) throws IllegalArgumentException {
+    public void rotateOrientation(double angle, @NonNull Vector3dc axis) throws IllegalArgumentException {
         if (!axis.isFinite()) throw new IllegalArgumentException("Rotation axis must be finite");
         if (axis.lengthSquared() < EPSILON_SQUARED) throw new IllegalArgumentException("Rotation axis must not be degenerate");
         orientation.rotateAxis(angle, axis); // The axis is normalized automatically by rotateAxis
@@ -345,6 +349,11 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
         versions.halfExtentAxisProjections.updateIfNeeded();
         versions.aabbRelative.updateIfNeeded();
         versions.cornerPosRelative.updateIfNeeded();
+    }
+
+    public void snapshotPreSolveVelocity() {
+        preSolveLinearVelocity.set(linearVelocity);
+        preSolveAngularVelocity.set(angularVelocity);
     }
 }
 

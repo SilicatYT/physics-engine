@@ -35,6 +35,10 @@ public final class Main {
         DISABLE_LAZY_UPDATES = false;
 
         PHYSICS_POOL.submit(
+                () -> islands.parallelStream().forEach(CollisionResolver::resolve)
+        ).join();
+
+        PHYSICS_POOL.submit(
                 () -> loadedObjects.parallelStream().forEach(Integrator::phaseTwo)
         ).join();
         for (PhysicsObject obj : loadedObjects) {
