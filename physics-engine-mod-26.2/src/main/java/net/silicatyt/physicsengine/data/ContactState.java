@@ -1,4 +1,10 @@
 package net.silicatyt.physicsengine.data;
 
-public interface ContactState { // TODO
+import org.joml.Vector3dc;
+
+import java.util.List;
+
+public interface ContactState {
+    public Vector3dc getNormal();
+    public List<? extends ContactPoint> getPoints();
 }

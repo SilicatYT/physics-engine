@@ -22,4 +22,7 @@ public final class FaceContactState implements ContactState { // TODO: Maybe onc
         this.normal = new Vector3d(normal);
         this.points = points;
     }
+
+    @Override public Vector3dc getNormal() { return normal; }
+    @Override public List<FaceContactPoint> getPoints() { return points; }
 }

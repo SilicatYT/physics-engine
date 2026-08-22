@@ -15,7 +15,6 @@ import static net.silicatyt.physicsengine.PhysicsEngine.LOADED_PHYSICS_OBJECTS;
 public final class Main {
     public static final double DELTA_TIME = 1.0 / 20.0;
     private static ForkJoinPool PHYSICS_POOL;
-    private static final long SHUTDOWN_TIMEOUT = 5;
     public static boolean DISABLE_LAZY_UPDATES = false; // Lazy updates for PhysicsObject getters should not occur during asynchronous code that runs code for the same object (data races)
 
     public static void tick(MinecraftServer server) {

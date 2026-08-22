@@ -18,10 +18,15 @@ public final class CollisionDetector {
     private static Long2ObjectOpenHashMap<Manifold> previousManifolds = new Long2ObjectOpenHashMap<>();
 
     public static List<Island> findIslands(List<PhysicsObject> loadedObjects, ForkJoinPool pool) {
+        // Generate manifolds
         List<PhysicsObjectPair> uniquePairs = PairFinder.findCandidatePairs(loadedObjects);
         List<Manifold> manifolds = generateManifolds(uniquePairs, pool);
 
-        previousManifolds = buildManifoldCache(manifolds);
+        // Carry over old manifolds for warm-starting purposes
+        Long2ObjectOpenHashMap<Manifold> newManifolds = buildManifoldCache(manifolds);
+        carryOverOldManifolds(uniquePairs, newManifolds, previousManifolds);
+        previousManifolds = newManifolds;
+
         return IslandBuilder.buildIslands(manifolds);
     }
 
@@ -29,11 +34,26 @@ public final class CollisionDetector {
         Long2ObjectOpenHashMap<Manifold> cache = new Long2ObjectOpenHashMap<>(manifolds.size());
         for (Manifold m : manifolds) {
             cache.put(
-                    PairKey.packUnordered(m.a().getId(), m.b().getId()),
+                    PairKey.packUnordered(m.a.getId(), m.b.getId()),
                     m
             );
         }
         return cache;
+    }
+
+    private static void carryOverOldManifolds(List<PhysicsObjectPair> uniquePairs, Long2ObjectOpenHashMap<Manifold> current, Long2ObjectOpenHashMap<Manifold> previous) {
+        for (PhysicsObjectPair pair : uniquePairs) {
+            long key = PairKey.packUnordered(pair.a().getId(), pair.b().getId());
+            if (current.containsKey(key)) continue; // Simply keep the newly generated manifold
+
+            Manifold old = previous.get(key);
+            if (old == null) continue; // No manifold to carry over
+
+            if (old.isToBeDiscarded()) continue; // Too old, don't carry over
+            old.incrementInactiveTime();
+
+            current.put(key, old); // Carry over to the next tick despite there not being a contact, because maybe I can still warm-start in the future
+        }
     }
 
     private static List<Manifold> generateManifolds(List<PhysicsObjectPair> uniquePairs, ForkJoinPool pool) {
@@ -77,7 +97,8 @@ public final class CollisionDetector {
 
     private static Optional<SatResult> testSat(PhysicsObject a, PhysicsObject b, double dx, double dy, double dz, Long2ObjectOpenHashMap<Manifold> lastTick) { // Half extents could also be pre-calculated in PhysicsObject, but with my versioning system, that's absolutely not worth it
         Manifold lastTickManifold = lastTick.get(PairKey.packUnordered(a.getId(), b.getId()));
-        int persistedAxisIndex = lastTickManifold != null ? lastTickManifold.persistedAxisIndex() : -1;
+
+        int persistedAxisIndex = lastTickManifold != null && !lastTickManifold.isOld() ? lastTickManifold.persistedAxisIndex : -1;
         Vector3dc persistedAxis = null;
         double persistedAxisOverlap = Double.MAX_VALUE;
 
@@ -147,12 +168,13 @@ public final class CollisionDetector {
         }
 
         Optional<PersistedAxisData> persisted = persistedAxisIndex == -1 ? Optional.empty() : Optional.of(new PersistedAxisData(
-                persistedAxisIndex, persistedAxisOverlap, persistedAxis, lastTickManifold.persistedAxisFacingOutward(), lastTickManifold.persistedAxisFacingB()
+                persistedAxisIndex, persistedAxisOverlap, persistedAxis, lastTickManifold.persistedAxisFacingOutward, lastTickManifold.persistedAxisFacingB
         ));
         return Optional.of(
                 new SatResult(
                         new CandidateAxisData(candidateAxisIndex, candidateAxisOverlap, candidateAxis),
-                        persisted
+                        persisted,
+                        lastTickManifold == null ? Optional.empty() : Optional.of(lastTickManifold)
                 )
         );
     }

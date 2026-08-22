@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.ToDoubleBiFunction;
 
-public final class ContactGenerator {
+public final class ContactGenerator { // TODO: This whole file is a mess and needs a rewrite and some optimizations
     private interface Boundary {
         double distance(ClipPoint p);
     }
@@ -40,6 +40,12 @@ public final class ContactGenerator {
             )
     );
 
+    private static final int[][] EDGE_STARTING_POINT_INDICES_FOR_AXIS = {
+            {0,1,2,3},
+            {0,1,4,5},
+            {0,2,4,6}
+    };
+
     public static Optional<Manifold> generateManifold(PhysicsObject a, PhysicsObject b, SatResult collision, double dx, double dy, double dz) {
         boolean persistedAxisPreferred = isPersistedAxisPreferred(collision) && collision.persistedAxisData().isPresent(); // "isPresent" only to get rid of compiler warnings
         PersistedAxisData persistedAxisData = persistedAxisPreferred ? collision.persistedAxisData().get() : null;
@@ -51,12 +57,17 @@ public final class ContactGenerator {
         boolean axisFacingOutward = false; // Default = false as an unused placeholder if it's an edge-edge contact
         int chosenAxisIndex = chosenAxisData.index();
 
+        Manifold lastTickManifold = collision.lastTickManifold().orElse(null);
+        Manifold sameAxisManifold = (lastTickManifold != null && lastTickManifold.persistedAxisIndex == chosenAxisIndex)
+                ? lastTickManifold : null;
+
         if (chosenAxisIndex < 6) {
             axisFacingOutward = persistedAxisPreferred ? persistedAxisData.isFacingOutward() : (chosenAxisIndex < 3) == axisFacingB;
-            contact = generateContactPointFace(a, b, chosenAxisData, axisFacingOutward, dx, dy, dz);
+            contact = generateContactPointFace(a, b, chosenAxisData, sameAxisManifold, axisFacingOutward, dx, dy, dz);
         } else {
-            contact = generateContactEdgeEdge(a, b, chosenAxisData, axisFacingB);
+            contact = generateContactEdgeEdge(a, b, chosenAxisData, sameAxisManifold, axisFacingB);
         }
+
         return contact.isEmpty() ? Optional.empty() : Optional.of(new Manifold(
                 a, b, contact.get(), chosenAxisIndex, axisFacingOutward, axisFacingB
         ));
@@ -67,6 +78,8 @@ public final class ContactGenerator {
 
         AxisData persistedAxis = collision.persistedAxisData().get();
         AxisData candidateAxis = collision.candidateAxisData();
+
+        if (persistedAxis.index() == candidateAxis.index()) return true; // Not necessary for correctness
 
         boolean persistedAxisIsPointFace = persistedAxis.index() < 6;
         boolean candidateAxisIsPointFace = candidateAxis.index() < 6;
@@ -82,7 +95,7 @@ public final class ContactGenerator {
     public static boolean isAxisFacingB(Vector3dc axis, double dx, double dy, double dz) { return axis.dot(dx, dy, dz) < 0; } // TODO: Re-use results from earlier in the datapack
 
     // Face
-    private static Optional<ContactState> generateContactPointFace(PhysicsObject a, PhysicsObject b, AxisData axisData, boolean axisFacingOutward, double dx, double dy, double dz) {
+    private static Optional<ContactState> generateContactPointFace(PhysicsObject a, PhysicsObject b, AxisData axisData, Manifold previousManifold, boolean axisFacingOutward, double dx, double dy, double dz) {
         // TODO: Split into several methods, single responsibility principle
         // TODO: Cleanup, improve variable names, add comments with the original formulas etc. This whole method is a pure mess because I wanted to apply the same optimizations as in the datapack
         int axisIndex = axisData.index();
@@ -183,16 +196,30 @@ public final class ContactGenerator {
         List<FaceContactPoint> contactPoints = new ArrayList<>(clipPoints.size()); // TODO: Avoid creating a new list object
         FaceContactState contact = new FaceContactState(a, b, referenceObjectIsA, incidentFaceIndex, referenceFaceIndex, outwardContactNormal, contactPoints); // TODO: Avoid creating new FaceContactState & FaceContactPoint objects each time
 
+        // Setup previous contactPoints for warm-starting
+        List<FaceContactPoint> oldPoints = (previousManifold != null
+                && previousManifold.persistedAxisFacingOutward == axisFacingOutward
+                && previousManifold.state instanceof FaceContactState oldState)
+                ? oldState.getPoints() : null;
+
         // Create contact points
         for (ContactPointCandidate p : candidates) {
             Vector3d contactPos = new Vector3d(outwardContactNormal).mul(p.penetrationDepth()) // TODO: In the datapack, optimize contactPos calculation by using all the pre-calculated variables if possible
                     .add(p.point().pos())
                     .add(incidentToReferenceOffsetX, incidentToReferenceOffsetY, incidentToReferenceOffsetZ); // TODO: Remove allocation
             FaceContactPoint point = new FaceContactPoint(p.point().id(), contact, contactPos, p.penetrationDepth());
+            if (oldPoints != null) { // Carry over warm-start impulses
+                for (FaceContactPoint old : oldPoints) {
+                    if (old.id == point.id) {
+                        point.setAccumulatedImpulse(old.getAccumulatedImpulse());
+                        break;
+                    }
+                }
+            }
             contactPoints.add(point);
         }
 
-        return Optional.of(contact);
+        return Optional.of(contact); // TODO: Can it happen that 0 contact points are generated? If not, remove "Optional". If yes, return empty in that case
     }
 
     private static int calculateFaceIndex(int axisIndex, boolean facingOutward) { return 2 * axisIndex + (facingOutward ? 1 : 0); }
@@ -266,9 +293,106 @@ public final class ContactGenerator {
     }
 
     // Edge-edge
-    private static Optional<ContactState> generateContactEdgeEdge(PhysicsObject a, PhysicsObject b, AxisData axisData, boolean contactNormalFacingB) {
-        return Optional.empty();
+    private static Optional<ContactState> generateContactEdgeEdge(PhysicsObject a, PhysicsObject b, AxisData axisData, Manifold previousManifold, boolean axisFacingB) { // TODO: Apply mathematical optimizations (Re-use projections I did in the SAT etc)
+        // Make contact normal face objectA
+        Vector3dc contactNormal = axisFacingB ? new Vector3d(axisData.axis()).negate() : axisData.axis();
+
+        // Get the respective edges (The one that's closest to the other object)
+        int edgeA = getObjectEdgeIndex(a, axisData.index(), contactNormal, true);
+        int edgeB = getObjectEdgeIndex(b, axisData.index(), contactNormal, false);
+
+        // Calculate contact pos
+        Vector3dc contactPos = calculateContactPosEdgeEdge(a, b, edgeA, edgeB);
+
+        // Calculate penetration depth
+        double penetrationDepth = calculatePenetrationDepth(a, b, edgeA, edgeB, contactNormal);
+
+        // Create contact
+        int id = calculateId(edgeA, edgeB);
+        EdgeContactPoint newPoint = new EdgeContactPoint(a, b, id, contactNormal, contactPos, penetrationDepth);
+
+        // Carry over warm-start impulse
+        if (previousManifold != null && previousManifold.state instanceof EdgeContactPoint old && old.id == id) {
+            newPoint.setAccumulatedImpulse(old.getAccumulatedImpulse());
+        }
+
+        return Optional.of(newPoint);
     }
+
+    private static int getObjectEdgeIndex(PhysicsObject obj, int contactNormalAxisIndex, Vector3dc contactNormal, boolean isObjectA) { // TODO: Can this be optimized mathematically, using values I've calculated earlier?
+        double projection;
+        double maxProjection = -Double.MAX_VALUE;
+
+        int axisIndex = getObjectAxisIndex(contactNormalAxisIndex, isObjectA);
+        int[] edgeStartingPointIndices = EDGE_STARTING_POINT_INDICES_FOR_AXIS[axisIndex];
+        int edgeIndex = -1;
+
+        for (int i = 0; i < 4; i++) { // Which edge has the deepest projection (most positive) onto the contact normal? Basically "Which one is equal to projectionObjectA[1]", but I must consider floating point errors.
+            projection = obj.getCornerPosRelative(edgeStartingPointIndices[i]).dot(contactNormal);
+            if (isObjectA) projection *= -1; // Deepest projection for objectA is the most negative TODO: I INVERTED THE CHECK AND THE COMMENT. IS THAT CORRECT?
+            if (projection > maxProjection) {
+                maxProjection = projection;
+                edgeIndex = 4 * axisIndex + i; // Edges have IDs 0 - 11 (4 edges for x, 4 edges for y, and 4 edges for z)
+            }
+        }
+
+        return edgeIndex;
+    }
+
+    private static int getObjectAxisIndex(int crossProductAxisIndex, boolean isObjectA) { // Takes axisIndex as used in the SAT (0-14), returns 0-2 for xyz
+        if (crossProductAxisIndex < 6 || crossProductAxisIndex > 14) throw new IllegalArgumentException("Index does not match any cross product index (6-14).");
+        if (isObjectA) return (crossProductAxisIndex - 6) / 3;
+        return (crossProductAxisIndex - 6) % 3;
+    }
+
+    private static Vector3dc calculateContactPosEdgeEdge(PhysicsObject a, PhysicsObject b, int edgeIndexA, int edgeIndexB) { // TODO: Optimize, clean up, re-use already calculates values etc
+        // Calculation: u (EdgeStartA), v (EdgeDirectionA = AxisA), m (EdgeStartB), n (EdgeDirectionB = AxisB)
+        //              Point on EdgeA = u + s * v, Point on EdgeB = m + t * n
+        //              A = v * v (Always 1 because v is normalized), B = n * n (Always 1 because n is normalized), C = v * n, D = v * (u - m), E = n * (u - m)
+        //              s = (CE - BD) / (AB - CC), t = (AE - CD) / (AB - CC)
+        Vector3dc axisA = a.getAxis(getAxisIndex(edgeIndexA));
+        Vector3dc axisB = b.getAxis(getAxisIndex(edgeIndexB));
+
+        Vector3dc edgeStartingPointA = getEdgeStartingPoint(a, edgeIndexA);
+        Vector3dc edgeStartingPointB = getEdgeStartingPoint(b, edgeIndexB);
+
+        double c = axisA.dot(axisB);
+        double denominator = 1.0 - c*c; // AB - CC
+        Vector3d startingPointDifference = edgeStartingPointA.sub(edgeStartingPointB, new Vector3d());
+        double d = axisA.dot(startingPointDifference);
+        double e = axisB.dot(startingPointDifference);
+        double s = (c*e - d) / denominator;
+        double t = (e - c*d) / denominator;
+
+        double axisAScale = a.getScale(getAxisIndex(edgeIndexA));
+        double axisBScale = b.getScale(getAxisIndex(edgeIndexB));
+        s = Math.clamp(s, 0, axisAScale);
+        t = Math.clamp(t, 0, axisBScale);
+
+        Vector3d pointEdgeA = new Vector3d(axisA);
+        pointEdgeA.mul(s).add(edgeStartingPointA);
+
+        Vector3d pointEdgeB = new Vector3d(axisB);
+        pointEdgeB.mul(t).add(edgeStartingPointB);
+
+        return new Vector3d(pointEdgeA).add(pointEdgeB).mul(0.5d);
+    }
+
+    private static int getAxisIndex(int edgeIndex) { return edgeIndex / 4; }
+
+    private static Vector3dc getEdgeStartingPoint(PhysicsObject obj, int edgeIndex) {
+        int axisIndex = getAxisIndex(edgeIndex);
+        int[] edgeStartingPointIndices = EDGE_STARTING_POINT_INDICES_FOR_AXIS[axisIndex];
+        int edgeStartingPointIndex = edgeStartingPointIndices[edgeIndex - 4 * axisIndex];
+
+        return obj.getCornerPosRelative(edgeStartingPointIndex);
+    }
+
+    private static double calculatePenetrationDepth(PhysicsObject a, PhysicsObject b, int edgeIndexA, int edgeIndexB, Vector3dc contactNormal) {
+        return new Vector3d(getEdgeStartingPoint(b, edgeIndexB)).sub(getEdgeStartingPoint(a, edgeIndexA)).dot(contactNormal);
+    }
+
+    private static int calculateId(int edgeIndexA, int edgeIndexB) { return 10 * edgeIndexA + edgeIndexB; }
 
 }
 
