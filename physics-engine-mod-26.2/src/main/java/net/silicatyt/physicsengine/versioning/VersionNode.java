@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import static net.silicatyt.physicsengine.simulation.Main.DISABLE_LAZY_UPDATES;
+
 public final class VersionNode implements VersionSource {
     private long version = 0;
     private final Runnable update;
@@ -15,7 +17,8 @@ public final class VersionNode implements VersionSource {
     public long getVersion() { return version; }
 
     @Override
-    public void updateIfNeeded() { // Read-only unless an update happens
+    public void updateIfNeeded() {
+        if (DISABLE_LAZY_UPDATES) return;
         boolean isDirty = false;
 
         for (DependencyNode dependency : dependencies) {

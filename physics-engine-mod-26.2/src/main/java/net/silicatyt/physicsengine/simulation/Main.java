@@ -16,6 +16,7 @@ public final class Main {
     public static final double DELTA_TIME = 1.0 / 20.0;
     private static ForkJoinPool PHYSICS_POOL;
     private static final long SHUTDOWN_TIMEOUT = 5;
+    public static boolean DISABLE_LAZY_UPDATES = false; // Lazy updates for PhysicsObject getters should not occur during asynchronous code that runs code for the same object (data races)
 
     public static void tick(MinecraftServer server) {
         ServerTickRateManager tickRateManager = server.tickRateManager();
@@ -24,10 +25,15 @@ public final class Main {
         List<PhysicsObject> loadedObjects = List.copyOf(LOADED_PHYSICS_OBJECTS); // So I don't modify LOADED_PHYSICS_OBJECTS in integration (entities could unload) while I iterate over it
 
         PHYSICS_POOL.submit(
-                () -> loadedObjects.parallelStream().forEach(Integrator::phaseOne)
+                () -> loadedObjects.parallelStream().forEach(obj -> {
+                    Integrator.phaseOne(obj);
+                    obj.updateDerivedValues(); // Necessary before the asynchronous part in the collision detection runs. No values change at that point, but several of the same type of getter run in parallel, potentially for the same object. The updates would cause data races
+                })
         ).join();
 
+        DISABLE_LAZY_UPDATES = true;
         List<Island> islands = CollisionDetector.findIslands(loadedObjects, PHYSICS_POOL);
+        DISABLE_LAZY_UPDATES = false;
 
         PHYSICS_POOL.submit(
                 () -> loadedObjects.parallelStream().forEach(Integrator::phaseTwo)

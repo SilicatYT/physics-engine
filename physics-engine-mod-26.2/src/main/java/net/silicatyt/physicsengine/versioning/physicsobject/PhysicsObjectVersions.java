@@ -19,6 +19,7 @@ public final class PhysicsObjectVersions implements PhysicsObjectVersionsView {
     public final VersionNode axes;
     public final VersionNode halfExtentAxisProjections;
     public final VersionNode aabbRelative;
+    public final VersionNode cornerPosRelative;
 
     public final VersionNode internalPos = new VersionNode(() -> {});
 
@@ -29,7 +30,8 @@ public final class PhysicsObjectVersions implements PhysicsObjectVersionsView {
             Runnable updateInverseInertiaTensorWorld,
             Runnable updateAxes,
             Runnable updateHalfExtentAxisProjections,
-            Runnable updateAabbRelative
+            Runnable updateAabbRelative,
+            Runnable updateCornerPosRelative
     ) {
         rotationMatrix = new VersionNode(updateRotationMatrix);
         inverseInertiaTensorLocal = new VersionNode(updateInverseInertiaTensorLocal);
@@ -37,6 +39,7 @@ public final class PhysicsObjectVersions implements PhysicsObjectVersionsView {
         axes = new VersionNode(updateAxes);
         halfExtentAxisProjections = new VersionNode(updateHalfExtentAxisProjections);
         aabbRelative = new VersionNode(updateAabbRelative); // aabbRelativeMin & aabbRelativeMax
+        cornerPosRelative = new VersionNode(updateCornerPosRelative);
 
         // Dependencies
         rotationMatrix.addDependencies(orientation);
@@ -45,6 +48,7 @@ public final class PhysicsObjectVersions implements PhysicsObjectVersionsView {
         axes.addDependencies(rotationMatrix);
         halfExtentAxisProjections.addDependencies(axes, scale);
         aabbRelative.addDependencies(halfExtentAxisProjections);
+        cornerPosRelative.addDependencies(halfExtentAxisProjections);
     }
 
 

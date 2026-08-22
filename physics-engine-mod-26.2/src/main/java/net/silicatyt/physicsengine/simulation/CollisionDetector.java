@@ -39,15 +39,12 @@ public final class CollisionDetector {
     private static List<Manifold> generateManifolds(List<PhysicsObjectPair> uniquePairs, ForkJoinPool pool) {
         Long2ObjectOpenHashMap<Manifold> lastTick = previousManifolds; // For safety: To make sure the parallel stream always uses the correct manifolds, even if 'previousManifolds' gets re-assigned and the code order changes
 
-        // Temporary (Serial)
-        return uniquePairs.stream().map(pair -> processPair(pair, lastTick)).flatMap(Optional::stream).toList();
-
-        /*return pool.submit(() -> // TODO: Fix the bug where parallel parts use getters (which are not read-only due to the lazy update system), causing data races between PhysicsObjectPairs that share objects
+        return pool.submit(() ->
                 uniquePairs.parallelStream()
                         .map(pair -> processPair(pair, lastTick))
                         .flatMap(Optional::stream)
                         .toList()
-        ).join();*/
+        ).join();
     }
 
     private static Optional<Manifold> processPair(PhysicsObjectPair pair, Long2ObjectOpenHashMap<Manifold> lastTick) {
@@ -168,7 +165,7 @@ public final class CollisionDetector {
     }
 
     private static double calculateAxisOverlap(double relativeMaxProjectionA, double relativeMaxProjectionB, Vector3dc axis, double dx, double dy, double dz) {
-        return relativeMaxProjectionA + relativeMaxProjectionB - abs(axis.dot(dx, dy, dz));
+        return relativeMaxProjectionA + relativeMaxProjectionB - abs(axis.dot(dx, dy, dz)); // TODO: Pass this dot product to ContactGenerator, can be re-used in PointFace (projection onto tangent axes, constA & constB calculation) & EdgeEdge
     }
 
 }

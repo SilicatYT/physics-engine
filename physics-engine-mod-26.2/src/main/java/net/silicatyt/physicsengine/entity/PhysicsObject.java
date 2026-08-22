@@ -96,6 +96,16 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
     };
     private final Vector3d aabbRelativeMin = new Vector3d();
     private final Vector3d aabbRelativeMax = new Vector3d();
+    private final Vector3d[] cornerPosRelative = new Vector3d[]{ // Ordered binarily, i.e.: (-x, -y, -z), then (-x, -y, +z) etc (TODO: Initialize in a for-loop in the constructor instead)
+            new Vector3d(),
+            new Vector3d(),
+            new Vector3d(),
+            new Vector3d(),
+            new Vector3d(),
+            new Vector3d(),
+            new Vector3d(),
+            new Vector3d()
+    };
 
 
     // Other transient data
@@ -113,7 +123,8 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
             this::updateInverseInertiaTensorWorld,
             this::updateAxes,
             this::updateHalfExtentAxisProjections,
-            this::updateAabbRelative
+            this::updateAabbRelative,
+            this::updateCornerPosRelative
     );
     public PhysicsObjectVersionsView getVersions() { return versions; }
 
@@ -124,6 +135,7 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
     public Vector3dc getAngularVelocity() { return angularVelocity; }
     public Quaterniondc getOrientation() { return orientation; }
     public Vector3dc getScale() { return scale; }
+    public double getScale(int axisIndex) { return scale.get(axisIndex); }
     public double getFrictionCoefficient() { return frictionCoefficient; }
     public double getRestitutionCoefficient() { return restitutionCoefficient; }
 
@@ -146,6 +158,10 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
     public Vector3dc getHalfExtentAxisProjection(int axisIndex) {
         versions.halfExtentAxisProjections.updateIfNeeded();
         return halfExtentAxisProjections[axisIndex];
+    }
+    public Vector3dc getCornerPosRelative(int index) {
+        versions.cornerPosRelative.updateIfNeeded();
+        return cornerPosRelative[index];
     }
 
     public Vector3dc getInternalPos() { return internalPos; }
@@ -219,8 +235,8 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
     public void setInternalPos(double x, double y, double z) throws IllegalArgumentException { // TODO: Maybe check if the entity needs to be in-bounds (Might crash?)
         if (!Double.isFinite(x) || !Double.isFinite(y) || !Double.isFinite(z)) throw new IllegalArgumentException("Internal pos must be finite");
         if (internalPos.equals(x, y, z)) return;
-        versions.internalPos.increment();
         internalPos.set(x, y, z);
+        versions.internalPos.increment();
     }
 
 
@@ -256,6 +272,26 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
         aabbRelativeMin.set(aabbRelativeMax).negate();
     }
 
+    private void updateCornerPosRelative() {
+        int i = 0;
+        for (int x = -1; x <= 1; x += 2) {
+            for (int y = -1; y <= 1; y += 2) {
+                for (int z = -1; z <= 1; z += 2) {
+                    Vector3d corner = cornerPosRelative[i++];
+                    corner.set(0, 0, 0);
+
+                    if (x > 0) corner.add(halfExtentAxisProjections[0]);
+                    else corner.sub(halfExtentAxisProjections[0]);
+
+                    if (y > 0) corner.add(halfExtentAxisProjections[1]);
+                    else corner.sub(halfExtentAxisProjections[1]);
+
+                    if (z > 0) corner.add(halfExtentAxisProjections[2]);
+                    else corner.sub(halfExtentAxisProjections[2]);
+                }
+            }
+        }
+    }
 
     // Other
     public void updateTransformation() { // TODO: Remove "new ...()" calls
@@ -299,6 +335,16 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
     public void clearAccumulators() {
         accumulatedForce.zero();
         accumulatedTorque.zero();
+    }
+
+    public void updateDerivedValues() { // Only run before asynchronous code that runs getters for the same objects, to avoid data races. Not the cleanest solution, and it checks the same dependencies several times, but it's the best I could come up with without abandoning the lazy updates.
+        versions.rotationMatrix.updateIfNeeded();
+        versions.inverseInertiaTensorLocal.updateIfNeeded();
+        versions.inverseInertiaTensorWorld.updateIfNeeded();
+        versions.axes.updateIfNeeded();
+        versions.halfExtentAxisProjections.updateIfNeeded();
+        versions.aabbRelative.updateIfNeeded();
+        versions.cornerPosRelative.updateIfNeeded();
     }
 }
 
