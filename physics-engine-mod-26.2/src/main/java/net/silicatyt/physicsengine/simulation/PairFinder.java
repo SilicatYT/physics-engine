@@ -55,10 +55,15 @@ public class PairFinder { // AI-generated
             for (int i = 0; i < bucket.size(); i++) {
                 for (int j = i + 1; j < bucket.size(); j++) {
                     PhysicsObject a = bucket.get(i), b = bucket.get(j);
-                    if (tested.add(PairKey.packUnordered(a.getId(), b.getId()))) pairs.add(new PhysicsObjectPair(a, b)); // The larger object id is put first, which is how it deduplicates
+                    if (!tested.add(PairKey.packUnordered(a.getId(), b.getId()))) continue;
+                    boolean aStatic = a.getInverseMass() == 0.0;
+                    boolean bStatic = b.getInverseMass() == 0.0;
+                    if (aStatic && bStatic) continue; // Two static objects cannot collide with each other
+                    if (aStatic) { PhysicsObject temp = a; a = b; b = temp; } // Static objects will always be objectB (Makes checks easier)
+                    pairs.add(new PhysicsObjectPair(a, b));
+                    }
                 }
             }
-        }
         return pairs;
     }
 

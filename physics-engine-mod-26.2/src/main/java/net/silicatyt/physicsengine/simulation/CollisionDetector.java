@@ -151,7 +151,11 @@ public final class CollisionDetector {
                 a.getAxis(i).cross(b.getAxis(j), mutableAxis);
                 double lengthSquared = mutableAxis.lengthSquared();
                 if (lengthSquared < EPSILON_SQUARED) continue; // Degenerate axis, ignore it
-                mutableAxis.normalize(Math.sqrt(lengthSquared)); // Doesn't calculate lengthSquared again
+
+                double inverseLength = 1.0 / Math.sqrt(lengthSquared);
+                mutableAxis.x *= inverseLength;
+                mutableAxis.y *= inverseLength;
+                mutableAxis.z *= inverseLength;
 
                 axisOverlap = calculateAxisOverlap(calculateRelativeMaxProjectionOntoAxis(a, mutableAxis), calculateRelativeMaxProjectionOntoAxis(b, mutableAxis), mutableAxis, dx, dy, dz);
                 if (axisOverlap <= 0.0) return Optional.empty();

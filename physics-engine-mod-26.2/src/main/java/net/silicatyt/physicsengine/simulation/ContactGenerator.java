@@ -65,15 +65,11 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
             axisFacingOutward = persistedAxisPreferred ? persistedAxisData.isFacingOutward() : (chosenAxisIndex < 3) == axisFacingB;
             contact = generateContactPointFace(a, b, chosenAxisData, sameAxisManifold, axisFacingOutward, dx, dy, dz);
         } else {
-            contact = generateContactEdgeEdge(a, b, chosenAxisData, sameAxisManifold, axisFacingB);
+            contact = generateContactEdgeEdge(a, b, chosenAxisData, sameAxisManifold, axisFacingB, dx, dy, dz);
         }
 
-        double offsetX = chosenAxisIndex < 3 ? -dx : dx;// TODO: Clean up, and re-use calculations from generateContactPointFace(). Calculate referenceObjectIsA and the offset here, and pass it to generateContactPointFace() as parameters instead.
-        double offsetY = chosenAxisIndex < 3 ? -dy : dy;
-        double offsetZ = chosenAxisIndex < 3 ? -dz : dz;
-
         return contact.isEmpty() ? Optional.empty() : Optional.of(new Manifold(
-                a, b, contact.get(), chosenAxisIndex, axisFacingOutward, axisFacingB, offsetX, offsetY, offsetZ // TODO: Invert the offset if pointFace and a is the reference
+                a, b, contact.get(), chosenAxisIndex, axisFacingOutward, axisFacingB, dx, dy, dz // TODO: Invert the offset if pointFace and a is the reference
         ));
     }
 
@@ -298,7 +294,7 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
     }
 
     // Edge-edge
-    private static Optional<ContactState> generateContactEdgeEdge(PhysicsObject a, PhysicsObject b, AxisData axisData, Manifold previousManifold, boolean axisFacingB) { // TODO: Apply mathematical optimizations (Re-use projections I did in the SAT etc)
+    private static Optional<ContactState> generateContactEdgeEdge(PhysicsObject a, PhysicsObject b, AxisData axisData, Manifold previousManifold, boolean axisFacingB, double dx, double dy, double dz) { // TODO: Apply mathematical optimizations (Re-use projections I did in the SAT etc)
         // Make contact normal face objectA
         Vector3dc contactNormal = axisFacingB ? new Vector3d(axisData.axis()).negate() : axisData.axis();
 
@@ -307,10 +303,10 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
         int edgeB = getObjectEdgeIndex(b, axisData.index(), contactNormal, false);
 
         // Calculate contact pos
-        Vector3dc contactPos = calculateContactPosEdgeEdge(a, b, edgeA, edgeB);
+        Vector3dc contactPos = calculateContactPosEdgeEdge(a, b, edgeA, edgeB, dx, dy, dz);
 
         // Calculate penetration depth
-        double penetrationDepth = calculatePenetrationDepth(a, b, edgeA, edgeB, contactNormal);
+        double penetrationDepth = calculatePenetrationDepth(a, b, edgeA, edgeB, contactNormal, dx, dy, dz);
 
         // Create contact
         int id = calculateId(edgeA, edgeB);
@@ -350,7 +346,7 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
         return (crossProductAxisIndex - 6) % 3;
     }
 
-    private static Vector3dc calculateContactPosEdgeEdge(PhysicsObject a, PhysicsObject b, int edgeIndexA, int edgeIndexB) { // TODO: Optimize, clean up, re-use already calculates values etc
+    private static Vector3dc calculateContactPosEdgeEdge(PhysicsObject a, PhysicsObject b, int edgeIndexA, int edgeIndexB, double dx, double dy, double dz) { // TODO: Optimize, clean up, re-use already calculates values etc
         // Calculation: u (EdgeStartA), v (EdgeDirectionA = AxisA), m (EdgeStartB), n (EdgeDirectionB = AxisB)
         //              Point on EdgeA = u + s * v, Point on EdgeB = m + t * n
         //              A = v * v (Always 1 because v is normalized), B = n * n (Always 1 because n is normalized), C = v * n, D = v * (u - m), E = n * (u - m)
@@ -375,7 +371,8 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
         t = Math.clamp(t, 0, axisBScale);
 
         Vector3d pointEdgeA = new Vector3d(axisA);
-        pointEdgeA.mul(s).add(edgeStartingPointA);
+        pointEdgeA.mul(s).add(edgeStartingPointA)
+                .add(dx, dy, dz);
 
         Vector3d pointEdgeB = new Vector3d(axisB);
         pointEdgeB.mul(t).add(edgeStartingPointB);
@@ -393,8 +390,8 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
         return obj.getCornerPosRelative(edgeStartingPointIndex);
     }
 
-    private static double calculatePenetrationDepth(PhysicsObject a, PhysicsObject b, int edgeIndexA, int edgeIndexB, Vector3dc contactNormal) {
-        return new Vector3d(getEdgeStartingPoint(b, edgeIndexB)).sub(getEdgeStartingPoint(a, edgeIndexA)).dot(contactNormal);
+    private static double calculatePenetrationDepth(PhysicsObject a, PhysicsObject b, int edgeIndexA, int edgeIndexB, Vector3dc contactNormal, double dx, double dy, double dz) {
+        return new Vector3d(getEdgeStartingPoint(b, edgeIndexB)).sub(getEdgeStartingPoint(a, edgeIndexA)).sub(dx, dy, dz).dot(contactNormal); // TODO: Is ".sub(dx, dy, dz)" correct here?
     }
 
     private static int calculateId(int edgeIndexA, int edgeIndexB) { return 10 * edgeIndexA + edgeIndexB; }

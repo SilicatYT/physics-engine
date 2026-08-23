@@ -20,7 +20,8 @@ public final class CollisionResolver {
     private static final double MIN_DELTA_VELOCITY = 0.0; // TODO: Finetune
     private static final double MIN_DELTA_VELOCITY_SQUARED = MIN_DELTA_VELOCITY * MIN_DELTA_VELOCITY;
     private static final double MIN_TANGENTIAL_VELOCITY_SQUARED = 0.0; // TODO: Finetune
-    private static final double PENETRATION_SLOP = 0.0; // TODO: Finetune
+    private static final double PENETRATION_SLOP = 0.01; // TODO: Finetune
+    private static final double BAUMGARTE_FACTOR = 0.2; // TODO: Finetune
     private static final double RESTITUTION_ACTIVATION_SPEED_THRESHOLD = 0.0; // TODO: Finetune
 
     // Setup
@@ -80,7 +81,7 @@ public final class CollisionResolver {
         boolean relativeToA = p.isPositionRelativeToA();
 
         Vector3dc relativeContactPosA = relativeToA ? contactPos : new Vector3d(contactPos).sub(m.offsetX, m.offsetY, m.offsetZ);
-        Vector3dc relativeContactPosB = relativeToA ? new Vector3d(contactPos).add(m.offsetX, m.offsetY, m.offsetZ) : contactPos;
+        Vector3dc relativeContactPosB = relativeToA ? new Vector3d(contactPos).sub(m.offsetX, m.offsetY, m.offsetZ) : contactPos;
 
         Matrix3dc RA = buildRMatrix(relativeContactPosA, ctx.orthonormalBasis());
         Matrix3dc RB = buildRMatrix(relativeContactPosB, ctx.orthonormalBasis());
@@ -149,7 +150,7 @@ public final class CollisionResolver {
         return -ctxManifold.restitutionCoefficient() * total;
     }
 
-    private static double calculateBiasVelocity(ContactPoint p) { return Math.max(p.getPenetrationDepth() - PENETRATION_SLOP, 0.0) / DELTA_TIME; } // TODO: Maybe multiply slop by penetration for more stable results?
+    private static double calculateBiasVelocity(ContactPoint p) { return Math.max(BAUMGARTE_FACTOR * (p.getPenetrationDepth() - PENETRATION_SLOP), 0.0) / DELTA_TIME; } // TODO: Maybe multiply slop by penetration for more stable results?
 
     private static Vector3dc buildEffectiveMass(ContactPoint p, Manifold m, Matrix3dc RA, Matrix3dc RB, Matrix3dc angularImpulseFactorA, Matrix3dc angularImpulseFactorB) { // TODO: Vector allocations could be removed
         Vector3d effectiveMass = new Vector3d();
@@ -270,15 +271,69 @@ public final class CollisionResolver {
         a.applyImpulse(impulse, contact.contactContext().relativeContactPosA());
 
         PhysicsObject b = contact.manifold().b;
+        if (b.getInverseMass() == 0.0) return;
         b.applyImpulse(new Vector3d(impulse).negate(), contact.contactContext().relativeContactPosB());
     }
 
 
     // Penetration resolution
-    private static void resolvePenetration(ResolvingContact contact) {} // TODO
+    private static void resolvePenetration(ResolvingContact contact) { // TODO: Split into helper methods, some code is re-used from other parts (contactVelocity, targetClosingVelocity, combinedImpulse vs accumulatedImpulse, ...)
+        double biasVelocity = contact.contactContext().biasVelocity();
+        double deltaVelocity = biasVelocity - calculateSplitImpulseClosingVelocity(contact);
+        //if (Math.abs(deltaVelocity) < MIN_PENETRATION_DEPTH / DELTA_TIME) return; TODO: IMPROVE THIS CHECK. RN it's bugged because it compares meters with meters/second.
+
+        double impulse = deltaVelocity * contact.contactContext().effectiveMass().x(); // Only the component along the contact normal
+        double accumulatedImpulse = contact.state().accumulatedSplitImpulse;
+
+        double combinedImpulse = Math.max(0d, impulse + accumulatedImpulse);
+
+        Vector3d deltaImpulse = new Vector3d(combinedImpulse - accumulatedImpulse, 0.0, 0.0);
+        contact.state().accumulatedSplitImpulse += deltaImpulse.x;
+
+        contact.manifoldContext().orthonormalBasis().transform(deltaImpulse); // TODO: Optimize (Only the x component is set)
+
+        // Apply impulse (Add it to linear & angular correction)
+        applySplitImpulse(contact, deltaImpulse);
+    }
+
+    private static double calculateSplitImpulseClosingVelocity(ResolvingContact contact) {
+        Vector3dc normal = contact.point().getNormal();
+        Vector3dc relativeContactPosA = contact.contactContext().relativeContactPosA();
+        Vector3dc relativeContactPosB = contact.contactContext().relativeContactPosB();
+
+        Vector3d armA = new Vector3d(relativeContactPosA).cross(normal);
+        Vector3d armB = new Vector3d(relativeContactPosB).cross(normal);
+
+        PhysicsObject a = contact.manifold().a;
+        PhysicsObject b = contact.manifold().b;
+        double closingVelocity = a.getAngularCorrection().dot(armA) + a.getLinearCorrection().dot(normal);
+        closingVelocity -= b.getAngularCorrection().dot(armB) + b.getLinearCorrection().dot(normal);
+        return closingVelocity;
+    }
+
+    private static void applySplitImpulse(ResolvingContact contact, Vector3dc impulse) { // TODO: Use helper methods to reduce duplicated code
+        // ObjectA
+        PhysicsObject a = contact.manifold().a;
+        Vector3dc linearDelta = a.calculateImpulseLinearVelocity(impulse);
+        a.addLinearCorrection(linearDelta);
+
+        Vector3dc angularDelta = a.calculateImpulseAngularVelocity(impulse, contact.contactContext().relativeContactPosA());
+        a.addAngularCorrection(angularDelta);
+
+        // ObjectB
+        PhysicsObject b = contact.manifold().b;
+        if (b.getInverseMass() == 0.0) return;
+        Vector3d negatedImpulse = new Vector3d(impulse).negate();
+        linearDelta = b.calculateImpulseLinearVelocity(negatedImpulse);
+        b.addLinearCorrection(linearDelta);
+
+        angularDelta = b.calculateImpulseAngularVelocity(negatedImpulse, contact.contactContext().relativeContactPosB());
+        b.addAngularCorrection(angularDelta);
+    }
 
 
 }
 
 // TODO: Is my naming convention clean (build for creating new objects, calculate for returning value, update for in-place)? Not used consistently (i.e., calculateImpulseLinearVelocity() in PhysicsObject)
 // TODO: Maybe change effective mass from Vector3d to Matrix3d, should make it more stable (but also a bit more expensive...)
+// TODO: Maybe make penetrationSlop or BAUMGARTE_FACTOR scale with the object sizes? Very small objects noticeably sink into the floor

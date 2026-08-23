@@ -17,7 +17,8 @@ import net.silicatyt.physicsengine.versioning.physicsobject.PhysicsObjectVersion
 import org.joml.*;
 import org.jspecify.annotations.NonNull;
 
-import static java.lang.Math.abs;
+import java.lang.Math;
+
 import static net.silicatyt.physicsengine.serialization.PhysicsObjectCodecs.*;
 import static net.silicatyt.physicsengine.simulation.Integrator.EPSILON_SQUARED;
 import static net.silicatyt.physicsengine.simulation.Main.DELTA_TIME;
@@ -116,6 +117,8 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
     private final Vector3d linearVelocityFromAcceleration = new Vector3d();
     private final Vector3d preSolveLinearVelocity = new Vector3d(); // Needed so warm-starting doesn't affect some solver pre-calculations
     private final Vector3d preSolveAngularVelocity = new Vector3d();
+    private final Vector3d linearCorrection = new Vector3d(); // Caused by split-impulse
+    private final Vector3d angularCorrection = new Vector3d();
 
 
     // Versioning
@@ -173,6 +176,8 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
     public Vector3dc getLinearVelocityFromAcceleration() { return linearVelocityFromAcceleration; }
     public Vector3dc getPreSolveLinearVelocity() { return preSolveLinearVelocity; }
     public Vector3d getPreSolveAngularVelocity() { return preSolveAngularVelocity; }
+    public Vector3dc getLinearCorrection() { return linearCorrection; }
+    public Vector3dc getAngularCorrection() { return angularCorrection; }
 
 
     // Setters
@@ -270,7 +275,7 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
         for (int i = 0; i < 3; i++) {
             aabbRelativeMax.setComponent(
                     i,
-                    abs(halfExtentAxisProjections[0].get(i)) + abs(halfExtentAxisProjections[1].get(i)) + abs(halfExtentAxisProjections[2].get(i))
+                    Math.abs(halfExtentAxisProjections[0].get(i)) + Math.abs(halfExtentAxisProjections[1].get(i)) + Math.abs(halfExtentAxisProjections[2].get(i))
             );
         }
         aabbRelativeMin.set(aabbRelativeMax).negate();
@@ -340,7 +345,7 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
         setAngularVelocity(angularVelocityChange.add(getAngularVelocity()));
     }
 
-    public Vector3d calculateImpulseLinearVelocity(Vector3dc impulse) { return new Vector3d(impulse).mul(getInverseMass()); }
+    public Vector3d calculateImpulseLinearVelocity(Vector3dc impulse) { return new Vector3d(impulse).mul(getInverseMass()); } // TODO: Maybe move these somewhere else?
 
     public Vector3d calculateImpulseAngularVelocity(Vector3dc impulse, Vector3dc relativeContactPos) {
         Vector3d torque = new Vector3d(relativeContactPos).cross(impulse);
@@ -349,15 +354,44 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
 
     public void rotateOrientation(double angle, @NonNull Vector3dc axis) throws IllegalArgumentException {
         if (!axis.isFinite()) throw new IllegalArgumentException("Rotation axis must be finite");
-        if (axis.lengthSquared() < EPSILON_SQUARED) throw new IllegalArgumentException("Rotation axis must not be degenerate");
-        orientation.rotateAxis(angle, axis); // The axis is normalized automatically by rotateAxis
+        double lengthSquared = axis.lengthSquared();
+        if (lengthSquared < EPSILON_SQUARED) throw new IllegalArgumentException("Rotation axis must not be degenerate");
+
+        double inverseAxisLength = 1.0 / Math.sqrt(lengthSquared);
+        double normalizedAxisX = axis.x() * inverseAxisLength;
+        double normalizedAxisY = axis.y() * inverseAxisLength;
+        double normalizedAxisZ = axis.z() * inverseAxisLength;
+
+        double halfAngle = angle * 0.5;
+        double sinHalfAngle = Math.sin(halfAngle);
+        double qx = normalizedAxisX * sinHalfAngle;
+        double qy = normalizedAxisY * sinHalfAngle;
+        double qz = normalizedAxisZ * sinHalfAngle;
+        double qw = Math.cos(halfAngle);
+
+        orientation.premul(qx, qy, qz, qw);
         orientation.normalize(); // Could suffice to do it once every few ticks
         versions.orientation.increment(); // TODO: Should I use a setter so I don't need this explicitly? Would add more overhead, but I wouldn't have to increment the version in several places?
+    }
+
+    public void addLinearCorrection(@NonNull Vector3dc v) throws IllegalArgumentException {
+        if (!v.isFinite()) throw new IllegalArgumentException("Linear correction must be finite");
+        linearCorrection.add(v);
+    }
+
+    public void addAngularCorrection(@NonNull Vector3dc v) throws IllegalArgumentException {
+        if (!v.isFinite()) throw new IllegalArgumentException("Angular correction must be finite");
+        angularCorrection.add(v);
     }
 
     public void clearAccumulators() {
         accumulatedForce.zero();
         accumulatedTorque.zero();
+    }
+
+    public void clearCorrection() {
+        linearCorrection.zero();
+        angularCorrection.zero();
     }
 
     public void updateDerivedValues() { // Only run before asynchronous code that runs getters for the same objects, to avoid data races. Not the cleanest solution, and it checks the same dependencies several times, but it's the best I could come up with without abandoning the lazy updates.

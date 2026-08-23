@@ -9,8 +9,7 @@ import static java.lang.Math.pow;
 import static net.silicatyt.physicsengine.simulation.Main.DELTA_TIME;
 
 public class Integrator {
-    //public static final Vector3dc DEFAULT_GRAVITY = new Vector3d(0.0, -9.81, 0.0);
-    public static final Vector3dc DEFAULT_GRAVITY = new Vector3d(0.0, 0.0, 0.0);
+    public static final Vector3dc DEFAULT_GRAVITY = new Vector3d(0.0, -9.81, 0.0);
     public static final double DEFAULT_LINEAR_DAMPING = 0.95; // "After 1 second, this much of its linear velocity should remain".
     public static final double DEFAULT_ANGULAR_DAMPING = 0.95;
 
@@ -30,7 +29,7 @@ public class Integrator {
     }
 
     public static void phaseTwo(PhysicsObject obj) {
-        //applySplitImpulseCorrection(obj);
+        applySplitImpulseCorrection(obj);
         obj.clearAccumulators();
     }
 
@@ -95,16 +94,16 @@ public class Integrator {
 
     private static void updateOrientation(PhysicsObject obj, Vector3dc angularVelocity) { // Approach: Exponential map integration
         double angularVelocityLengthSquared = angularVelocity.lengthSquared();
-        if (angularVelocityLengthSquared < EPSILON_SQUARED) return; // No orientation change. Continuing here (normalizing at some point) would produce NaN. 1e-12 is used because it's "pretty much 0" and makes it ignore unstable divisors.
+        if (angularVelocityLengthSquared < EPSILON_SQUARED) return; // No orientation change. Continuing here (normalizing at some point) would produce NaN.
         double angle = Math.sqrt(angularVelocityLengthSquared) * DELTA_TIME;
         obj.rotateOrientation(angle, angularVelocity);
     }
 
-    //private static void applySplitImpulseCorrection(PhysicsObject obj) {
-        //updatePos(obj, obj.getLinearCorrection());
-        //updateOrientation(obj, obj.getAngularCorrection());
-        //obj.clearCorrection();
-    //}
+    private static void applySplitImpulseCorrection(PhysicsObject obj) {
+        updatePos(obj, obj.getLinearCorrection());
+        updateOrientation(obj, obj.getAngularCorrection());
+        obj.clearCorrection();
+    }
 }
 
 // TODO: Make sure I fix that bug where scale and orientation flicker every tick
