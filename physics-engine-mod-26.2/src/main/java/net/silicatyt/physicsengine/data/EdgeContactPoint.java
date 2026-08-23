@@ -7,7 +7,7 @@ import java.util.List;
 
 public final class EdgeContactPoint implements ContactState, ContactPoint {
     public final int id;
-    private final Vector3dc normal;
+    private final Vector3dc normal; // Facing object A
     private final Vector3dc position;
     private final double penetrationDepth;
     private final Vector3d accumulatedImpulse = new Vector3d();

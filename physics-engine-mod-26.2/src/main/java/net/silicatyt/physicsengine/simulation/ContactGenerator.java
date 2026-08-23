@@ -197,8 +197,9 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
         candidates = reduce(candidates); // TODO: Make it in-place to remove heap allocation
 
         // Create contact state
+        Vector3dc contactNormalFacingA = referenceObjectIsA ? new Vector3d(outwardContactNormal).negate() : outwardContactNormal;
         List<FaceContactPoint> contactPoints = new ArrayList<>(clipPoints.size()); // TODO: Avoid creating a new list object
-        FaceContactState contact = new FaceContactState(a, b, referenceObjectIsA, incidentFaceIndex, referenceFaceIndex, outwardContactNormal, contactPoints); // TODO: Avoid creating new FaceContactState & FaceContactPoint objects each time
+        FaceContactState contact = new FaceContactState(a, b, referenceObjectIsA, incidentFaceIndex, referenceFaceIndex, contactNormalFacingA, contactPoints); // TODO: Avoid creating new FaceContactState & FaceContactPoint objects each time
 
         // Setup previous contactPoints for warm-starting
         List<FaceContactPoint> oldPoints = (previousManifold != null

@@ -19,8 +19,9 @@ public final class CollisionResolver {
 
     private static final double MIN_DELTA_VELOCITY = 0.0; // TODO: Finetune
     private static final double MIN_DELTA_VELOCITY_SQUARED = MIN_DELTA_VELOCITY * MIN_DELTA_VELOCITY;
-    private static final double PENETRATION_SLOP = 0.01;
-    private static final double RESTITUTION_ACTIVATION_SPEED_THRESHOLD = 0.01; // TODO: Finetune
+    private static final double MIN_TANGENTIAL_VELOCITY_SQUARED = 0.0; // TODO: Finetune
+    private static final double PENETRATION_SLOP = 0.0; // TODO: Finetune
+    private static final double RESTITUTION_ACTIVATION_SPEED_THRESHOLD = 0.0; // TODO: Finetune
 
     // Setup
     public static void resolve(Island island) {
@@ -108,7 +109,7 @@ public final class CollisionResolver {
             // Use (z, 0, -x)
             tangent1.set(normal.z(), 0.0, -normal.x());
 
-            double length = Math.sqrt(tangent1.x * tangent1.x + tangent1.y * tangent1.y);
+            double length = Math.sqrt(tangent1.x * tangent1.x + tangent1.z * tangent1.z);
             tangent1.x /= length;
             tangent1.z /= length;
         } else {
@@ -144,11 +145,11 @@ public final class CollisionResolver {
 
         double total = closingVelocity + relativeVelocityFromAcceleration.dot(normal);
 
-        if (total < RESTITUTION_ACTIVATION_SPEED_THRESHOLD) return 0d;
+        if (total > RESTITUTION_ACTIVATION_SPEED_THRESHOLD) return 0.0;
         return -ctxManifold.restitutionCoefficient() * total;
     }
 
-    private static double calculateBiasVelocity(ContactPoint p) { return Math.max(p.getPenetrationDepth() - PENETRATION_SLOP, 0.0) / DELTA_TIME; }
+    private static double calculateBiasVelocity(ContactPoint p) { return Math.max(p.getPenetrationDepth() - PENETRATION_SLOP, 0.0) / DELTA_TIME; } // TODO: Maybe multiply slop by penetration for more stable results?
 
     private static Vector3dc buildEffectiveMass(ContactPoint p, Manifold m, Matrix3dc RA, Matrix3dc RB, Matrix3dc angularImpulseFactorA, Matrix3dc angularImpulseFactorB) { // TODO: Vector allocations could be removed
         Vector3d effectiveMass = new Vector3d();
@@ -182,10 +183,94 @@ public final class CollisionResolver {
 
 
     // Velocity resolution
-    private static void resolveVelocity(ResolvingContact contact) {} // TODO
+    private static void resolveVelocity(ResolvingContact contact) {
+        updateContactVelocity(contact);
+        updateClosingVelocity(contact);
 
-    private static void applyImpulse(ResolvingContact contact, Vector3dc impulse) {
-        // TODO
+        Vector3dc contactVelocity = contact.state().velocity;
+        Matrix3dc orthonormalBasis = contact.manifoldContext().orthonormalBasis();
+
+        Vector3d column = new Vector3d();
+        double contactVelocityContactSpaceX = contact.state().closingVelocity; // I avoid 'orthonormalBasis.transformTranspose(contactVelocity)' because the x component (closingVelocity) is already calculated
+        double contactVelocityContactSpaceY = orthonormalBasis.getColumn(1, column).dot(contactVelocity);
+        double contactVelocityContactSpaceZ = orthonormalBasis.getColumn(2, column).dot(contactVelocity);
+        Vector3d contactVelocityContactSpace = column.set(contactVelocityContactSpaceX, contactVelocityContactSpaceY, contactVelocityContactSpaceZ);
+
+        // Early out if converged
+        double deltaVelocity = calculateDeltaVelocity(contact);
+        boolean normalConverged = Math.abs(deltaVelocity) < MIN_DELTA_VELOCITY;
+        boolean tangentialConverged = (contactVelocityContactSpace.y()*contactVelocityContactSpace.y()
+                + contactVelocityContactSpace.z()*contactVelocityContactSpace.z()) < MIN_TANGENTIAL_VELOCITY_SQUARED;
+        if (normalConverged && tangentialConverged) return;
+
+        // Impulse
+        Vector3dc impulse = buildImpulse(contact, deltaVelocity, contactVelocityContactSpace); // Required impulse for velocity change
+
+        /*if ((contactVelocityInContactSpace.y*contactVelocityInContactSpace.y + contactVelocityInContactSpace.z*contactVelocityInContactSpace.z) < 0.2) { // TODO: Temporarily disabled, fixes friction sliding issue?
+            impulse.y = 0d;
+            impulse.z = 0d;
+        }*/
+
+        Vector3dc accumulatedImpulse = contact.state().accumulatedImpulseContactSpace;
+        Vector3d combinedImpulse = new Vector3d(impulse).add(accumulatedImpulse);
+        combinedImpulse.x = Math.max(0.0, combinedImpulse.x); // Clamp the combined impulse (incl. the warm-starting impulse), so the total impulse for this tick does not go in the negatives. I only apply combinedImpulse - accumulatedImpulse each iteration.
+
+        // Friction
+        double planarImpulseMagnitudeSquared = combinedImpulse.y*combinedImpulse.y + combinedImpulse.z*combinedImpulse.z;
+        double maxFriction = contact.manifoldContext().frictionCoefficient() * combinedImpulse.x;
+
+        if (planarImpulseMagnitudeSquared > maxFriction*maxFriction) { // Use dynamic friction
+            double scalingFactor = maxFriction / Math.sqrt(planarImpulseMagnitudeSquared);
+            combinedImpulse.y *= scalingFactor;
+            combinedImpulse.z *= scalingFactor;
+        }
+
+        Vector3d deltaImpulse = combinedImpulse.sub(accumulatedImpulse); // Re-assignment
+        contact.state().accumulatedImpulseContactSpace.add(deltaImpulse);
+
+        orthonormalBasis.transform(deltaImpulse); // To world coordinates
+
+        // Apply impulse
+        applyImpulse(contact, deltaImpulse);
+    }
+
+    private static void updateContactVelocity(ResolvingContact contact) {
+        PhysicsObject a = contact.manifold().a;
+        PhysicsObject b = contact.manifold().b;
+        Vector3dc rA = contact.contactContext().relativeContactPosA();
+        Vector3dc rB = contact.contactContext().relativeContactPosB();
+
+        Vector3d velocityA = contact.state().velocity;
+        Vector3d velocityB = new Vector3d();
+        velocityA.set(a.getAngularVelocity()).cross(rA).add(a.getLinearVelocity());
+        velocityB.set(b.getAngularVelocity()).cross(rB).add(b.getLinearVelocity());
+
+        contact.state().velocity.sub(velocityB);
+    }
+
+    private static void updateClosingVelocity(ResolvingContact contact) {
+        contact.state().closingVelocity = contact.state().velocity.dot(contact.point().getNormal());
+    }
+
+    private static double calculateDeltaVelocity(ResolvingContact contact) {
+        return contact.state().closingVelocity - contact.contactContext().targetClosingVelocity();
+    }
+
+    private static Vector3dc buildImpulse(ResolvingContact contact, double deltaVelocity, Vector3dc contactVelocityContactSpace) {
+        Vector3dc effectiveMass = contact.contactContext().effectiveMass();
+        Vector3d impulse = new Vector3d();
+        impulse.x = -deltaVelocity * effectiveMass.x();
+        impulse.y = -contactVelocityContactSpace.y() * effectiveMass.y();
+        impulse.z = -contactVelocityContactSpace.z() * effectiveMass.z();
+        return impulse;
+    }
+
+    private static void applyImpulse(ResolvingContact contact, Vector3dc impulse) { // TODO: Get rid of vector allocation
+        PhysicsObject a = contact.manifold().a;
+        a.applyImpulse(impulse, contact.contactContext().relativeContactPosA());
+
+        PhysicsObject b = contact.manifold().b;
+        b.applyImpulse(new Vector3d(impulse).negate(), contact.contactContext().relativeContactPosB());
     }
 
 
@@ -194,3 +279,6 @@ public final class CollisionResolver {
 
 
 }
+
+// TODO: Is my naming convention clean (build for creating new objects, calculate for returning value, update for in-place)? Not used consistently (i.e., calculateImpulseLinearVelocity() in PhysicsObject)
+// TODO: Maybe change effective mass from Vector3d to Matrix3d, should make it more stable (but also a bit more expensive...)

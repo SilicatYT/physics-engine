@@ -10,7 +10,7 @@ public final class FaceContactState implements ContactState { // TODO: Maybe onc
     public final PhysicsObject a, b;
     public final boolean referenceObjectIsA;
     public final int incidentFaceIndex, referenceFaceIndex;
-    private final Vector3d normal; // Facing outward
+    private final Vector3d normal; // Facing object A
     private final List<FaceContactPoint> points;
 
     public FaceContactState(PhysicsObject a, PhysicsObject b, boolean referenceObjectIsA, int incidentFaceIndex, int referenceFaceIndex, Vector3dc normal, List<FaceContactPoint> points) {

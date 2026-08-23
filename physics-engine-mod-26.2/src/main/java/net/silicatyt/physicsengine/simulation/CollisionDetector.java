@@ -12,7 +12,7 @@ import java.util.Optional;
 import java.util.concurrent.ForkJoinPool;
 
 import static java.lang.Math.abs;
-import static net.silicatyt.physicsengine.simulation.Integrator.EPSILON;
+import static net.silicatyt.physicsengine.simulation.Integrator.EPSILON_SQUARED;
 
 public final class CollisionDetector {
     private static Long2ObjectOpenHashMap<Manifold> previousManifolds = new Long2ObjectOpenHashMap<>();
@@ -150,7 +150,7 @@ public final class CollisionDetector {
                 int axisIndex = 6 + 3*i + j;
                 a.getAxis(i).cross(b.getAxis(j), mutableAxis);
                 double lengthSquared = mutableAxis.lengthSquared();
-                if (lengthSquared < EPSILON) continue; // Degenerate axis, ignore it
+                if (lengthSquared < EPSILON_SQUARED) continue; // Degenerate axis, ignore it
                 mutableAxis.normalize(Math.sqrt(lengthSquared)); // Doesn't calculate lengthSquared again
 
                 axisOverlap = calculateAxisOverlap(calculateRelativeMaxProjectionOntoAxis(a, mutableAxis), calculateRelativeMaxProjectionOntoAxis(b, mutableAxis), mutableAxis, dx, dy, dz);

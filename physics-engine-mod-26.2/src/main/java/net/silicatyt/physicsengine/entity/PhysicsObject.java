@@ -328,6 +328,25 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
         versions.angularVelocity.increment(); // TODO: Should I use setAngularVelocity here? Same reason as for rotateOrientation()
     }
 
+    public void applyImpulse(Vector3dc impulse, Vector3dc relativeContactPos) { // TODO: Remove vector allocations
+        if (getInverseMass() == 0.0) return;
+
+        // Linear part
+        Vector3d linearVelocityChange = calculateImpulseLinearVelocity(impulse);
+        setLinearVelocity(linearVelocityChange.add(getLinearVelocity()));
+
+        // Angular part
+        Vector3d angularVelocityChange = calculateImpulseAngularVelocity(impulse, relativeContactPos);
+        setAngularVelocity(angularVelocityChange.add(getAngularVelocity()));
+    }
+
+    public Vector3d calculateImpulseLinearVelocity(Vector3dc impulse) { return new Vector3d(impulse).mul(getInverseMass()); }
+
+    public Vector3d calculateImpulseAngularVelocity(Vector3dc impulse, Vector3dc relativeContactPos) {
+        Vector3d torque = new Vector3d(relativeContactPos).cross(impulse);
+        return getInverseInertiaTensorWorld().transform(torque);
+    }
+
     public void rotateOrientation(double angle, @NonNull Vector3dc axis) throws IllegalArgumentException {
         if (!axis.isFinite()) throw new IllegalArgumentException("Rotation axis must be finite");
         if (axis.lengthSquared() < EPSILON_SQUARED) throw new IllegalArgumentException("Rotation axis must not be degenerate");
