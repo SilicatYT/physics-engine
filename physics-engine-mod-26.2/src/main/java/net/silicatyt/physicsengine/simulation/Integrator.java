@@ -30,6 +30,7 @@ public class Integrator {
     }
 
     public static void phaseTwo(PhysicsObject obj) {
+        //applySplitImpulseCorrection(obj);
         obj.clearAccumulators();
     }
 
@@ -81,10 +82,29 @@ public class Integrator {
         obj.applyTorque(torque);
     }
 
+   /*private static void updateOrientationEuler(PhysicsObject obj, Vector3dc angularVelocity) { // Approach: Euler integration (TODO: Less accurate but faster. How about in a datapack, where I can use entity rotation tricks to compute sin and cos quickly? What to choose there?)
+        Quaterniond orientation = new Quaterniond(obj.getOrientation());
+        obj.setOrientation(
+                orientation.add(
+                        new Quaterniond(angularVelocity.x(), angularVelocity.y(), angularVelocity.z(), 0) // angularVelocity is treated as a quaternion
+                        .mul(orientation)
+                        .scale(0.5d * DELTA_TIME)
+                )
+        ); // I don't normalize it here because setOrientation() already does that automatically
+    }*/
+
     private static void updateOrientation(PhysicsObject obj, Vector3dc angularVelocity) { // Approach: Exponential map integration
         double angularVelocityLengthSquared = angularVelocity.lengthSquared();
         if (angularVelocityLengthSquared < EPSILON_SQUARED) return; // No orientation change. Continuing here (normalizing at some point) would produce NaN. 1e-12 is used because it's "pretty much 0" and makes it ignore unstable divisors.
         double angle = Math.sqrt(angularVelocityLengthSquared) * DELTA_TIME;
         obj.rotateOrientation(angle, angularVelocity);
     }
+
+    //private static void applySplitImpulseCorrection(PhysicsObject obj) {
+        //updatePos(obj, obj.getLinearCorrection());
+        //updateOrientation(obj, obj.getAngularCorrection());
+        //obj.clearCorrection();
+    //}
 }
+
+// TODO: Make sure I fix that bug where scale and orientation flicker every tick

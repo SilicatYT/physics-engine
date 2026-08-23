@@ -8,4 +8,5 @@ public interface ContactPoint {
     double getPenetrationDepth();
     Vector3dc getAccumulatedImpulse(); // World space, for cross-tick stability
     void setAccumulatedImpulse(Vector3dc impulse);
+    boolean isPositionRelativeToA();
 }

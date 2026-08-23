@@ -10,15 +10,20 @@ public class Manifold {
     public final int persistedAxisIndex;
     public final boolean persistedAxisFacingOutward;
     public final boolean persistedAxisFacingB;
+    public final double offsetX, offsetY, offsetZ;
     private int inactiveTime = 0;
 
-    public Manifold(PhysicsObject a, PhysicsObject b, ContactState state, int persistedAxisIndex, boolean persistedAxisFacingOutward, boolean persistedAxisFacingB) {
+    public Manifold(PhysicsObject a, PhysicsObject b, ContactState state, int persistedAxisIndex, boolean persistedAxisFacingOutward, boolean persistedAxisFacingB, double offsetX, double offsetY, double offsetZ) {
         this.a = a;
         this.b = b;
         this.state = state;
         this.persistedAxisIndex = persistedAxisIndex;
         this.persistedAxisFacingOutward = persistedAxisFacingOutward;
         this.persistedAxisFacingB = persistedAxisFacingB;
+
+        this.offsetX = offsetX;
+        this.offsetY = offsetY;
+        this.offsetZ = offsetZ;
     }
 
     public void incrementInactiveTime() { inactiveTime++; }

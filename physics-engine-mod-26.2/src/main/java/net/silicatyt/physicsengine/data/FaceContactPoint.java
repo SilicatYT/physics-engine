@@ -3,7 +3,7 @@ package net.silicatyt.physicsengine.data;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
 
-public final class FaceContactPoint implements ContactPoint { // TODO: Currently the contact gets re-created every tick. It would be better if I could simply update the already allocated Contact objects
+public final class FaceContactPoint implements ContactPoint {
     public final int id;
     private final Vector3d position;
     private final double penetrationDepth;
@@ -22,5 +22,6 @@ public final class FaceContactPoint implements ContactPoint { // TODO: Currently
     @Override public double getPenetrationDepth() { return penetrationDepth; }
     @Override public Vector3d getAccumulatedImpulse() { return accumulatedImpulse; }
     @Override public void setAccumulatedImpulse(Vector3dc impulse) { accumulatedImpulse.set(impulse); }
+    @Override public boolean isPositionRelativeToA() { return parent.referenceObjectIsA; } // It's offset by (incident - reference)
 
 }

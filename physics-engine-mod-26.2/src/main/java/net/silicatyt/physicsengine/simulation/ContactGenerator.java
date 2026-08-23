@@ -68,8 +68,12 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
             contact = generateContactEdgeEdge(a, b, chosenAxisData, sameAxisManifold, axisFacingB);
         }
 
+        double offsetX = chosenAxisIndex < 3 ? -dx : dx;// TODO: Clean up, and re-use calculations from generateContactPointFace(). Calculate referenceObjectIsA and the offset here, and pass it to generateContactPointFace() as parameters instead.
+        double offsetY = chosenAxisIndex < 3 ? -dy : dy;
+        double offsetZ = chosenAxisIndex < 3 ? -dz : dz;
+
         return contact.isEmpty() ? Optional.empty() : Optional.of(new Manifold(
-                a, b, contact.get(), chosenAxisIndex, axisFacingOutward, axisFacingB
+                a, b, contact.get(), chosenAxisIndex, axisFacingOutward, axisFacingB, offsetX, offsetY, offsetZ // TODO: Invert the offset if pointFace and a is the reference
         ));
     }
 
@@ -309,7 +313,7 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
 
         // Create contact
         int id = calculateId(edgeA, edgeB);
-        EdgeContactPoint newPoint = new EdgeContactPoint(a, b, id, contactNormal, contactPos, penetrationDepth);
+        EdgeContactPoint newPoint = new EdgeContactPoint(id, contactNormal, contactPos, penetrationDepth);
 
         // Carry over warm-start impulse
         if (previousManifold != null && previousManifold.state instanceof EdgeContactPoint old && old.id == id) {
@@ -399,3 +403,4 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
 // TODO: Group the classes in "data" better
 // TODO: Maybe split the ContactGenerator into 2 classes (or 3, because of isPersistedAxisPreferred and stuff). Package "simulation", or a sub-package?
 // TODO: Maybe it's not clean to have "FaceContactState" and "EdgeContactPoint" both implement ContactState? Maybe I should add an explicit "EdgeContactState" for readability, even if it's not needed?
+// TODO: For terrain collisions, I want to implement face culling & merging. But make sure it doesn't merge faces with different materials. Only "same material & face can connect"

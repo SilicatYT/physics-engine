@@ -1,13 +1,11 @@
 package net.silicatyt.physicsengine.data;
 
-import net.silicatyt.physicsengine.entity.PhysicsObject;
 import org.joml.Vector3d;
 import org.joml.Vector3dc;
 
 import java.util.List;
 
 public final class EdgeContactPoint implements ContactState, ContactPoint {
-    public final PhysicsObject a, b;
     public final int id;
     private final Vector3dc normal;
     private final Vector3dc position;
@@ -15,9 +13,7 @@ public final class EdgeContactPoint implements ContactState, ContactPoint {
     private final Vector3d accumulatedImpulse = new Vector3d();
     private final List<EdgeContactPoint> asList;
 
-    public EdgeContactPoint(PhysicsObject a, PhysicsObject b, int id, Vector3dc normal, Vector3dc position, double penetrationDepth) {
-        this.a = a;
-        this.b = b;
+    public EdgeContactPoint(int id, Vector3dc normal, Vector3dc position, double penetrationDepth) {
         this.id = id;
         this.normal = normal;
         this.position = position;
@@ -30,6 +26,7 @@ public final class EdgeContactPoint implements ContactState, ContactPoint {
     @Override public double getPenetrationDepth() { return penetrationDepth; }
     @Override public Vector3d getAccumulatedImpulse() { return accumulatedImpulse; }
     @Override public void setAccumulatedImpulse(Vector3dc impulse) { accumulatedImpulse.set(impulse); }
+    @Override public boolean isPositionRelativeToA() { return false; } // It's offset by (a - b)
 
     @Override public List<EdgeContactPoint> getPoints() { return asList; }
 
