@@ -46,6 +46,8 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
             {0,2,4,6}
     };
 
+    private static final double CLIP_EPSILON = 1e-9;
+
     public static Optional<Manifold> generateManifold(PhysicsObject a, PhysicsObject b, SatResult collision, double dx, double dy, double dz) {
         boolean persistedAxisPreferred = isPersistedAxisPreferred(collision) && collision.persistedAxisData().isPresent(); // "isPresent" only to get rid of compiler warnings
         PersistedAxisData persistedAxisData = persistedAxisPreferred ? collision.persistedAxisData().get() : null;
@@ -189,6 +191,8 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
             if (penetrationDepth > 0) candidates.add(new ContactPointCandidate(p, penetrationDepth));
         }
 
+        if (candidates.isEmpty()) return Optional.empty();
+
         // Reduce to max 4 points
         candidates = reduce(candidates); // TODO: Make it in-place to remove heap allocation
 
@@ -238,15 +242,11 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
 
 
             if (currInBounds != nextInBounds) {
-                double t = distanceCurr / (distanceCurr - distanceNext);
-                ClipPoint interpolated = new ClipPoint(
-                        curr.tangentProjectionA() + t * (next.tangentProjectionA() - curr.tangentProjectionA()), // TODO: When a new point is added (interpolated), only calculate the projection onto the tangents that still have pending boundary checks
-                        curr.tangentProjectionB() + t * (next.tangentProjectionB() - curr.tangentProjectionB()),
-                        curr.normalProjection() + t * (next.normalProjection() - curr.normalProjection()),
-                        curr.pos().lerp(next.pos(), t, new Vector3d()),
-                        boundaryIndex * 10 + curr.id() % 10 // Packed into a single int, 1 digit per value (single-digit), so uniqueness is guaranteed. curr.id() % 10 is the incidentEdgeIndex
-                );
-                out.add(interpolated);
+                double denominator = distanceCurr - distanceNext;
+                if (Math.abs(denominator) > CLIP_EPSILON) { // CLIP_EPSILON to guard against zero-length distance
+                    double t = distanceCurr / denominator;
+                    if (t > CLIP_EPSILON && t < 1.0 - CLIP_EPSILON) { // CLIP_EPSILON to guard against generating interpolated points that lie on corners
+                        ClipPoint interpolated = new ClipPoint(
             }
         }
         return out;
