@@ -27,10 +27,24 @@ public class Integrator {
     }
 
     public static void phaseTwo(PhysicsObject obj) {
-        updatePos(obj, obj.getLinearVelocity());
-        updateOrientation(obj, obj.getAngularVelocity());
-        applySplitImpulseCorrection(obj); // TODO: Merge into a single updatePos and updateOrientation
+        Vector3dc linearVelocity = obj.getLinearVelocity();
+        Vector3dc splitLinearVelocity = obj.getSplitLinearVelocity();
+        updatePos(obj,
+                linearVelocity.x() + splitLinearVelocity.x(),
+                linearVelocity.y() + splitLinearVelocity.y(),
+                linearVelocity.z() + splitLinearVelocity.z()
+                );
+
+        Vector3dc angularVelocity = obj.getAngularVelocity();
+        Vector3dc splitAngularVelocity = obj.getSplitAngularVelocity();
+        updateOrientation(obj,
+                angularVelocity.x() + splitAngularVelocity.x(),
+                angularVelocity.y() + splitAngularVelocity.y(),
+                angularVelocity.z() + splitAngularVelocity.z()
+        );
+
         obj.clearAccumulators();
+        obj.clearSplitVelocities();
     }
 
 
@@ -59,12 +73,12 @@ public class Integrator {
         }
     }
 
-    private static void updatePos(PhysicsObject obj, Vector3dc movement) {
+    private static void updatePos(PhysicsObject obj, double moveX, double moveY, double moveZ) {
         Vector3dc pos = obj.getInternalPos();
         obj.setInternalPos(
-                pos.x() + movement.x() * DELTA_TIME,
-                pos.y() + movement.y() * DELTA_TIME,
-                pos.z() + movement.z() * DELTA_TIME
+                pos.x() + moveX * DELTA_TIME,
+                pos.y() + moveY * DELTA_TIME,
+                pos.z() + moveZ * DELTA_TIME
         );
     }
 
@@ -92,17 +106,11 @@ public class Integrator {
         ); // I don't normalize it here because setOrientation() already does that automatically
     }*/
 
-    private static void updateOrientation(PhysicsObject obj, Vector3dc angularVelocity) { // Approach: Exponential map integration
-        double angularVelocityLengthSquared = angularVelocity.lengthSquared();
-        if (angularVelocityLengthSquared < EPSILON_SQUARED) return; // No orientation change. Continuing here (normalizing at some point) would produce NaN.
-        double angle = Math.sqrt(angularVelocityLengthSquared) * DELTA_TIME;
-        obj.rotateOrientation(angle, angularVelocity);
-    }
-
-    private static void applySplitImpulseCorrection(PhysicsObject obj) {
-        updatePos(obj, obj.getLinearCorrection());
-        updateOrientation(obj, obj.getAngularCorrection());
-        obj.clearCorrection();
+    private static void updateOrientation(PhysicsObject obj, double angularVelocityX, double angularVelocityY, double angularVelocityZ) { // Approach: Exponential map integration
+        double lengthSquared = Vector3d.lengthSquared(angularVelocityX, angularVelocityY, angularVelocityZ);
+        if (lengthSquared < EPSILON_SQUARED) return; // No orientation change. Continuing here (normalizing at some point) would produce NaN.
+        double angle = Math.sqrt(lengthSquared) * DELTA_TIME;
+        obj.rotateOrientation(angle, angularVelocityX, angularVelocityY, angularVelocityZ);
     }
 }
 

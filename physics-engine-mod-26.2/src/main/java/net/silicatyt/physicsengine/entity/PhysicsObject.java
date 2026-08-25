@@ -117,8 +117,8 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
     private final Vector3d linearVelocityFromAcceleration = new Vector3d();
     private final Vector3d preSolveLinearVelocity = new Vector3d(); // Needed so warm-starting doesn't affect some solver pre-calculations
     private final Vector3d preSolveAngularVelocity = new Vector3d();
-    private final Vector3d linearCorrection = new Vector3d(); // Caused by split-impulse
-    private final Vector3d angularCorrection = new Vector3d();
+    private final Vector3d splitLinearVelocity = new Vector3d(); // Caused by split-impulse
+    private final Vector3d splitAngularVelocity = new Vector3d();
 
 
     // Versioning
@@ -176,8 +176,8 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
     public Vector3dc getLinearVelocityFromAcceleration() { return linearVelocityFromAcceleration; }
     public Vector3dc getPreSolveLinearVelocity() { return preSolveLinearVelocity; }
     public Vector3d getPreSolveAngularVelocity() { return preSolveAngularVelocity; }
-    public Vector3dc getLinearCorrection() { return linearCorrection; }
-    public Vector3dc getAngularCorrection() { return angularCorrection; }
+    public Vector3dc getSplitLinearVelocity() { return splitLinearVelocity; }
+    public Vector3dc getSplitAngularVelocity() { return splitAngularVelocity; }
 
 
     // Setters
@@ -352,15 +352,15 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
         return getInverseInertiaTensorWorld().transform(torque);
     }
 
-    public void rotateOrientation(double angle, @NonNull Vector3dc axis) throws IllegalArgumentException {
-        if (!axis.isFinite()) throw new IllegalArgumentException("Rotation axis must be finite");
-        double lengthSquared = axis.lengthSquared();
+    public void rotateOrientation(double angle, double axisX, double axisY, double axisZ) throws IllegalArgumentException {
+        if (!Double.isFinite(axisX) || !Double.isFinite(axisY) || !Double.isFinite(axisZ)) throw new IllegalArgumentException("Rotation axis must be finite");
+        double lengthSquared = Vector3d.lengthSquared(axisX, axisY, axisZ);
         if (lengthSquared < EPSILON_SQUARED) throw new IllegalArgumentException("Rotation axis must not be degenerate");
 
         double inverseAxisLength = 1.0 / Math.sqrt(lengthSquared);
-        double normalizedAxisX = axis.x() * inverseAxisLength;
-        double normalizedAxisY = axis.y() * inverseAxisLength;
-        double normalizedAxisZ = axis.z() * inverseAxisLength;
+        double normalizedAxisX = axisX * inverseAxisLength;
+        double normalizedAxisY = axisY * inverseAxisLength;
+        double normalizedAxisZ = axisZ * inverseAxisLength;
 
         double halfAngle = angle * 0.5;
         double sinHalfAngle = Math.sin(halfAngle);
@@ -374,14 +374,14 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
         versions.orientation.increment(); // TODO: Should I use a setter so I don't need this explicitly? Would add more overhead, but I wouldn't have to increment the version in several places?
     }
 
-    public void addLinearCorrection(@NonNull Vector3dc v) throws IllegalArgumentException {
-        if (!v.isFinite()) throw new IllegalArgumentException("Linear correction must be finite");
-        linearCorrection.add(v);
+    public void addSplitLinearVelocity(@NonNull Vector3dc v) throws IllegalArgumentException {
+        if (!v.isFinite()) throw new IllegalArgumentException("Split linear velocity must be finite");
+        splitLinearVelocity.add(v);
     }
 
-    public void addAngularCorrection(@NonNull Vector3dc v) throws IllegalArgumentException {
-        if (!v.isFinite()) throw new IllegalArgumentException("Angular correction must be finite");
-        angularCorrection.add(v);
+    public void addSplitAngularVelocity(@NonNull Vector3dc v) throws IllegalArgumentException {
+        if (!v.isFinite()) throw new IllegalArgumentException("Split angular velocity must be finite");
+        splitAngularVelocity.add(v);
     }
 
     public void clearAccumulators() {
@@ -389,9 +389,9 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
         accumulatedTorque.zero();
     }
 
-    public void clearCorrection() {
-        linearCorrection.zero();
-        angularCorrection.zero();
+    public void clearSplitVelocities() {
+        splitLinearVelocity.zero();
+        splitAngularVelocity.zero();
     }
 
     public void updateDerivedValues() { // Only run before asynchronous code that runs getters for the same objects, to avoid data races. Not the cleanest solution, and it checks the same dependencies several times, but it's the best I could come up with without abandoning the lazy updates.
