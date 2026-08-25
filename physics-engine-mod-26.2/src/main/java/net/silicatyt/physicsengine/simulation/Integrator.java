@@ -23,13 +23,13 @@ public class Integrator {
     public static void phaseOne(PhysicsObject obj) { // Update internal state
         fixEntityPos(obj);
         updateLinearVelocity(obj);
-        updatePos(obj, obj.getLinearVelocity());
         updateAngularVelocity(obj);
-        updateOrientation(obj, obj.getAngularVelocity());
     }
 
     public static void phaseTwo(PhysicsObject obj) {
-        applySplitImpulseCorrection(obj);
+        updatePos(obj, obj.getLinearVelocity());
+        updateOrientation(obj, obj.getAngularVelocity());
+        applySplitImpulseCorrection(obj); // TODO: Merge into a single updatePos and updateOrientation
         obj.clearAccumulators();
     }
 
