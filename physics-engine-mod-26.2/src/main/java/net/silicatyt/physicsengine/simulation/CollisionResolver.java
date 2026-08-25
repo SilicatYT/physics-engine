@@ -81,7 +81,7 @@ public final class CollisionResolver {
         boolean relativeToA = p.isPositionRelativeToA();
 
         Vector3dc relativeContactPosA = relativeToA ? contactPos : new Vector3d(contactPos).sub(m.offsetX, m.offsetY, m.offsetZ);
-        Vector3dc relativeContactPosB = relativeToA ? new Vector3d(contactPos).sub(m.offsetX, m.offsetY, m.offsetZ) : contactPos;
+        Vector3dc relativeContactPosB = relativeToA ? new Vector3d(contactPos).add(m.offsetX, m.offsetY, m.offsetZ) : contactPos;
 
         Matrix3dc RA = buildRMatrix(relativeContactPosA, ctx.orthonormalBasis());
         Matrix3dc RB = buildRMatrix(relativeContactPosB, ctx.orthonormalBasis());
@@ -135,18 +135,18 @@ public final class CollisionResolver {
     private static double calculateTargetClosingVelocity(ContactPoint p, Manifold m, ManifoldSolverContext ctxManifold, Vector3dc relativeContactPosA, Vector3dc relativeContactPosB) {
         // targetClosingVelocity = -restitution * (closingVelocity + relativeVelocityFromAcceleration.dot(contactNormal))
         Vector3dc normal = p.getNormal();
-        Vector3d armA = new Vector3d(relativeContactPosA).cross(normal);
+        Vector3d armA = new Vector3d(relativeContactPosA).cross(normal); // TODO: Store in the context, because it's used multiple times
         Vector3d armB = new Vector3d(relativeContactPosB).cross(normal);
 
-        double closingVelocity = m.a.getPreSolveAngularVelocity().dot(armA) + m.a.getPreSolveLinearVelocity().dot(normal); // Using pre-solve velocity so it's not affected by warm-starting
-        closingVelocity -= m.b.getPreSolveAngularVelocity().dot(armB) + m.b.getPreSolveLinearVelocity().dot(normal);
+        double closingVelocity = m.b.getPreSolveAngularVelocity().dot(armB) + m.b.getPreSolveLinearVelocity().dot(normal); // Using pre-solve velocity so it's not affected by warm-starting
+        closingVelocity -= m.a.getPreSolveAngularVelocity().dot(armA) + m.a.getPreSolveLinearVelocity().dot(normal); // TODO: Remove the 2nd dot product by subtracting a's velocity from b's directly
 
-        Vector3d relativeVelocityFromAcceleration = new Vector3d(m.a.getLinearVelocityFromAcceleration());
-        relativeVelocityFromAcceleration.sub(m.b.getLinearVelocityFromAcceleration());
+        Vector3d relativeVelocityFromAcceleration = new Vector3d(m.b.getLinearVelocityFromAcceleration());
+        relativeVelocityFromAcceleration.sub(m.a.getLinearVelocityFromAcceleration());
 
-        double total = closingVelocity + relativeVelocityFromAcceleration.dot(normal);
+        double total = closingVelocity - relativeVelocityFromAcceleration.dot(normal); // TODO: Optimize by merging the dot product with the other ones
 
-        if (total > RESTITUTION_ACTIVATION_SPEED_THRESHOLD) return 0.0;
+        if (total < RESTITUTION_ACTIVATION_SPEED_THRESHOLD) return 0.0;
         return -ctxManifold.restitutionCoefficient() * total;
     }
 
@@ -241,12 +241,12 @@ public final class CollisionResolver {
         Vector3dc rA = contact.contactContext().relativeContactPosA();
         Vector3dc rB = contact.contactContext().relativeContactPosB();
 
-        Vector3d velocityA = contact.state().velocity;
-        Vector3d velocityB = new Vector3d();
+        Vector3d velocityA = new Vector3d();
+        Vector3d velocityB = contact.state().velocity;
         velocityA.set(a.getAngularVelocity()).cross(rA).add(a.getLinearVelocity());
         velocityB.set(b.getAngularVelocity()).cross(rB).add(b.getLinearVelocity());
 
-        contact.state().velocity.sub(velocityB);
+        velocityB.sub(velocityA);
     }
 
     private static void updateClosingVelocity(ResolvingContact contact) {
@@ -257,12 +257,12 @@ public final class CollisionResolver {
         return contact.state().closingVelocity - contact.contactContext().targetClosingVelocity();
     }
 
-    private static Vector3dc buildImpulse(ResolvingContact contact, double deltaVelocity, Vector3dc contactVelocityContactSpace) {
+    private static Vector3d buildImpulse(ResolvingContact contact, double deltaVelocity, Vector3dc contactVelocityContactSpace) {
         Vector3dc effectiveMass = contact.contactContext().effectiveMass();
         Vector3d impulse = new Vector3d();
-        impulse.x = -deltaVelocity * effectiveMass.x();
-        impulse.y = -contactVelocityContactSpace.y() * effectiveMass.y();
-        impulse.z = -contactVelocityContactSpace.z() * effectiveMass.z();
+        impulse.x = deltaVelocity * effectiveMass.x();
+        impulse.y = contactVelocityContactSpace.y() * effectiveMass.y();
+        impulse.z = contactVelocityContactSpace.z() * effectiveMass.z();
         return impulse;
     }
 
@@ -279,7 +279,7 @@ public final class CollisionResolver {
     // Penetration resolution
     private static void resolvePenetration(ResolvingContact contact) { // TODO: Split into helper methods, some code is re-used from other parts (contactVelocity, targetClosingVelocity, combinedImpulse vs accumulatedImpulse, ...)
         double biasVelocity = contact.contactContext().biasVelocity();
-        double deltaVelocity = biasVelocity - calculateSplitImpulseClosingVelocity(contact);
+        double deltaVelocity = biasVelocity + calculateSplitImpulseClosingVelocity(contact);
         //if (Math.abs(deltaVelocity) < MIN_PENETRATION_DEPTH / DELTA_TIME) return; TODO: IMPROVE THIS CHECK. RN it's bugged because it compares meters with meters/second.
 
         double impulse = deltaVelocity * contact.contactContext().effectiveMass().x(); // Only the component along the contact normal
@@ -301,13 +301,13 @@ public final class CollisionResolver {
         Vector3dc relativeContactPosA = contact.contactContext().relativeContactPosA();
         Vector3dc relativeContactPosB = contact.contactContext().relativeContactPosB();
 
-        Vector3d armA = new Vector3d(relativeContactPosA).cross(normal);
+        Vector3d armA = new Vector3d(relativeContactPosA).cross(normal); // TODO: Re-use from earlier
         Vector3d armB = new Vector3d(relativeContactPosB).cross(normal);
 
         PhysicsObject a = contact.manifold().a;
         PhysicsObject b = contact.manifold().b;
-        double closingVelocity = a.getAngularCorrection().dot(armA) + a.getLinearCorrection().dot(normal);
-        closingVelocity -= b.getAngularCorrection().dot(armB) + b.getLinearCorrection().dot(normal);
+        double closingVelocity = b.getAngularCorrection().dot(armB) + b.getLinearCorrection().dot(normal);
+        closingVelocity -= a.getAngularCorrection().dot(armA) + a.getLinearCorrection().dot(normal); // TODO: Merge the dot products
         return closingVelocity;
     }
 

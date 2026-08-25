@@ -171,7 +171,7 @@ public final class CollisionDetector {
             }
         }
 
-        Optional<PersistedAxisData> persisted = persistedAxisIndex == -1 ? Optional.empty() : Optional.of(new PersistedAxisData(
+        Optional<PersistedAxisData> persisted = persistedAxisIndex == -1 || persistedAxis == null ? Optional.empty() : Optional.of(new PersistedAxisData( // The null check is necessary in case the axis was a degenerate cross product axis and was never assigned
                 persistedAxisIndex, persistedAxisOverlap, persistedAxis, lastTickManifold.persistedAxisFacingOutward, lastTickManifold.persistedAxisFacingB
         ));
         return Optional.of(

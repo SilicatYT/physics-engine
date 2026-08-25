@@ -330,7 +330,7 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
 
         for (int i = 0; i < 4; i++) { // Which edge has the deepest projection (most positive) onto the contact normal? Basically "Which one is equal to projectionObjectA[1]", but I must consider floating point errors.
             projection = obj.getCornerPosRelative(edgeStartingPointIndices[i]).dot(contactNormal);
-            if (isObjectA) projection *= -1; // Deepest projection for objectA is the most negative TODO: I INVERTED THE CHECK AND THE COMMENT. IS THAT CORRECT?
+            if (isObjectA) projection *= -1; // Deepest projection for objectA is the most negative
             if (projection > maxProjection) {
                 maxProjection = projection;
                 edgeIndex = 4 * axisIndex + i; // Edges have IDs 0 - 11 (4 edges for x, 4 edges for y, and 4 edges for z)
@@ -354,7 +354,7 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
         Vector3dc axisA = a.getAxis(getAxisIndex(edgeIndexA));
         Vector3dc axisB = b.getAxis(getAxisIndex(edgeIndexB));
 
-        Vector3dc edgeStartingPointA = getEdgeStartingPoint(a, edgeIndexA);
+        Vector3dc edgeStartingPointA = new Vector3d(getEdgeStartingPoint(a, edgeIndexA)).add(dx, dy, dz);
         Vector3dc edgeStartingPointB = getEdgeStartingPoint(b, edgeIndexB);
 
         double c = axisA.dot(axisB);
@@ -371,8 +371,7 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
         t = Math.clamp(t, 0, axisBScale);
 
         Vector3d pointEdgeA = new Vector3d(axisA);
-        pointEdgeA.mul(s).add(edgeStartingPointA)
-                .add(dx, dy, dz);
+        pointEdgeA.mul(s).add(edgeStartingPointA);
 
         Vector3d pointEdgeB = new Vector3d(axisB);
         pointEdgeB.mul(t).add(edgeStartingPointB);
@@ -391,7 +390,7 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
     }
 
     private static double calculatePenetrationDepth(PhysicsObject a, PhysicsObject b, int edgeIndexA, int edgeIndexB, Vector3dc contactNormal, double dx, double dy, double dz) {
-        return new Vector3d(getEdgeStartingPoint(b, edgeIndexB)).sub(getEdgeStartingPoint(a, edgeIndexA)).sub(dx, dy, dz).dot(contactNormal); // TODO: Is ".sub(dx, dy, dz)" correct here?
+        return new Vector3d(getEdgeStartingPoint(b, edgeIndexB)).sub(getEdgeStartingPoint(a, edgeIndexA)).sub(dx, dy, dz).dot(contactNormal);
     }
 
     private static int calculateId(int edgeIndexA, int edgeIndexB) { return 10 * edgeIndexA + edgeIndexB; }
