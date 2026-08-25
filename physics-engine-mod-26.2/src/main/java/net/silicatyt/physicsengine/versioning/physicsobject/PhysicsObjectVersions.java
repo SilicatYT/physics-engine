@@ -51,17 +51,7 @@ public final class PhysicsObjectVersions implements PhysicsObjectVersionsView {
         cornerPosRelative.addDependencies(halfExtentAxisProjections);
     }
 
+    // VersionSources
+    // ...
 
-    @Override public VersionSource inverseMass() { return inverseMass; }
-    @Override public VersionSource linearVelocity() { return linearVelocity; }
-    @Override public VersionSource angularVelocity() { return angularVelocity; }
-    @Override public VersionSource orientation() { return orientation; }
-    @Override public VersionSource scale() { return scale; }
-    @Override public VersionSource frictionCoefficient() { return frictionCoefficient; }
-    @Override public VersionSource restitutionCoefficient() { return restitutionCoefficient; }
-
-    @Override public VersionSource inverseInertiaTensorWorld() { return inverseInertiaTensorWorld; }
-    @Override public VersionSource axes() { return axes; }
-
-    @Override public VersionSource internalPos() { return internalPos; }
 }

@@ -81,6 +81,7 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
 
 
     // Derived data
+    private final Vector3d halfExtents = new Vector3d(scale).mul(0.5);
     private final Matrix3d rotationMatrix = new Matrix3d();
     private final Matrix3d rotationMatrixTranspose = new Matrix3d();
     private final Matrix3d inverseInertiaTensorLocal = new Matrix3d();
@@ -144,6 +145,7 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
     public double getFrictionCoefficient() { return frictionCoefficient; }
     public double getRestitutionCoefficient() { return restitutionCoefficient; }
 
+    public double getHalfExtent(int axisIndex) { return halfExtents.get(axisIndex); }
     public Matrix3dc getInverseInertiaTensorWorld() {
         versions.inverseInertiaTensorWorld.updateIfNeeded();
         return inverseInertiaTensorWorld;
@@ -222,6 +224,11 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
         if (!v.isFinite()) throw new IllegalArgumentException("Scale must be finite");
         if (scale.equals(v)) return;
         scale.set(v);
+
+        for (int i = 0; i < 3; i++) { // Update half extents (Didn't want to make a whole versioned field, they're closely linked)
+            halfExtents.setComponent(i, v.get(i) * 0.5);
+        }
+
         versions.scale.increment();
     }
 
@@ -269,7 +276,7 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
 
     private void updateAxes() { for (int i = 0; i < 3; i++) rotationMatrix.getColumn(i, axes[i]); }
 
-    private void updateHalfExtentAxisProjections() { for (int i = 0; i < 3; i++) halfExtentAxisProjections[i].set(axes[i]).mul(scale.get(i) * 0.5); }
+    private void updateHalfExtentAxisProjections() { for (int i = 0; i < 3; i++) halfExtentAxisProjections[i].set(axes[i]).mul(halfExtents.get(i)); }
 
     private void updateAabbRelative() {
         for (int i = 0; i < 3; i++) {
@@ -316,7 +323,7 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
     public void addLinearVelocityAcceleration(double x, double y, double z) throws IllegalArgumentException { // TODO: Maybe put the whole formula here, and rename to "applyAcceleration" for consistency with "applyTorque"?
         if (!Double.isFinite(x) || !Double.isFinite(y) || !Double.isFinite(z)) throw new IllegalArgumentException("Linear velocity acceleration must be finite");
         if (x == 0.0 && y == 0.0 && z == 0.0) return;
-        linearVelocityFromAcceleration.set(x, y, z); // TODO: Should I rather set it to 0 each tick and use add() here, in case someone uses this method multiple times? They *could* set both velocity values independently by just using 2 method calls rn. But if I add a "clear()" method, it'll still be possible. I'd need to bundle it in a "startTick()" method, which would be annoying. I'll just keep it like this for now.
+        linearVelocityFromAcceleration.add(x, y, z);
         linearVelocity.add(x, y, z);
         versions.linearVelocity.increment();
     }
@@ -382,6 +389,10 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
     public void addSplitAngularVelocity(@NonNull Vector3dc v) throws IllegalArgumentException {
         if (!v.isFinite()) throw new IllegalArgumentException("Split angular velocity must be finite");
         splitAngularVelocity.add(v);
+    }
+
+    public void clearAccelerationVelocities() {
+        linearVelocityFromAcceleration.zero();
     }
 
     public void clearAccumulators() {

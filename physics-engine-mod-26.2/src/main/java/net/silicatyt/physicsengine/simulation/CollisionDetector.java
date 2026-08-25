@@ -15,6 +15,8 @@ import static java.lang.Math.abs;
 import static net.silicatyt.physicsengine.simulation.Integrator.EPSILON_SQUARED;
 
 public final class CollisionDetector {
+    private static final double FACE_AXIS_PREFERENCE_MULTIPLIER = 1.0 / 0.7;
+
     private static Long2ObjectOpenHashMap<Manifold> previousManifolds = new Long2ObjectOpenHashMap<>();
 
     public static List<Island> findIslands(List<PhysicsObject> loadedObjects, ForkJoinPool pool) {
@@ -110,10 +112,9 @@ public final class CollisionDetector {
         double axisOverlap;
 
         // a's axes
-        Vector3dc scaleA = a.getScale();
         for (int i = 0; i < 3; i++) { // TODO: Put the contents of the for-loop into a helper method (or 3). But how to do it cleanly, I can't pass 'double' references in Java.
             axis = a.getAxis(i);
-            axisOverlap = calculateAxisOverlap(scaleA.get(i) * 0.5, calculateRelativeMaxProjectionOntoAxis(b, axis), axis, dx, dy, dz);
+            axisOverlap = calculateAxisOverlap(a.getHalfExtent(i), calculateRelativeMaxProjectionOntoAxis(b, axis), axis, dx, dy, dz);
             if (axisOverlap <= 0.0) return Optional.empty();
             if (i == persistedAxisIndex) {
                 persistedAxis = axis;
@@ -127,10 +128,10 @@ public final class CollisionDetector {
         }
 
         // b's axes
-        Vector3dc scaleB = b.getScale();
         for (int i = 3; i < 6; i++) {
-            axis = b.getAxis(i - 3);
-            axisOverlap = calculateAxisOverlap(calculateRelativeMaxProjectionOntoAxis(a, axis), scaleB.get(i - 3) * 0.5, axis, dx, dy, dz);
+            int axisIndex = i - 3;
+            axis = b.getAxis(axisIndex);
+            axisOverlap = calculateAxisOverlap(calculateRelativeMaxProjectionOntoAxis(a, axis), b.getHalfExtent(axisIndex), axis, dx, dy, dz);
             if (axisOverlap <= 0.0) return Optional.empty();
             if (i == persistedAxisIndex) {
                 persistedAxis = axis;
@@ -152,7 +153,7 @@ public final class CollisionDetector {
                 double lengthSquared = mutableAxis.lengthSquared();
                 if (lengthSquared < EPSILON_SQUARED) continue; // Degenerate axis, ignore it
 
-                double inverseLength = 1.0 / Math.sqrt(lengthSquared);
+                double inverseLength = 1.0 / Math.sqrt(lengthSquared); // TODO: Optimize it by not normalizing here (only at the end when the axis was chosen). I have to modify the axisOverlap calculation for this.
                 mutableAxis.x *= inverseLength;
                 mutableAxis.y *= inverseLength;
                 mutableAxis.z *= inverseLength;
@@ -163,7 +164,8 @@ public final class CollisionDetector {
                     persistedAxis = new Vector3d(mutableAxis); // TODO: Maybe it's not clean to only assign a new object sometimes? I only need it for the current tick, so the re-assignment of getAxis() (Which only changes the next tick) is not a problem
                     persistedAxisOverlap = axisOverlap;
                 }
-                if (axisOverlap < candidateAxisOverlap) {
+                double effectiveOverlap = (candidateAxisIndex < 6 && axisIndex >= 6) ? axisOverlap * FACE_AXIS_PREFERENCE_MULTIPLIER : axisOverlap;
+                if (effectiveOverlap < candidateAxisOverlap) {
                     candidateAxisIndex = axisIndex;
                     candidateAxis.set(mutableAxis);
                     candidateAxisOverlap = axisOverlap;

@@ -17,16 +17,18 @@ public final class CollisionResolver {
     private static final int NOF_VELOCITY_RESOLUTION_ITERATIONS = 20;
     private static final int NOF_PENETRATION_RESOLUTION_ITERATIONS = 20;
 
-    private static final double MIN_DELTA_VELOCITY = 0.0; // TODO: Finetune
-    private static final double MIN_DELTA_VELOCITY_SQUARED = MIN_DELTA_VELOCITY * MIN_DELTA_VELOCITY;
-    private static final double MIN_TANGENTIAL_VELOCITY_SQUARED = 0.0; // TODO: Finetune
+    private static final double MIN_DELTA_IMPULSE = 0.0005; // TODO: Finetune by measuring
+    private static final double MIN_DELTA_IMPULSE_SQUARED = MIN_DELTA_IMPULSE * MIN_DELTA_IMPULSE;
+    private static final double MIN_PENETRATION_CORRECTION = 0.0005; // TODO: Finetune
     private static final double PENETRATION_SLOP = 0.01; // TODO: Finetune
-    private static final double BAUMGARTE_FACTOR = 0.2; // TODO: Finetune
-    private static final double RESTITUTION_ACTIVATION_SPEED_THRESHOLD = 0.0; // TODO: Finetune
+    private static final double BAUMGARTE_FACTOR = 0.25; // TODO: Finetune
+    private static final double INVERSE_BAUMGARTE_FACTOR = 1.0 / BAUMGARTE_FACTOR;
+    private static final double RESTITUTION_ACTIVATION_SPEED_THRESHOLD = 0.01; // TODO: Finetune
 
     // Setup
     public static void resolve(Island island) {
         for (PhysicsObject obj : island.objects()) obj.snapshotPreSolveVelocity(); // So targetVelocity can use the velocity from before warm-starting was applied. Additional loop required because applying warm-starting affects two objects, not just one.
+        // TODO: ^ fix, currently it doesn't snapshot for static objects, because they're not part of island-objects()
 
         // Setup: Merge manifold contact points together into ResolvingContact wrappers with pre-calculated values & apply warm-starting
         List<ResolvingContact> allContacts = new ArrayList<>();
@@ -43,7 +45,7 @@ public final class CollisionResolver {
                 transformToContactSpace(state.accumulatedImpulseContactSpace, manifoldContext);
 
                 // Warm-starting
-                if (state.accumulatedImpulseContactSpace.lengthSquared() >= MIN_DELTA_VELOCITY_SQUARED) {
+                if (state.accumulatedImpulseContactSpace.lengthSquared() >= MIN_DELTA_IMPULSE_SQUARED) { // TODO: Because warm-starting doesn't always apply, the 1st iteration might under-solve potentially? Skip the check entirely?
                     applyImpulse(c, p.getAccumulatedImpulse());
                 }
             }
@@ -52,13 +54,21 @@ public final class CollisionResolver {
         // Velocity resolution
         allContacts.sort(Comparator.comparingDouble((ResolvingContact c) -> c.state().accumulatedImpulseContactSpace.x()).reversed()); // Sorted by warm-start impulse along contact normal (desc) for stack stability
         for (int i = 0; i < NOF_VELOCITY_RESOLUTION_ITERATIONS; i++) {
-            for (ResolvingContact c : allContacts) resolveVelocity(c);
+            double maxDeltaImpulseSquared = 0.0;
+            for (ResolvingContact c : allContacts) {
+                maxDeltaImpulseSquared = Math.max(maxDeltaImpulseSquared, resolveVelocity(c));
+            }
+            if (maxDeltaImpulseSquared < MIN_DELTA_IMPULSE_SQUARED) break; // Everything's already stable. That's another advantage of using islands, even if it weren't parallelized.
         }
 
         // Penetration resolution
         allContacts.sort(Comparator.comparingDouble((ResolvingContact c) -> c.point().getPenetrationDepth()).reversed()); // TODO: Check whether sorting by the previous tick's applied splitImpulse would be more stable. I'd need to move accumulatedSplitImpulse from ContactSolverState to ContactPoint in that case.
         for (int i = 0; i < NOF_PENETRATION_RESOLUTION_ITERATIONS; i++) {
-            for (ResolvingContact c : allContacts) resolvePenetration(c);
+            double maxPositionError = 0.0;
+            for (ResolvingContact c : allContacts) {
+                maxPositionError = Math.max(maxPositionError, resolvePenetration(c));
+            }
+            if (maxPositionError < MIN_PENETRATION_CORRECTION) break;
         }
 
         // Convert accumulatedImpulse back to world space (so it can be carried over to the next tick)
@@ -150,7 +160,9 @@ public final class CollisionResolver {
         return -ctxManifold.restitutionCoefficient() * total;
     }
 
-    private static double calculateBiasVelocity(ContactPoint p) { return Math.max(BAUMGARTE_FACTOR * (p.getPenetrationDepth() - PENETRATION_SLOP), 0.0) / DELTA_TIME; } // TODO: Maybe multiply slop by penetration for more stable results?
+    private static double calculateBiasVelocity(ContactPoint p) {
+        return Math.max(BAUMGARTE_FACTOR * (p.getPenetrationDepth() - PENETRATION_SLOP), 0.0) / DELTA_TIME;
+    }
 
     private static Vector3dc buildEffectiveMass(ContactPoint p, Manifold m, Matrix3dc RA, Matrix3dc RB, Matrix3dc angularImpulseFactorA, Matrix3dc angularImpulseFactorB) { // TODO: Vector allocations could be removed
         Vector3d effectiveMass = new Vector3d();
@@ -184,7 +196,7 @@ public final class CollisionResolver {
 
 
     // Velocity resolution
-    private static void resolveVelocity(ResolvingContact contact) {
+    private static double resolveVelocity(ResolvingContact contact) {
         updateContactVelocity(contact);
         updateClosingVelocity(contact);
 
@@ -197,20 +209,11 @@ public final class CollisionResolver {
         double contactVelocityContactSpaceZ = orthonormalBasis.getColumn(2, column).dot(contactVelocity);
         Vector3d contactVelocityContactSpace = column.set(contactVelocityContactSpaceX, contactVelocityContactSpaceY, contactVelocityContactSpaceZ);
 
-        // Early out if converged
-        double deltaVelocity = calculateDeltaVelocity(contact);
-        boolean normalConverged = Math.abs(deltaVelocity) < MIN_DELTA_VELOCITY;
-        boolean tangentialConverged = (contactVelocityContactSpace.y()*contactVelocityContactSpace.y()
-                + contactVelocityContactSpace.z()*contactVelocityContactSpace.z()) < MIN_TANGENTIAL_VELOCITY_SQUARED;
-        if (normalConverged && tangentialConverged) return;
-
         // Impulse
-        Vector3dc impulse = buildImpulse(contact, deltaVelocity, contactVelocityContactSpace); // Required impulse for velocity change
+        double deltaVelocity = calculateDeltaVelocity(contact);
+        Vector3d impulse = buildImpulse(contact, deltaVelocity, contactVelocityContactSpace); // Required impulse for velocity change
 
-        /*if ((contactVelocityInContactSpace.y*contactVelocityInContactSpace.y + contactVelocityInContactSpace.z*contactVelocityInContactSpace.z) < 0.2) { // TODO: Temporarily disabled, fixes friction sliding issue?
-            impulse.y = 0d;
-            impulse.z = 0d;
-        }*/
+        // TODO: Maybe implement static friction (via friction anchors?)
 
         Vector3dc accumulatedImpulse = contact.state().accumulatedImpulseContactSpace;
         Vector3d combinedImpulse = new Vector3d(impulse).add(accumulatedImpulse);
@@ -226,13 +229,16 @@ public final class CollisionResolver {
             combinedImpulse.z *= scalingFactor;
         }
 
-        Vector3d deltaImpulse = combinedImpulse.sub(accumulatedImpulse); // Re-assignment
-        contact.state().accumulatedImpulseContactSpace.add(deltaImpulse);
+        Vector3d deltaImpulse = new Vector3d(combinedImpulse).sub(accumulatedImpulse);
+        double deltaImpulseSquared = deltaImpulse.lengthSquared();
+        if (deltaImpulseSquared < MIN_DELTA_IMPULSE_SQUARED) return deltaImpulseSquared; // Early-out. Has to be done after clamping
 
+        contact.state().accumulatedImpulseContactSpace.set(combinedImpulse);
         orthonormalBasis.transform(deltaImpulse); // To world coordinates
 
         // Apply impulse
         applyImpulse(contact, deltaImpulse);
+        return deltaImpulseSquared;
     }
 
     private static void updateContactVelocity(ResolvingContact contact) {
@@ -277,10 +283,12 @@ public final class CollisionResolver {
 
 
     // Penetration resolution
-    private static void resolvePenetration(ResolvingContact contact) { // TODO: Split into helper methods, some code is re-used from other parts (contactVelocity, targetClosingVelocity, combinedImpulse vs accumulatedImpulse, ...)
+    private static double resolvePenetration(ResolvingContact contact) { // TODO: Split into helper methods, some code is re-used from other parts (contactVelocity, targetClosingVelocity, combinedImpulse vs accumulatedImpulse, ...)
         double biasVelocity = contact.contactContext().biasVelocity();
         double deltaVelocity = biasVelocity + calculateSplitImpulseClosingVelocity(contact);
-        //if (Math.abs(deltaVelocity) < MIN_PENETRATION_DEPTH / DELTA_TIME) return; TODO: IMPROVE THIS CHECK. RN it's bugged because it compares meters with meters/second.
+
+        double positionError = Math.abs(deltaVelocity) * DELTA_TIME * INVERSE_BAUMGARTE_FACTOR;
+        if (positionError < MIN_PENETRATION_CORRECTION) return positionError;
 
         double impulse = deltaVelocity * contact.contactContext().effectiveMass().x(); // Only the component along the contact normal
         double accumulatedImpulse = contact.state().accumulatedSplitImpulse;
@@ -288,12 +296,13 @@ public final class CollisionResolver {
         double combinedImpulse = Math.max(0d, impulse + accumulatedImpulse);
 
         Vector3d deltaImpulse = new Vector3d(combinedImpulse - accumulatedImpulse, 0.0, 0.0);
-        contact.state().accumulatedSplitImpulse += deltaImpulse.x;
+        contact.state().accumulatedSplitImpulse = combinedImpulse;
 
         contact.manifoldContext().orthonormalBasis().transform(deltaImpulse); // TODO: Optimize (Only the x component is set)
 
-        // Apply impulse (Add it to linear & angular correction)
+        // Apply impulse (Add it to split linear & angular velocities)
         applySplitImpulse(contact, deltaImpulse);
+        return positionError;
     }
 
     private static double calculateSplitImpulseClosingVelocity(ResolvingContact contact) {
@@ -306,8 +315,8 @@ public final class CollisionResolver {
 
         PhysicsObject a = contact.manifold().a;
         PhysicsObject b = contact.manifold().b;
-        double closingVelocity = b.getAngularCorrection().dot(armB) + b.getLinearCorrection().dot(normal);
-        closingVelocity -= a.getAngularCorrection().dot(armA) + a.getLinearCorrection().dot(normal); // TODO: Merge the dot products
+        double closingVelocity = b.getSplitAngularVelocity().dot(armB) + b.getSplitLinearVelocity().dot(normal);
+        closingVelocity -= a.getSplitAngularVelocity().dot(armA) + a.getSplitLinearVelocity().dot(normal); // TODO: Merge the dot products
         return closingVelocity;
     }
 
@@ -315,20 +324,20 @@ public final class CollisionResolver {
         // ObjectA
         PhysicsObject a = contact.manifold().a;
         Vector3dc linearDelta = a.calculateImpulseLinearVelocity(impulse);
-        a.addLinearCorrection(linearDelta);
+        a.addSplitLinearVelocity(linearDelta);
 
         Vector3dc angularDelta = a.calculateImpulseAngularVelocity(impulse, contact.contactContext().relativeContactPosA());
-        a.addAngularCorrection(angularDelta);
+        a.addSplitAngularVelocity(angularDelta);
 
         // ObjectB
         PhysicsObject b = contact.manifold().b;
         if (b.getInverseMass() == 0.0) return;
         Vector3d negatedImpulse = new Vector3d(impulse).negate();
         linearDelta = b.calculateImpulseLinearVelocity(negatedImpulse);
-        b.addLinearCorrection(linearDelta);
+        b.addSplitLinearVelocity(linearDelta);
 
         angularDelta = b.calculateImpulseAngularVelocity(negatedImpulse, contact.contactContext().relativeContactPosB());
-        b.addAngularCorrection(angularDelta);
+        b.addSplitAngularVelocity(angularDelta);
     }
 
 

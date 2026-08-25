@@ -16,8 +16,6 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
     }
 
     private static final double PREVIOUS_AXIS_PREFERENCE_MULTIPLIER = 0.9; // The currently chosen axis has to clearly win against the previous one, otherwise prefer the old one
-    private static final double FACE_AXIS_PREFERENCE_MULTIPLIER = 0.7; // Edge-edge axes need to clearly win against face-face, otherwise prefer face-face
-    private static final double PREVIOUS_EDGE_AXIS_PREFERENCE_MULTIPLIER = 0.95; // Prefer the previous axis, but not as strongly because it's edge-edge compared to face-face
 
     private static final int[][] FACE_CORNER_INDICES_IN_WINDING_ORDER = { // In winding order (important for Sutherland-Hodgman clipping)
             {0, 1, 3, 2}, // -X
@@ -83,15 +81,7 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
 
         if (persistedAxis.index() == candidateAxis.index()) return true; // Not necessary for correctness
 
-        boolean persistedAxisIsPointFace = persistedAxis.index() < 6;
-        boolean candidateAxisIsPointFace = candidateAxis.index() < 6;
-        double persistedAxisMultiplier =
-                persistedAxisIsPointFace == candidateAxisIsPointFace
-                        ? PREVIOUS_AXIS_PREFERENCE_MULTIPLIER
-                        : persistedAxisIsPointFace
-                        ? FACE_AXIS_PREFERENCE_MULTIPLIER
-                        : PREVIOUS_EDGE_AXIS_PREFERENCE_MULTIPLIER;
-        return persistedAxis.overlap() * persistedAxisMultiplier < candidateAxis.overlap();
+        return persistedAxis.overlap() * PREVIOUS_AXIS_PREFERENCE_MULTIPLIER < candidateAxis.overlap();
     }
 
     public static boolean isAxisFacingB(Vector3dc axis, double dx, double dy, double dz) { return axis.dot(dx, dy, dz) < 0; } // TODO: Re-use results from earlier in the datapack
@@ -138,17 +128,17 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
 
         int incidentFaceIndex = calculateFaceIndex(incidentAxisIndex, isProjectionNegative);
 
-        double incidentHalfExtentNormalProjection0 = incidentObject.getScale(0) * 0.5 * incidentAxisNormalProjection0; // TODO: In the datapack, re-use the pre-calculated half extents
-        double incidentHalfExtentNormalProjection1 = incidentObject.getScale(1) * 0.5 * incidentAxisNormalProjection1;
-        double incidentHalfExtentNormalProjection2 = incidentObject.getScale(2) * 0.5 * incidentAxisNormalProjection2;
+        double incidentHalfExtentNormalProjection0 = incidentObject.getHalfExtent(0) * incidentAxisNormalProjection0;
+        double incidentHalfExtentNormalProjection1 = incidentObject.getHalfExtent(1) * incidentAxisNormalProjection1;
+        double incidentHalfExtentNormalProjection2 = incidentObject.getHalfExtent(2) * incidentAxisNormalProjection2;
 
         // Get incident points (in winding order) & project them onto the reference tangent frame
         double incidentToReferenceOffsetX = referenceObjectIsA ? -dx : dx; // incident - reference
         double incidentToReferenceOffsetY = referenceObjectIsA ? -dy : dy;
         double incidentToReferenceOffsetZ = referenceObjectIsA ? -dz : dz;
 
-        double maxReferenceFaceProjectionTangentA = 0.5 * referenceObject.getScale(referenceTangentIndexA); // Corner 0 has the minimum position along both tangents of any face, but because I project a reference object corner onto its own axis, I can shortcut to the half extent. I also use "max" instead of "min" to avoid two negations.
-        double maxReferenceFaceProjectionTangentB = 0.5 * referenceObject.getScale(referenceTangentIndexB); // TODO: In the datapack, re-use the pre-calculated half extents
+        double maxReferenceFaceProjectionTangentA = referenceObject.getHalfExtent(referenceTangentIndexA); // Corner 0 has the minimum position along both tangents of any face, but because I project a reference object corner onto its own axis, I can shortcut to the half extent. I also use "max" instead of "min" to avoid two negations.
+        double maxReferenceFaceProjectionTangentB = referenceObject.getHalfExtent(referenceTangentIndexB);
         double constA = referenceTangentA.dot(incidentToReferenceOffsetX, incidentToReferenceOffsetY, incidentToReferenceOffsetZ) + maxReferenceFaceProjectionTangentA; // TODO: Dot product is already calculated in the SAT, pass it in instead
         double constB = referenceTangentB.dot(incidentToReferenceOffsetX, incidentToReferenceOffsetY, incidentToReferenceOffsetZ) + maxReferenceFaceProjectionTangentB;
 
@@ -181,7 +171,7 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
         for (int i = 0; i < boundaries.length; i++) clipPoints = clip(clipPoints, boundaries[i], i); // TODO: Make it in-place to remove heap allocations
 
         // Calculate penetration depth & discard non-penetrating points
-        double referenceHalfExtent = 0.5 * referenceObject.getScale(referenceAxisIndex); // TODO: In the datapack, re-use the pre-calculated half extents
+        double referenceHalfExtent = referenceObject.getHalfExtent(referenceAxisIndex);
         double offsetProjection = outwardContactNormal.dot(incidentToReferenceOffsetX, incidentToReferenceOffsetY, incidentToReferenceOffsetZ);
         double offsetReferencePointProjection = referenceHalfExtent - offsetProjection;
 
@@ -243,10 +233,17 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
 
             if (currInBounds != nextInBounds) {
                 double denominator = distanceCurr - distanceNext;
-                if (Math.abs(denominator) > CLIP_EPSILON) { // CLIP_EPSILON to guard against zero-length distance
-                    double t = distanceCurr / denominator;
-                    if (t > CLIP_EPSILON && t < 1.0 - CLIP_EPSILON) { // CLIP_EPSILON to guard against generating interpolated points that lie on corners
-                        ClipPoint interpolated = new ClipPoint(
+                double t = distanceCurr / denominator;
+                if (t > CLIP_EPSILON && t < 1.0 - CLIP_EPSILON) { // CLIP_EPSILON to guard against generating interpolated points that lie on corners, causing too much impulse for that corner
+                    ClipPoint interpolated = new ClipPoint(
+                            curr.tangentProjectionA() + t * (next.tangentProjectionA() - curr.tangentProjectionA()), // TODO: When a new point is added (interpolated), only calculate the projection onto the tangents that still have pending boundary checks
+                            curr.tangentProjectionB() + t * (next.tangentProjectionB() - curr.tangentProjectionB()),
+                            curr.normalProjection() + t * (next.normalProjection() - curr.normalProjection()),
+                            curr.pos().lerp(next.pos(), t, new Vector3d()),
+                            curr.id() * 10 + boundaryIndex + 5 // Packed into a single int (TODO: Clean up the formula)
+                    );
+                    out.add(interpolated);
+                }
             }
         }
         return out;
@@ -376,7 +373,7 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
         Vector3d pointEdgeB = new Vector3d(axisB);
         pointEdgeB.mul(t).add(edgeStartingPointB);
 
-        return new Vector3d(pointEdgeA).add(pointEdgeB).mul(0.5d);
+        return new Vector3d(pointEdgeA).add(pointEdgeB).mul(0.5);
     }
 
     private static int getAxisIndex(int edgeIndex) { return edgeIndex / 4; }

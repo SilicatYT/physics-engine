@@ -45,6 +45,7 @@ public class Integrator {
 
         obj.clearAccumulators();
         obj.clearSplitVelocities();
+        obj.clearAccelerationVelocities();
     }
 
 
