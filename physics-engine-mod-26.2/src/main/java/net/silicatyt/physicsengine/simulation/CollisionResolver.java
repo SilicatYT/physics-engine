@@ -99,8 +99,8 @@ public final class CollisionResolver {
         Matrix3dc angularImpulseFactorA = m.a.getInverseInertiaTensorWorld().mul(RA, new Matrix3d());
         Matrix3dc angularImpulseFactorB = m.b.getInverseInertiaTensorWorld().mul(RB, new Matrix3d());
 
-        Vector3dc effectiveMass = buildEffectiveMass(p, m, RA, RB, angularImpulseFactorA, angularImpulseFactorB);
-        double targetClosingVelocity = calculateTargetClosingVelocity(p, m, ctx, relativeContactPosA, relativeContactPosB);
+        EffectiveMass effectiveMass = buildEffectiveMass(m, RA, RB, angularImpulseFactorA, angularImpulseFactorB);
+        double targetClosingVelocity = calculateTargetClosingVelocity(p, m, ctx, RA, RB);
         double biasVelocity = calculateBiasVelocity(p);
         return new ContactSolverContext(targetClosingVelocity, biasVelocity, relativeContactPosA, relativeContactPosB, RA, RB, angularImpulseFactorA, angularImpulseFactorB, effectiveMass);
     }
@@ -164,22 +164,55 @@ public final class CollisionResolver {
         return Math.max(BAUMGARTE_FACTOR * (p.getPenetrationDepth() - PENETRATION_SLOP), 0.0) / DELTA_TIME;
     }
 
-    private static Vector3dc buildEffectiveMass(ContactPoint p, Manifold m, Matrix3dc RA, Matrix3dc RB, Matrix3dc angularImpulseFactorA, Matrix3dc angularImpulseFactorB) { // TODO: Vector allocations could be removed
-        Vector3d effectiveMass = new Vector3d();
-        Vector3d RColumn = new Vector3d();
-        Vector3d factorColumn = new Vector3d();
-        for (int i = 0; i < 3; i++) {
-            Vector3dc RA_col = RA.getColumn(i, RColumn);
-            Vector3dc factorA_col = angularImpulseFactorA.getColumn(i, factorColumn);
-            double termA = factorA_col.dot(RA_col) + m.a.getInverseMass();
+    private static EffectiveMass buildEffectiveMass(Manifold m, Matrix3dc RA, Matrix3dc RB, Matrix3dc angularImpulseFactorA, Matrix3dc angularImpulseFactorB) { // TODO: In the datapack, maybe use the regular vector form (single scalar per axis) if it doesn't have a stability or accuracy impact
+        // TODO: Remove vector allocations, add helper method
+        Vector3d armNormal = new Vector3d();
+        Vector3d armTangent1 = new Vector3d();
+        Vector3d armTangent2 = new Vector3d();
+        Vector3d angularFactorNormal = new Vector3d();
+        Vector3d angularFactorTangent1 = new Vector3d();
+        Vector3d angularFactorTangent2 = new Vector3d();
 
-            Vector3dc RB_col = RB.getColumn(i, RColumn);
-            Vector3dc factorB_col = angularImpulseFactorB.getColumn(i, factorColumn);
-            double termB = factorB_col.dot(RB_col) + m.b.getInverseMass();
+        // ObjectA
+        RA.getColumn(0, armNormal);
+        RA.getColumn(1, armTangent1);
+        RA.getColumn(2, armTangent2);
+        angularImpulseFactorA.getColumn(0, angularFactorNormal);
+        angularImpulseFactorA.getColumn(1, angularFactorTangent1);
+        angularImpulseFactorA.getColumn(2, angularFactorTangent2);
 
-            effectiveMass.setComponent(i, 1.0 / (termA + termB));
+        double angularNormal = angularFactorNormal.dot(armNormal);
+        double angularTangent11 = angularFactorTangent1.dot(armTangent1);
+        double angularTangent22 = angularFactorTangent2.dot(armTangent2);
+        double angularTangent12 = angularFactorTangent1.dot(armTangent2); // Symmetric, so factorTangent2.dot(armTangent1) would be identical
+
+        // ObjectB
+        if (m.b.getInverseMass() != 0.0) {
+            RB.getColumn(0, armNormal);
+            RB.getColumn(1, armTangent1);
+            RB.getColumn(2, armTangent2);
+            angularImpulseFactorB.getColumn(0, angularFactorNormal);
+            angularImpulseFactorB.getColumn(1, angularFactorTangent1);
+            angularImpulseFactorB.getColumn(2, angularFactorTangent2);
+
+            angularNormal += angularFactorNormal.dot(armNormal);
+            angularTangent11 += angularFactorTangent1.dot(armTangent1);
+            angularTangent22 += angularFactorTangent2.dot(armTangent2);
+            angularTangent12 += angularFactorTangent1.dot(armTangent2);
         }
-        return effectiveMass;
+
+        double inverseMassSum = m.a.getInverseMass() + m.b.getInverseMass();
+        double kNormal = inverseMassSum + angularNormal;
+        double kTangent11 = inverseMassSum + angularTangent11;
+        double kTangent22 = inverseMassSum + angularTangent22;
+        double kTangent12 = angularTangent12; // No inverseMassSum here, because the two tangents are orthogonal
+
+        double normalEffectiveMass = 1.0 / kNormal;
+        double inverseDeterminant = 1.0 / (kTangent11 * kTangent22 - kTangent12 * kTangent12);
+        return new EffectiveMass(normalEffectiveMass,
+                kTangent22 * inverseDeterminant,
+                -kTangent12 * inverseDeterminant,
+                kTangent11 * inverseDeterminant);
     }
 
     private static Matrix3d buildRMatrix(Vector3dc relativeContactPos, Matrix3dc basis) { // TODO: Remove vector allocations
@@ -264,11 +297,14 @@ public final class CollisionResolver {
     }
 
     private static Vector3d buildImpulse(ResolvingContact contact, double deltaVelocity, Vector3dc contactVelocityContactSpace) {
-        Vector3dc effectiveMass = contact.contactContext().effectiveMass();
+        EffectiveMass effectiveMass = contact.contactContext().effectiveMass();
         Vector3d impulse = new Vector3d();
-        impulse.x = deltaVelocity * effectiveMass.x();
-        impulse.y = contactVelocityContactSpace.y() * effectiveMass.y();
-        impulse.z = contactVelocityContactSpace.z() * effectiveMass.z();
+
+        double tangentialVelocity1 = contactVelocityContactSpace.y();
+        double tangentialVelocity2 = contactVelocityContactSpace.z();
+        impulse.x = deltaVelocity * effectiveMass.normal();
+        impulse.y = tangentialVelocity1 * effectiveMass.inverseK11() + tangentialVelocity2 * effectiveMass.inverseK12();
+        impulse.z = tangentialVelocity1 * effectiveMass.inverseK12() + tangentialVelocity2 * effectiveMass.inverseK22();
         return impulse;
     }
 
@@ -290,7 +326,7 @@ public final class CollisionResolver {
         double positionError = Math.abs(deltaVelocity) * DELTA_TIME * INVERSE_BAUMGARTE_FACTOR;
         if (positionError < MIN_PENETRATION_CORRECTION) return positionError;
 
-        double impulse = deltaVelocity * contact.contactContext().effectiveMass().x(); // Only the component along the contact normal
+        double impulse = deltaVelocity * contact.contactContext().effectiveMass().normal(); // Only the component along the contact normal
         double accumulatedImpulse = contact.state().accumulatedSplitImpulse;
 
         double combinedImpulse = Math.max(0d, impulse + accumulatedImpulse);

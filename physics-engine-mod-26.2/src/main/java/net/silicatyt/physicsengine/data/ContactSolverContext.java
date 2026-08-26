@@ -12,5 +12,5 @@ public record ContactSolverContext(
         Matrix3dc RB,
         Matrix3dc angularImpulseFactorA, // inverseInertiaTensorWorld_A * RA
         Matrix3dc angularImpulseFactorB,
-        Vector3dc effectiveMass
+        EffectiveMass effectiveMass
 ){}
