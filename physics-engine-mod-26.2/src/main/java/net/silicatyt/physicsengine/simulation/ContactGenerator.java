@@ -16,6 +16,7 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
     }
 
     private static final double PREVIOUS_AXIS_PREFERENCE_MULTIPLIER = 0.9; // The currently chosen axis has to clearly win against the previous one, otherwise prefer the old one
+    private static final double PREVIOUS_AXIS_PREFERENCE_MULTIPLIER_SQUARED = PREVIOUS_AXIS_PREFERENCE_MULTIPLIER * PREVIOUS_AXIS_PREFERENCE_MULTIPLIER;
 
     private static final int[][] FACE_CORNER_INDICES_IN_WINDING_ORDER = { // In winding order (important for Sutherland-Hodgman clipping)
             {0, 1, 3, 2}, // -X
@@ -51,7 +52,8 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
         PersistedAxisData persistedAxisData = persistedAxisPreferred ? collision.persistedAxisData().get() : null;
 
         AxisData chosenAxisData = persistedAxisPreferred ? persistedAxisData : collision.candidateAxisData();
-        boolean axisFacingB = persistedAxisPreferred ? persistedAxisData.isFacingB() : isAxisFacingB(chosenAxisData.axis(), dx, dy, dz);
+        Vector3dc chosenAxis = getAxisVector(a, b, chosenAxisData.index());
+        boolean axisFacingB = persistedAxisPreferred ? persistedAxisData.isFacingB() : isAxisFacingB(chosenAxis, dx, dy, dz);
 
         Optional<ContactState> contact;
         boolean axisFacingOutward = false; // Default = false as an unused placeholder if it's an edge-edge contact
@@ -63,13 +65,13 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
 
         if (chosenAxisIndex < 6) {
             axisFacingOutward = persistedAxisPreferred ? persistedAxisData.isFacingOutward() : (chosenAxisIndex < 3) == axisFacingB;
-            contact = generateContactPointFace(a, b, chosenAxisData, sameAxisManifold, axisFacingOutward, dx, dy, dz);
+            contact = generateContactPointFace(a, b, chosenAxisData, chosenAxis, sameAxisManifold, axisFacingOutward, dx, dy, dz);
         } else {
-            contact = generateContactEdgeEdge(a, b, chosenAxisData, sameAxisManifold, axisFacingB, dx, dy, dz);
+            contact = generateContactEdgeEdge(a, b, chosenAxisData, chosenAxis, sameAxisManifold, axisFacingB, dx, dy, dz);
         }
 
         return contact.isEmpty() ? Optional.empty() : Optional.of(new Manifold(
-                a, b, contact.get(), chosenAxisIndex, axisFacingOutward, axisFacingB, dx, dy, dz // TODO: Invert the offset if pointFace and a is the reference
+                a, b, contact.get(), chosenAxisIndex, axisFacingOutward, axisFacingB, dx, dy, dz
         ));
     }
 
@@ -81,13 +83,23 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
 
         if (persistedAxis.index() == candidateAxis.index()) return true; // Not necessary for correctness
 
-        return persistedAxis.overlap() * PREVIOUS_AXIS_PREFERENCE_MULTIPLIER < candidateAxis.overlap();
+        return persistedAxis.overlapSquared() * PREVIOUS_AXIS_PREFERENCE_MULTIPLIER_SQUARED < candidateAxis.overlapSquared();
     }
 
-    public static boolean isAxisFacingB(Vector3dc axis, double dx, double dy, double dz) { return axis.dot(dx, dy, dz) < 0; } // TODO: Re-use results from earlier in the datapack
+    private static Vector3dc getAxisVector(PhysicsObject a, PhysicsObject b, int axisIndex) { // axisIndex from 0-14
+        if (axisIndex < 3) return a.getAxis(axisIndex);
+        if (axisIndex < 6) return b.getAxis(axisIndex - 3);
+
+        int diff = axisIndex - 6;
+        int i = diff / 3;
+        int j = diff % 3;
+        return new Vector3d(a.getAxis(i)).cross(b.getAxis(j)).normalize(); // TODO: Optimize by passing lengthSquared from the SAT, and potentially by storing i and j to avoid their calculation
+    }
+
+    private static boolean isAxisFacingB(Vector3dc axis, double dx, double dy, double dz) { return axis.dot(dx, dy, dz) < 0; } // TODO: Re-use results from earlier in the datapack
 
     // Face
-    private static Optional<ContactState> generateContactPointFace(PhysicsObject a, PhysicsObject b, AxisData axisData, Manifold previousManifold, boolean axisFacingOutward, double dx, double dy, double dz) {
+    private static Optional<ContactState> generateContactPointFace(PhysicsObject a, PhysicsObject b, AxisData axisData, Vector3dc axis, Manifold previousManifold, boolean axisFacingOutward, double dx, double dy, double dz) {
         // TODO: Split into several methods, single responsibility principle
         // TODO: Cleanup, improve variable names, add comments with the original formulas etc. This whole method is a pure mess because I wanted to apply the same optimizations as in the datapack
         int axisIndex = axisData.index();
@@ -98,7 +110,7 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
         PhysicsObject incidentObject = referenceObjectIsA ? b : a;
 
         // Get outward facing contact normal
-        Vector3dc outwardContactNormal = axisFacingOutward ? axisData.axis() : new Vector3d(axisData.axis()).negate(); // Re-assignment should be fine, because getAxis() runs before that. But technically it's not 100% future-proof
+        Vector3dc outwardContactNormal = axisFacingOutward ? axis : new Vector3d(axis).negate(); // Re-assignment should be fine, because getAxis() runs before that. But technically it's not 100% future-proof
 
         // Get reference face
         int referenceAxisIndex = referenceObjectIsA ? axisIndex : axisIndex - 3; // 0-2 regardless of whether it's objectA or objectB (TODO: This is already calculated earlier in the SAT)
@@ -116,7 +128,7 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
         boolean isProjectionNegative = false;
         double incidentAxisNormalProjection0 = 0.0, incidentAxisNormalProjection1 = 0.0, incidentAxisNormalProjection2 = 0.0;
         for (int i = 0; i < 3; i++) {
-            double projection = outwardContactNormal.dot(incidentObject.getAxis(i)); // TODO (MAYBE): In the datapack, optimize this calculation by taking advantage of the SAT's cross products and their lengthSquared. "a.dot(b)^2 = 1 - |a.cross(b)|^2"
+            double projection = outwardContactNormal.dot(incidentObject.getAxis(i));
             if (i == 0) incidentAxisNormalProjection0 = projection; else if (i == 1) incidentAxisNormalProjection1 = projection; else incidentAxisNormalProjection2 = projection;
             double absProjection = Math.abs(projection);
             if (absProjection < maxAbsProjection) continue;
@@ -139,7 +151,7 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
 
         double maxReferenceFaceProjectionTangentA = referenceObject.getHalfExtent(referenceTangentIndexA); // Corner 0 has the minimum position along both tangents of any face, but because I project a reference object corner onto its own axis, I can shortcut to the half extent. I also use "max" instead of "min" to avoid two negations.
         double maxReferenceFaceProjectionTangentB = referenceObject.getHalfExtent(referenceTangentIndexB);
-        double constA = referenceTangentA.dot(incidentToReferenceOffsetX, incidentToReferenceOffsetY, incidentToReferenceOffsetZ) + maxReferenceFaceProjectionTangentA; // TODO: Dot product is already calculated in the SAT, pass it in instead
+        double constA = referenceTangentA.dot(incidentToReferenceOffsetX, incidentToReferenceOffsetY, incidentToReferenceOffsetZ) + maxReferenceFaceProjectionTangentA; // TODO: (DOUBLE-CHECK AFTER THE SAT REWRITE) Dot product is maybe already calculated in the SAT, pass it in instead
         double constB = referenceTangentB.dot(incidentToReferenceOffsetX, incidentToReferenceOffsetY, incidentToReferenceOffsetZ) + maxReferenceFaceProjectionTangentB;
 
         List<ClipPoint> clipPoints = new ArrayList<>(4);
@@ -291,9 +303,9 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
     }
 
     // Edge-edge
-    private static Optional<ContactState> generateContactEdgeEdge(PhysicsObject a, PhysicsObject b, AxisData axisData, Manifold previousManifold, boolean axisFacingB, double dx, double dy, double dz) { // TODO: Apply mathematical optimizations (Re-use projections I did in the SAT etc)
+    private static Optional<ContactState> generateContactEdgeEdge(PhysicsObject a, PhysicsObject b, AxisData axisData, Vector3dc axis, Manifold previousManifold, boolean axisFacingB, double dx, double dy, double dz) { // TODO: Apply mathematical optimizations (Re-use projections I did in the SAT etc)
         // Make contact normal face objectA
-        Vector3dc contactNormal = axisFacingB ? new Vector3d(axisData.axis()).negate() : axisData.axis();
+        Vector3dc contactNormal = axisFacingB ? new Vector3d(axis).negate() : axis;
 
         // Get the respective edges (The one that's closest to the other object)
         int edgeA = getObjectEdgeIndex(a, axisData.index(), contactNormal, true);

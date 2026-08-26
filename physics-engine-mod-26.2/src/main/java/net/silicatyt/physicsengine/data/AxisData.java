@@ -1,9 +1,6 @@
 package net.silicatyt.physicsengine.data;
 
-import org.joml.Vector3dc;
-
 public interface AxisData {
     int index();
-    double overlap();
-    Vector3dc axis();
+    double overlapSquared(); // So I don't have to get the actual overlap for cross-product axes
 }

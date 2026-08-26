@@ -16,6 +16,9 @@ import static net.silicatyt.physicsengine.simulation.Integrator.EPSILON_SQUARED;
 
 public final class CollisionDetector {
     private static final double FACE_AXIS_PREFERENCE_MULTIPLIER = 1.0 / 0.7;
+    private static final double FACE_AXIS_PREFERENCE_MULTIPLIER_SQUARED = FACE_AXIS_PREFERENCE_MULTIPLIER * FACE_AXIS_PREFERENCE_MULTIPLIER;
+    private static final double CROSS_PRODUCT_EPSILON = 1e-3;
+    private static final double CROSS_PRODUCT_EPSILON_SQUARED = CROSS_PRODUCT_EPSILON * CROSS_PRODUCT_EPSILON;
 
     private static Long2ObjectOpenHashMap<Manifold> previousManifolds = new Long2ObjectOpenHashMap<>();
 
@@ -97,105 +100,130 @@ public final class CollisionDetector {
                 && maxA.z() + dz >= minB.z();
     }
 
-    private static Optional<SatResult> testSat(PhysicsObject a, PhysicsObject b, double dx, double dy, double dz, Long2ObjectOpenHashMap<Manifold> lastTick) { // Half extents could also be pre-calculated in PhysicsObject, but with my versioning system, that's absolutely not worth it
+    private static Optional<SatResult> testSat(PhysicsObject a, PhysicsObject b, double dx, double dy, double dz, Long2ObjectOpenHashMap<Manifold> lastTick) { // Gottschalk-Erikson approach
+        // TODO: Add helper methods, clean up
+        // TODO: Maybe store the disconnecting axis for failed SATs and perform its check first in the next tick? Might not be easily possible with the new approach
+        // Setup
         Manifold lastTickManifold = lastTick.get(PairKey.packUnordered(a.getId(), b.getId()));
 
         int persistedAxisIndex = lastTickManifold != null && !lastTickManifold.isOld() ? lastTickManifold.persistedAxisIndex : -1;
-        Vector3dc persistedAxis = null;
-        double persistedAxisOverlap = Double.MAX_VALUE;
+        double persistedAxisOverlapSquared = -1.0;
 
         int candidateAxisIndex = -1;
-        Vector3d candidateAxis = new Vector3d(); // Can't re-assign vectors as I go because of the cross products (Mutable vector, can't use "=")
         double candidateAxisOverlap = Double.MAX_VALUE;
 
-        Vector3dc axis;
-        double axisOverlap;
+        // SAT pre-calculations
+        double[][] axisDot = new double[3][3]; // axisDot[i][j] is the projection of a's axis i onto b's axis j
+        double[][] absAxisDot = new double[3][3];
+        double[] offsetInA = new double[3]; // offset (a-b) in a's local axis frame
 
-        // a's axes
-        for (int i = 0; i < 3; i++) { // TODO: Put the contents of the for-loop into a helper method (or 3). But how to do it cleanly, I can't pass 'double' references in Java.
-            axis = a.getAxis(i);
-            axisOverlap = calculateAxisOverlap(a.getHalfExtent(i), calculateRelativeMaxProjectionOntoAxis(b, axis), axis, dx, dy, dz);
-            if (axisOverlap <= 0.0) return Optional.empty();
-            if (i == persistedAxisIndex) {
-                persistedAxis = axis;
-                persistedAxisOverlap = axisOverlap;
-            }
-            if (axisOverlap < candidateAxisOverlap) {
-                candidateAxisIndex = i;
-                candidateAxis.set(axis);
-                candidateAxisOverlap = axisOverlap;
-            }
-        }
-
-        // b's axes
-        for (int i = 3; i < 6; i++) {
-            int axisIndex = i - 3;
-            axis = b.getAxis(axisIndex);
-            axisOverlap = calculateAxisOverlap(calculateRelativeMaxProjectionOntoAxis(a, axis), b.getHalfExtent(axisIndex), axis, dx, dy, dz);
-            if (axisOverlap <= 0.0) return Optional.empty();
-            if (i == persistedAxisIndex) {
-                persistedAxis = axis;
-                persistedAxisOverlap = axisOverlap;
-            }
-            if (axisOverlap < candidateAxisOverlap) {
-                candidateAxisIndex = i;
-                candidateAxis.set(axis);
-                candidateAxisOverlap = axisOverlap;
-            }
-        }
-
-        // Cross product axes
-        Vector3d mutableAxis = new Vector3d();
+        // objectA axes
         for (int i = 0; i < 3; i++) {
+            // Setup
             for (int j = 0; j < 3; j++) {
-                int axisIndex = 6 + 3*i + j;
-                a.getAxis(i).cross(b.getAxis(j), mutableAxis);
-                double lengthSquared = mutableAxis.lengthSquared();
-                if (lengthSquared < EPSILON_SQUARED) continue; // Degenerate axis, ignore it
+                axisDot[i][j] = a.getAxis(i).dot(b.getAxis(j));
+                absAxisDot[i][j] = Math.abs(axisDot[i][j]);
+            }
+            offsetInA[i] = a.getAxis(i).dot(dx, dy, dz);
 
-                double inverseLength = 1.0 / Math.sqrt(lengthSquared); // TODO: Optimize it by not normalizing here (only at the end when the axis was chosen). I have to modify the axisOverlap calculation for this.
-                mutableAxis.x *= inverseLength;
-                mutableAxis.y *= inverseLength;
-                mutableAxis.z *= inverseLength;
+            // Overlap calculation
+            double radiusA = a.getHalfExtent(i);
+            double radiusB = b.getHalfExtent(0) * absAxisDot[i][0]
+                    + b.getHalfExtent(1) * absAxisDot[i][1]
+                    + b.getHalfExtent(2) * absAxisDot[i][2];
+            double distanceAlongAxis = Math.abs(offsetInA[i]);
+            double overlap = radiusA + radiusB - distanceAlongAxis;
 
-                axisOverlap = calculateAxisOverlap(calculateRelativeMaxProjectionOntoAxis(a, mutableAxis), calculateRelativeMaxProjectionOntoAxis(b, mutableAxis), mutableAxis, dx, dy, dz);
-                if (axisOverlap <= 0.0) return Optional.empty();
-                if (axisIndex == persistedAxisIndex) {
-                    persistedAxis = new Vector3d(mutableAxis); // TODO: Maybe it's not clean to only assign a new object sometimes? I only need it for the current tick, so the re-assignment of getAxis() (Which only changes the next tick) is not a problem
-                    persistedAxisOverlap = axisOverlap;
-                }
-                double effectiveOverlap = (candidateAxisIndex < 6 && axisIndex >= 6) ? axisOverlap * FACE_AXIS_PREFERENCE_MULTIPLIER : axisOverlap;
-                if (effectiveOverlap < candidateAxisOverlap) {
-                    candidateAxisIndex = axisIndex;
-                    candidateAxis.set(mutableAxis);
-                    candidateAxisOverlap = axisOverlap;
+            // Check
+            if (overlap <= 0.0) return Optional.empty();
+            if (i == persistedAxisIndex) {
+                persistedAxisOverlapSquared = overlap * overlap;
+            }
+            if (overlap < candidateAxisOverlap) {
+                candidateAxisIndex = i;
+                candidateAxisOverlap = overlap;
+            }
+        }
+
+        // objectB axes
+        for (int j = 0; j < 3; j++) {
+            // Setup
+            for (int i = 0; i < 3; i++) {
+                axisDot[i][j] = a.getAxis(i).dot(b.getAxis(j));
+                absAxisDot[i][j] = Math.abs(axisDot[i][j]);
+            }
+
+            // Overlap calculation
+            double radiusA = a.getHalfExtent(0) * absAxisDot[0][j]
+                    + a.getHalfExtent(1) * absAxisDot[1][j]
+                    + a.getHalfExtent(2) * absAxisDot[2][j];
+            double radiusB = b.getHalfExtent(j);
+            double distanceAlongAxis = Math.abs(
+                    offsetInA[0] * axisDot[0][j]
+                    + offsetInA[1] * axisDot[1][j]
+                    + offsetInA[2] * axisDot[2][j]
+            );
+            double overlap = radiusA + radiusB - distanceAlongAxis;
+
+            // Check
+            if (overlap <= 0.0) return Optional.empty();
+            int collisionAxisIndex = j + 3;
+            if (collisionAxisIndex == persistedAxisIndex) {
+                persistedAxisOverlapSquared = overlap * overlap;
+            }
+            if (overlap < candidateAxisOverlap) {
+                candidateAxisIndex = collisionAxisIndex;
+                candidateAxisOverlap = overlap;
+            }
+        }
+
+        double candidateAxisOverlapSquared = candidateAxisOverlap * candidateAxisOverlap;
+        double candidateAxisLengthSquared = 1.0; // Face axes are unit length
+
+        // Cross-product axes
+        for (int i = 0; i < 3; i++) {
+            int iNext = (i + 1) % 3, iPrev = (i + 2) % 3;
+            for (int j = 0; j < 3; j++) {
+                int jNext = (j + 1) % 3, jPrev = (j + 2) % 3;
+                double axisLengthSquared = 1.0 - axisDot[i][j] * axisDot[i][j];
+                if (axisLengthSquared < CROSS_PRODUCT_EPSILON_SQUARED) continue; // Axes nearly parallel, degenerate
+
+                double radiusA = a.getHalfExtent(iNext) * absAxisDot[iPrev][j]
+                        + a.getHalfExtent(iPrev) * absAxisDot[iNext][j];
+                double radiusB = b.getHalfExtent(jNext) * absAxisDot[i][jPrev]
+                        + b.getHalfExtent(jPrev) * absAxisDot[i][jNext];
+                double distanceAlongAxis = Math.abs(
+                        offsetInA[iPrev] * axisDot[iNext][j]
+                        - offsetInA[iNext] * axisDot[iPrev][j]
+                );
+                double unnormalizedOverlap = radiusA + radiusB - distanceAlongAxis;
+
+                // Check
+                if (unnormalizedOverlap <= 0.0) return Optional.empty();
+                double overlapSquared = unnormalizedOverlap * unnormalizedOverlap;
+                double biasedOverlapSquared = candidateAxisIndex < 6 ? overlapSquared * FACE_AXIS_PREFERENCE_MULTIPLIER_SQUARED : overlapSquared;
+                int collisionAxisIndex = 6 + 3*i + j;
+                if (collisionAxisIndex == persistedAxisIndex) persistedAxisOverlapSquared = overlapSquared / axisLengthSquared;
+                if (biasedOverlapSquared * candidateAxisLengthSquared < candidateAxisOverlapSquared * axisLengthSquared) {
+                    candidateAxisIndex = collisionAxisIndex;
+                    candidateAxisOverlapSquared = overlapSquared;
+                    candidateAxisLengthSquared = axisLengthSquared;
                 }
             }
         }
 
-        Optional<PersistedAxisData> persisted = persistedAxisIndex == -1 || persistedAxis == null ? Optional.empty() : Optional.of(new PersistedAxisData( // The null check is necessary in case the axis was a degenerate cross product axis and was never assigned
-                persistedAxisIndex, persistedAxisOverlap, persistedAxis, lastTickManifold.persistedAxisFacingOutward, lastTickManifold.persistedAxisFacingB
+        // Process results
+        candidateAxisOverlapSquared /= candidateAxisLengthSquared;
+        Optional<PersistedAxisData> persisted = persistedAxisIndex == -1 || persistedAxisOverlapSquared < 0.0 ? Optional.empty() : Optional.of(new PersistedAxisData( // The overlapSquared check is necessary in case the axis was a degenerate cross-product axis that should be ignored
+                persistedAxisIndex, persistedAxisOverlapSquared, lastTickManifold.persistedAxisFacingOutward, lastTickManifold.persistedAxisFacingB
         ));
         return Optional.of(
                 new SatResult(
-                        new CandidateAxisData(candidateAxisIndex, candidateAxisOverlap, candidateAxis),
+                        new CandidateAxisData(candidateAxisIndex, candidateAxisOverlapSquared),
                         persisted,
                         lastTickManifold == null ? Optional.empty() : Optional.of(lastTickManifold)
                 )
         );
     }
 
-    private static double calculateRelativeMaxProjectionOntoAxis(PhysicsObject obj, Vector3dc axis) {
-        double x = obj.getHalfExtentAxisProjection(0).dot(axis);
-        double y = obj.getHalfExtentAxisProjection(1).dot(axis);
-        double z = obj.getHalfExtentAxisProjection(2).dot(axis);
-        return abs(x) + abs(y) + abs(z);
-    }
-
-    private static double calculateAxisOverlap(double relativeMaxProjectionA, double relativeMaxProjectionB, Vector3dc axis, double dx, double dy, double dz) {
-        return relativeMaxProjectionA + relativeMaxProjectionB - abs(axis.dot(dx, dy, dz)); // TODO: Pass this dot product to ContactGenerator, can be re-used in PointFace (projection onto tangent axes, constA & constB calculation) & EdgeEdge
-    }
-
 }
-
-// TODO: When I have to calculate relativeContactPos for ContactGenerator, do so with ex, ey and ez (fastest way), and only calculate the 4 points I have to calculate. Perhaps keep track of what I've calculated so far, in case a 2nd collision with a different object in the same tick happens. I wouldn't want to calculate the same corners multiple times: At that point, it would be faster to just calculate all 8 once, which I don't want to do.
