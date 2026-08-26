@@ -8,6 +8,8 @@ public record ContactSolverContext(
         double biasVelocity,
         Vector3dc relativeContactPosA,
         Vector3dc relativeContactPosB,
+        Matrix3dc RA, // relativeContactPosA x orthonormalBasis
+        Matrix3dc RB,
         Matrix3dc angularImpulseFactorA, // inverseInertiaTensorWorld_A * RA
         Matrix3dc angularImpulseFactorB,
         Vector3dc effectiveMass

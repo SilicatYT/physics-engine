@@ -102,7 +102,7 @@ public final class CollisionResolver {
         Vector3dc effectiveMass = buildEffectiveMass(p, m, RA, RB, angularImpulseFactorA, angularImpulseFactorB);
         double targetClosingVelocity = calculateTargetClosingVelocity(p, m, ctx, relativeContactPosA, relativeContactPosB);
         double biasVelocity = calculateBiasVelocity(p);
-        return new ContactSolverContext(targetClosingVelocity, biasVelocity, relativeContactPosA, relativeContactPosB, angularImpulseFactorA, angularImpulseFactorB, effectiveMass);
+        return new ContactSolverContext(targetClosingVelocity, biasVelocity, relativeContactPosA, relativeContactPosB, RA, RB, angularImpulseFactorA, angularImpulseFactorB, effectiveMass);
     }
 
     private static void transformToContactSpace(Vector3d v, ManifoldSolverContext ctx) {
@@ -142,11 +142,11 @@ public final class CollisionResolver {
 
     private static double calculateRestitutionCoefficient(Manifold m) { return Math.sqrt(m.a.getRestitutionCoefficient() * m.b.getRestitutionCoefficient()); }
 
-    private static double calculateTargetClosingVelocity(ContactPoint p, Manifold m, ManifoldSolverContext ctxManifold, Vector3dc relativeContactPosA, Vector3dc relativeContactPosB) {
+    private static double calculateTargetClosingVelocity(ContactPoint p, Manifold m, ManifoldSolverContext ctxManifold, Matrix3dc RA, Matrix3dc RB) {
         // targetClosingVelocity = -restitution * (closingVelocity + relativeVelocityFromAcceleration.dot(contactNormal))
         Vector3dc normal = p.getNormal();
-        Vector3d armA = new Vector3d(relativeContactPosA).cross(normal); // TODO: Store in the context, because it's used multiple times
-        Vector3d armB = new Vector3d(relativeContactPosB).cross(normal);
+        Vector3d armA = RA.getColumn(0, new Vector3d()); // TODO: Remove vector heap allocations
+        Vector3d armB = RB.getColumn(0, new Vector3d());
 
         double closingVelocity = m.b.getPreSolveAngularVelocity().dot(armB) + m.b.getPreSolveLinearVelocity().dot(normal); // Using pre-solve velocity so it's not affected by warm-starting
         closingVelocity -= m.a.getPreSolveAngularVelocity().dot(armA) + m.a.getPreSolveLinearVelocity().dot(normal); // TODO: Remove the 2nd dot product by subtracting a's velocity from b's directly
@@ -307,11 +307,11 @@ public final class CollisionResolver {
 
     private static double calculateSplitImpulseClosingVelocity(ResolvingContact contact) {
         Vector3dc normal = contact.point().getNormal();
-        Vector3dc relativeContactPosA = contact.contactContext().relativeContactPosA();
-        Vector3dc relativeContactPosB = contact.contactContext().relativeContactPosB();
+        Matrix3dc RA = contact.contactContext().RA();
+        Matrix3dc RB = contact.contactContext().RB();
 
-        Vector3d armA = new Vector3d(relativeContactPosA).cross(normal); // TODO: Re-use from earlier
-        Vector3d armB = new Vector3d(relativeContactPosB).cross(normal);
+        Vector3d armA = RA.getColumn(0, new Vector3d()); // TODO: Remove vector heap allocations
+        Vector3d armB = RB.getColumn(0, new Vector3d());
 
         PhysicsObject a = contact.manifold().a;
         PhysicsObject b = contact.manifold().b;
