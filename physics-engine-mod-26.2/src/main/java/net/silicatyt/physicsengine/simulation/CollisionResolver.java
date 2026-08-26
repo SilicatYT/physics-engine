@@ -46,7 +46,7 @@ public final class CollisionResolver {
 
                 // Warm-starting
                 if (state.accumulatedImpulseContactSpace.lengthSquared() >= MIN_DELTA_IMPULSE_SQUARED) { // TODO: Because warm-starting doesn't always apply, the 1st iteration might under-solve potentially? Skip the check entirely?
-                    applyImpulse(c, p.getAccumulatedImpulse());
+                    applyImpulse(c, p.getAccumulatedImpulse(), state.accumulatedImpulseContactSpace);
                 }
             }
         }
@@ -208,7 +208,7 @@ public final class CollisionResolver {
         double kTangent12 = angularTangent12; // No inverseMassSum here, because the two tangents are orthogonal
 
         double normalEffectiveMass = 1.0 / kNormal;
-        double inverseDeterminant = 1.0 / (kTangent11 * kTangent22 - kTangent12 * kTangent12);
+        double inverseDeterminant = 1.0 / (kTangent11 * kTangent22 - kTangent12 * kTangent12); // TODO: Maybe needs a guard to avoid division by 0? Shouldn't be a problem for cuboids, right?
         return new EffectiveMass(normalEffectiveMass,
                 kTangent22 * inverseDeterminant,
                 -kTangent12 * inverseDeterminant,
@@ -267,10 +267,11 @@ public final class CollisionResolver {
         if (deltaImpulseSquared < MIN_DELTA_IMPULSE_SQUARED) return deltaImpulseSquared; // Early-out. Has to be done after clamping
 
         contact.state().accumulatedImpulseContactSpace.set(combinedImpulse);
+        Vector3d deltaImpulseContactSpace = new Vector3d(deltaImpulse);
         orthonormalBasis.transform(deltaImpulse); // To world coordinates
 
         // Apply impulse
-        applyImpulse(contact, deltaImpulse);
+        applyImpulse(contact, deltaImpulse, deltaImpulseContactSpace);
         return deltaImpulseSquared;
     }
 
@@ -308,15 +309,18 @@ public final class CollisionResolver {
         return impulse;
     }
 
-    private static void applyImpulse(ResolvingContact contact, Vector3dc impulse) { // TODO: Get rid of vector allocation
+    private static void applyImpulse(ResolvingContact contact, Vector3dc impulseWorldSpace, Vector3dc impulseContactSpace) { // TODO: Get rid of vector allocations
         PhysicsObject a = contact.manifold().a;
-        a.applyImpulse(impulse, contact.contactContext().relativeContactPosA());
+        a.addLinearVelocity(impulseWorldSpace.mul(a.getInverseMass(), new Vector3d()));
+        a.addAngularVelocity(contact.contactContext().angularImpulseFactorA().transform(impulseContactSpace, new Vector3d()));
 
         PhysicsObject b = contact.manifold().b;
         if (b.getInverseMass() == 0.0) return;
-        b.applyImpulse(new Vector3d(impulse).negate(), contact.contactContext().relativeContactPosB());
+        Vector3d negatedWorld = new Vector3d(impulseWorldSpace).negate();
+        Vector3d negatedContact = new Vector3d(impulseContactSpace).negate();
+        b.addLinearVelocity(negatedWorld.mul(b.getInverseMass()));
+        b.addAngularVelocity(contact.contactContext().angularImpulseFactorB().transform(negatedContact));
     }
-
 
     // Penetration resolution
     private static double resolvePenetration(ResolvingContact contact) { // TODO: Split into helper methods, some code is re-used from other parts (contactVelocity, targetClosingVelocity, combinedImpulse vs accumulatedImpulse, ...)
@@ -334,10 +338,11 @@ public final class CollisionResolver {
         Vector3d deltaImpulse = new Vector3d(combinedImpulse - accumulatedImpulse, 0.0, 0.0);
         contact.state().accumulatedSplitImpulse = combinedImpulse;
 
+        Vector3d deltaImpulseContactSpace = new Vector3d(deltaImpulse);
         contact.manifoldContext().orthonormalBasis().transform(deltaImpulse); // TODO: Optimize (Only the x component is set)
 
         // Apply impulse (Add it to split linear & angular velocities)
-        applySplitImpulse(contact, deltaImpulse);
+        applySplitImpulse(contact, deltaImpulse, deltaImpulseContactSpace);
         return positionError;
     }
 
@@ -356,24 +361,17 @@ public final class CollisionResolver {
         return closingVelocity;
     }
 
-    private static void applySplitImpulse(ResolvingContact contact, Vector3dc impulse) { // TODO: Use helper methods to reduce duplicated code
-        // ObjectA
+    private static void applySplitImpulse(ResolvingContact contact, Vector3dc impulseWorldSpace, Vector3dc impulseContactSpace) { // TODO: Use helper methods to reduce duplicated code from applyImpulse()
         PhysicsObject a = contact.manifold().a;
-        Vector3dc linearDelta = a.calculateImpulseLinearVelocity(impulse);
-        a.addSplitLinearVelocity(linearDelta);
+        a.addSplitLinearVelocity(impulseWorldSpace.mul(a.getInverseMass(), new Vector3d()));
+        a.addSplitAngularVelocity(contact.contactContext().angularImpulseFactorA().transform(impulseContactSpace, new Vector3d()));
 
-        Vector3dc angularDelta = a.calculateImpulseAngularVelocity(impulse, contact.contactContext().relativeContactPosA());
-        a.addSplitAngularVelocity(angularDelta);
-
-        // ObjectB
         PhysicsObject b = contact.manifold().b;
         if (b.getInverseMass() == 0.0) return;
-        Vector3d negatedImpulse = new Vector3d(impulse).negate();
-        linearDelta = b.calculateImpulseLinearVelocity(negatedImpulse);
-        b.addSplitLinearVelocity(linearDelta);
-
-        angularDelta = b.calculateImpulseAngularVelocity(negatedImpulse, contact.contactContext().relativeContactPosB());
-        b.addSplitAngularVelocity(angularDelta);
+        Vector3d negatedWorld = new Vector3d(impulseWorldSpace).negate();
+        Vector3d negatedContact = new Vector3d(impulseContactSpace).negate();
+        b.addSplitLinearVelocity(negatedWorld.mul(b.getInverseMass()));
+        b.addSplitAngularVelocity(contact.contactContext().angularImpulseFactorB().transform(negatedContact));
     }
 
 

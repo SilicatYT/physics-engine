@@ -320,6 +320,10 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
         lastEntityPos = position();
     }
 
+    public void addLinearVelocity(@NonNull Vector3dc v) { setLinearVelocity(linearVelocity.add(v)); } // Runs the .set() unnecessarily in setLinearVelocity, but it avoids duplicated code
+
+    public void addAngularVelocity(@NonNull Vector3dc v) { setAngularVelocity(angularVelocity.add(v)); }
+
     public void addLinearVelocityAcceleration(double x, double y, double z) throws IllegalArgumentException { // TODO: Maybe put the whole formula here, and rename to "applyAcceleration" for consistency with "applyTorque"?
         if (!Double.isFinite(x) || !Double.isFinite(y) || !Double.isFinite(z)) throw new IllegalArgumentException("Linear velocity acceleration must be finite");
         if (x == 0.0 && y == 0.0 && z == 0.0) return;
@@ -338,25 +342,6 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
         angularVelocity.mul(DELTA_TIME);
         angularVelocity.add(x, y, z);
         versions.angularVelocity.increment(); // TODO: Should I use setAngularVelocity here? Same reason as for rotateOrientation()
-    }
-
-    public void applyImpulse(Vector3dc impulse, Vector3dc relativeContactPos) { // TODO: Remove vector allocations
-        if (getInverseMass() == 0.0) return;
-
-        // Linear part
-        Vector3d linearVelocityChange = calculateImpulseLinearVelocity(impulse);
-        setLinearVelocity(linearVelocityChange.add(getLinearVelocity()));
-
-        // Angular part
-        Vector3d angularVelocityChange = calculateImpulseAngularVelocity(impulse, relativeContactPos);
-        setAngularVelocity(angularVelocityChange.add(getAngularVelocity()));
-    }
-
-    public Vector3d calculateImpulseLinearVelocity(Vector3dc impulse) { return new Vector3d(impulse).mul(getInverseMass()); } // TODO: Maybe move these somewhere else?
-
-    public Vector3d calculateImpulseAngularVelocity(Vector3dc impulse, Vector3dc relativeContactPos) {
-        Vector3d torque = new Vector3d(relativeContactPos).cross(impulse);
-        return getInverseInertiaTensorWorld().transform(torque);
     }
 
     public void rotateOrientation(double angle, double axisX, double axisY, double axisZ) throws IllegalArgumentException {
