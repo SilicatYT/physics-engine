@@ -61,8 +61,7 @@ public final class CollisionResolver {
             if (maxDeltaImpulseSquared < MIN_DELTA_IMPULSE_SQUARED) break; // Everything's already stable. That's another advantage of using islands, even if it weren't parallelized.
         }
 
-        // Penetration resolution
-        allContacts.sort(Comparator.comparingDouble((ResolvingContact c) -> c.point().getPenetrationDepth()).reversed()); // TODO: Check whether sorting by the previous tick's applied splitImpulse would be more stable. I'd need to move accumulatedSplitImpulse from ContactSolverState to ContactPoint in that case.
+        // Penetration resolution (No additional sort for penetrationDepth needed, as the previous sort works for this as well, because large penetration usually means large impulse. MAYBE it would be a little more stable, but for the datapack, it's likely not worth the overhead)
         for (int i = 0; i < NOF_PENETRATION_RESOLUTION_ITERATIONS; i++) {
             double maxPositionError = 0.0;
             for (ResolvingContact c : allContacts) {
@@ -335,14 +334,13 @@ public final class CollisionResolver {
 
         double combinedImpulse = Math.max(0d, impulse + accumulatedImpulse);
 
-        Vector3d deltaImpulse = new Vector3d(combinedImpulse - accumulatedImpulse, 0.0, 0.0);
+        double deltaImpulse = combinedImpulse - accumulatedImpulse;
         contact.state().accumulatedSplitImpulse = combinedImpulse;
 
-        Vector3d deltaImpulseContactSpace = new Vector3d(deltaImpulse);
-        contact.manifoldContext().orthonormalBasis().transform(deltaImpulse); // TODO: Optimize (Only the x component is set)
+        Vector3d deltaImpulseWorldSpace = new Vector3d(contact.point().getNormal()).mul(deltaImpulse);
 
         // Apply impulse (Add it to split linear & angular velocities)
-        applySplitImpulse(contact, deltaImpulse, deltaImpulseContactSpace);
+        applySplitImpulse(contact, deltaImpulseWorldSpace, deltaImpulse);
         return positionError;
     }
 
@@ -361,17 +359,17 @@ public final class CollisionResolver {
         return closingVelocity;
     }
 
-    private static void applySplitImpulse(ResolvingContact contact, Vector3dc impulseWorldSpace, Vector3dc impulseContactSpace) { // TODO: Use helper methods to reduce duplicated code from applyImpulse()
+    private static void applySplitImpulse(ResolvingContact contact, Vector3dc impulseWorldSpace, double impulseMagnitude) { // TODO: Use helper methods to reduce duplicated code from applyImpulse()
         PhysicsObject a = contact.manifold().a;
+        Vector3d angularImpulseFactorACol = contact.contactContext().angularImpulseFactorA().getColumn(0, new Vector3d());
         a.addSplitLinearVelocity(impulseWorldSpace.mul(a.getInverseMass(), new Vector3d()));
-        a.addSplitAngularVelocity(contact.contactContext().angularImpulseFactorA().transform(impulseContactSpace, new Vector3d()));
+        a.addSplitAngularVelocity(angularImpulseFactorACol.mul(impulseMagnitude));
 
         PhysicsObject b = contact.manifold().b;
         if (b.getInverseMass() == 0.0) return;
-        Vector3d negatedWorld = new Vector3d(impulseWorldSpace).negate();
-        Vector3d negatedContact = new Vector3d(impulseContactSpace).negate();
-        b.addSplitLinearVelocity(negatedWorld.mul(b.getInverseMass()));
-        b.addSplitAngularVelocity(contact.contactContext().angularImpulseFactorB().transform(negatedContact));
+        Vector3d angularImpulseFactorBCol = contact.contactContext().angularImpulseFactorB().getColumn(0, new Vector3d());
+        b.addSplitLinearVelocity(impulseWorldSpace.mul(-b.getInverseMass(), new Vector3d()));
+        b.addSplitAngularVelocity(angularImpulseFactorBCol.mul(-impulseMagnitude));
     }
 
 
