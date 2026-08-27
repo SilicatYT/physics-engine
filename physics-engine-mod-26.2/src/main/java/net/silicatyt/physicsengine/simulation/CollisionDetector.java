@@ -107,13 +107,13 @@ public final class CollisionDetector {
 
         int candidateAxisIndex = -1;
         double candidateAxisOverlap = Double.MAX_VALUE;
+        double candidateAxisSignedDistance = 0.0;
 
-        // SAT pre-calculations
         double[][] axisDot = new double[3][3]; // axisDot[i][j] is the projection of a's axis i onto b's axis j
         double[][] absAxisDot = new double[3][3];
-        double[] offsetInA = new double[3]; // offset (a-b) in a's local axis frame
 
         // objectA axes
+        double[] offsetInA = new double[3]; // offset (a-b) in a's local axis frame
         for (int i = 0; i < 3; i++) {
             // Setup
             for (int j = 0; j < 3; j++) {
@@ -138,27 +138,24 @@ public final class CollisionDetector {
             if (overlap < candidateAxisOverlap) {
                 candidateAxisIndex = i;
                 candidateAxisOverlap = overlap;
+                candidateAxisSignedDistance = offsetInA[i];
             }
         }
 
         // objectB axes
+        double[] offsetInB = new double[3];
         for (int j = 0; j < 3; j++) {
             // Setup
-            for (int i = 0; i < 3; i++) {
-                axisDot[i][j] = a.getAxis(i).dot(b.getAxis(j));
-                absAxisDot[i][j] = Math.abs(axisDot[i][j]);
-            }
+            offsetInB[j] = offsetInA[0] * axisDot[0][j]
+                    + offsetInA[1] * axisDot[1][j]
+                    + offsetInA[2] * axisDot[2][j];
 
             // Overlap calculation
             double radiusA = a.getHalfExtent(0) * absAxisDot[0][j]
                     + a.getHalfExtent(1) * absAxisDot[1][j]
                     + a.getHalfExtent(2) * absAxisDot[2][j];
             double radiusB = b.getHalfExtent(j);
-            double distanceAlongAxis = Math.abs(
-                    offsetInA[0] * axisDot[0][j]
-                    + offsetInA[1] * axisDot[1][j]
-                    + offsetInA[2] * axisDot[2][j]
-            );
+            double distanceAlongAxis = Math.abs(offsetInB[j]);
             double overlap = radiusA + radiusB - distanceAlongAxis;
 
             // Check
@@ -170,11 +167,13 @@ public final class CollisionDetector {
             if (overlap < candidateAxisOverlap) {
                 candidateAxisIndex = collisionAxisIndex;
                 candidateAxisOverlap = overlap;
+                candidateAxisSignedDistance = offsetInB[j];
             }
         }
 
         double candidateAxisOverlapSquared = candidateAxisOverlap * candidateAxisOverlap;
         double candidateAxisLengthSquared = 1.0; // Face axes are unit length
+        double persistedAxisLengthSquared = 1.0;
 
         // Cross-product axes
         for (int i = 0; i < 3; i++) {
@@ -188,10 +187,8 @@ public final class CollisionDetector {
                         + a.getHalfExtent(iPrev) * absAxisDot[iNext][j];
                 double radiusB = b.getHalfExtent(jNext) * absAxisDot[i][jPrev]
                         + b.getHalfExtent(jPrev) * absAxisDot[i][jNext];
-                double distanceAlongAxis = Math.abs(
-                        offsetInA[iPrev] * axisDot[iNext][j]
-                        - offsetInA[iNext] * axisDot[iPrev][j]
-                );
+                double signedDistanceAlongAxis = offsetInA[iPrev] * axisDot[iNext][j] - offsetInA[iNext] * axisDot[iPrev][j];
+                double distanceAlongAxis = Math.abs(signedDistanceAlongAxis);
                 double unnormalizedOverlap = radiusA + radiusB - distanceAlongAxis;
 
                 // Check
@@ -199,11 +196,15 @@ public final class CollisionDetector {
                 double overlapSquared = unnormalizedOverlap * unnormalizedOverlap;
                 double biasedOverlapSquared = candidateAxisIndex < 6 ? overlapSquared * FACE_AXIS_PREFERENCE_MULTIPLIER_SQUARED : overlapSquared;
                 int collisionAxisIndex = 6 + 3*i + j;
-                if (collisionAxisIndex == persistedAxisIndex) persistedAxisOverlapSquared = overlapSquared / axisLengthSquared;
+                if (collisionAxisIndex == persistedAxisIndex) {
+                    persistedAxisOverlapSquared = overlapSquared / axisLengthSquared;
+                    persistedAxisLengthSquared = axisLengthSquared;
+                }
                 if (biasedOverlapSquared * candidateAxisLengthSquared < candidateAxisOverlapSquared * axisLengthSquared) {
                     candidateAxisIndex = collisionAxisIndex;
                     candidateAxisOverlapSquared = overlapSquared;
                     candidateAxisLengthSquared = axisLengthSquared;
+                    candidateAxisSignedDistance = signedDistanceAlongAxis;
                 }
             }
         }
@@ -211,13 +212,16 @@ public final class CollisionDetector {
         // Process results
         candidateAxisOverlapSquared /= candidateAxisLengthSquared;
         Optional<PersistedAxisData> persisted = persistedAxisIndex == -1 || persistedAxisOverlapSquared < 0.0 ? Optional.empty() : Optional.of(new PersistedAxisData( // The overlapSquared check is necessary in case the axis was a degenerate cross-product axis that should be ignored
-                persistedAxisIndex, persistedAxisOverlapSquared, lastTickManifold.persistedAxisFacingOutward, lastTickManifold.persistedAxisFacingB
+                persistedAxisIndex, persistedAxisOverlapSquared, persistedAxisLengthSquared, lastTickManifold.persistedAxisFacingOutward, lastTickManifold.persistedAxisFacingB
         ));
         return Optional.of(
                 new SatResult(
-                        new CandidateAxisData(candidateAxisIndex, candidateAxisOverlapSquared),
+                        new CandidateAxisData(candidateAxisIndex, candidateAxisOverlapSquared, candidateAxisLengthSquared, candidateAxisSignedDistance),
                         persisted,
-                        lastTickManifold == null ? Optional.empty() : Optional.of(lastTickManifold)
+                        lastTickManifold == null ? Optional.empty() : Optional.of(lastTickManifold),
+                        axisDot,
+                        offsetInA,
+                        offsetInB
                 )
         );
     }
