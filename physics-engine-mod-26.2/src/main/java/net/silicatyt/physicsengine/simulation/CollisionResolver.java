@@ -31,6 +31,9 @@ public final class CollisionResolver {
         // TODO: ^ fix, currently it doesn't snapshot for static objects, because they're not part of island-objects()
 
         // Setup: Merge manifold contact points together into ResolvingContact wrappers with pre-calculated values & apply warm-starting
+        for (PhysicsObject obj : island.dynamicObjects()) obj.snapshotPreSolveVelocity(); // So targetVelocity can use the velocity from before warm-starting was applied. Additional loop required because applying warm-starting affects two objects, not just one.
+        for (PhysicsObject obj : island.staticObjects()) obj.snapshotPreSolveVelocity();
+
         List<ResolvingContact> allContacts = new ArrayList<>();
         for (Manifold m : island.manifolds()) {
             ManifoldSolverContext manifoldContext = buildManifoldContext(m);
@@ -376,5 +379,5 @@ public final class CollisionResolver {
 }
 
 // TODO: Is my naming convention clean (build for creating new objects, calculate for returning value, update for in-place)? Not used consistently (i.e., calculateImpulseLinearVelocity() in PhysicsObject)
-// TODO: Maybe change effective mass from Vector3d to Matrix3d, should make it more stable (but also a bit more expensive...)
 // TODO: Maybe make penetrationSlop or BAUMGARTE_FACTOR scale with the object sizes? Very small objects noticeably sink into the floor
+// TODO: Maybe cache the friction and restitution coefficients and only update the combined one if a's or b's changes

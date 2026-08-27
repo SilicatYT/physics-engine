@@ -162,10 +162,6 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
         versions.aabbRelative.updateIfNeeded();
         return aabbRelativeMax;
     }
-    public Vector3dc getHalfExtentAxisProjection(int axisIndex) {
-        versions.halfExtentAxisProjections.updateIfNeeded();
-        return halfExtentAxisProjections[axisIndex];
-    }
     public Vector3dc getCornerPosRelative(int index) {
         versions.cornerPosRelative.updateIfNeeded();
         return cornerPosRelative[index];
@@ -320,9 +316,9 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
         lastEntityPos = position();
     }
 
-    public void addLinearVelocity(@NonNull Vector3dc v) { setLinearVelocity(linearVelocity.add(v)); } // Runs the .set() unnecessarily in setLinearVelocity, but it avoids duplicated code
+    public void addLinearVelocity(@NonNull Vector3dc v) { setLinearVelocity(linearVelocity.x + v.x(), linearVelocity.y + v.y(), linearVelocity.z + v.z()); } // Runs the .set() unnecessarily in setLinearVelocity, but it avoids duplicated code
 
-    public void addAngularVelocity(@NonNull Vector3dc v) { setAngularVelocity(angularVelocity.add(v)); }
+    public void addAngularVelocity(@NonNull Vector3dc v) { setAngularVelocity(angularVelocity.x + v.x(), angularVelocity.y + v.y(), angularVelocity.z + v.z()); }
 
     public void addLinearVelocityAcceleration(double x, double y, double z) throws IllegalArgumentException { // TODO: Maybe put the whole formula here, and rename to "applyAcceleration" for consistency with "applyTorque"?
         if (!Double.isFinite(x) || !Double.isFinite(y) || !Double.isFinite(z)) throw new IllegalArgumentException("Linear velocity acceleration must be finite");

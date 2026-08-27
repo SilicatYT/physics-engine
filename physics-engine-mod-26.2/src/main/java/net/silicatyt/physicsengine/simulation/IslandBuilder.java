@@ -17,7 +17,8 @@ public final class IslandBuilder { // AI-generated
         }
 
         Map<Integer, List<Manifold>> manifoldsByRoot = new HashMap<>();
-        Map<Integer, Set<PhysicsObject>> objectsByRoot = new HashMap<>();
+        Map<Integer, Set<PhysicsObject>> dynamicObjectsByRoot = new HashMap<>();
+        Map<Integer, Set<PhysicsObject>> staticObjectsByRoot = new HashMap<>();
         for (Manifold m : manifolds) {
             boolean aDynamic = m.a.getInverseMass() != 0.0;
             boolean bDynamic = m.b != null && m.b.getInverseMass() != 0.0;
@@ -27,14 +28,17 @@ public final class IslandBuilder { // AI-generated
             int root = uf.find(dynamicRepresentative.getId());
 
             manifoldsByRoot.computeIfAbsent(root, k -> new ArrayList<>()).add(m);
-            Set<PhysicsObject> objects = objectsByRoot.computeIfAbsent(root, k -> new HashSet<>());
-            if (aDynamic) objects.add(m.a);
-            if (bDynamic) objects.add(m.b);
+            Set<PhysicsObject> dynamicObjects = dynamicObjectsByRoot.computeIfAbsent(root, _ -> new HashSet<>());
+            Set<PhysicsObject> staticObjects = staticObjectsByRoot.computeIfAbsent(root, _ -> new HashSet<>());
+            if (aDynamic) dynamicObjects.add(m.a);
+            else staticObjects.add(m.a);
+            if (bDynamic) dynamicObjects.add(m.b);
+            else staticObjects.add(m.b);
         }
 
         List<Island> islands = new ArrayList<>();
         for (int root : manifoldsByRoot.keySet()) {
-            islands.add(new Island(manifoldsByRoot.get(root), new ArrayList<>(objectsByRoot.get(root))));
+            islands.add(new Island(manifoldsByRoot.get(root), new ArrayList<>(dynamicObjectsByRoot.get(root)), new ArrayList<>(staticObjectsByRoot.get(root))));
         }
         return islands;
     }

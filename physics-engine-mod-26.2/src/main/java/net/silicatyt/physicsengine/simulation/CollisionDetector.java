@@ -4,15 +4,11 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import net.silicatyt.physicsengine.data.*;
 import net.silicatyt.physicsengine.entity.PhysicsObject;
 import net.silicatyt.physicsengine.util.PairKey;
-import org.joml.Vector3d;
 import org.joml.Vector3dc;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ForkJoinPool;
-
-import static java.lang.Math.abs;
-import static net.silicatyt.physicsengine.simulation.Integrator.EPSILON_SQUARED;
 
 public final class CollisionDetector {
     private static final double FACE_AXIS_PREFERENCE_MULTIPLIER = 1.0 / 0.7;
@@ -102,7 +98,7 @@ public final class CollisionDetector {
 
     private static Optional<SatResult> testSat(PhysicsObject a, PhysicsObject b, double dx, double dy, double dz, Long2ObjectOpenHashMap<Manifold> lastTick) { // Gottschalk-Erikson approach
         // TODO: Add helper methods, clean up
-        // TODO: Maybe store the disconnecting axis for failed SATs and perform its check first in the next tick? Might not be easily possible with the new approach
+        // TODO: Maybe store the separating axis for failed SATs and perform its check first in the next tick? Might not be easily possible with the new approach
         // Setup
         Manifold lastTickManifold = lastTick.get(PairKey.packUnordered(a.getId(), b.getId()));
 
