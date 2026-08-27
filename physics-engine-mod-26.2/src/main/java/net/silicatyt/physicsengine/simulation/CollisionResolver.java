@@ -27,9 +27,6 @@ public final class CollisionResolver {
 
     // Setup
     public static void resolve(Island island) {
-        for (PhysicsObject obj : island.objects()) obj.snapshotPreSolveVelocity(); // So targetVelocity can use the velocity from before warm-starting was applied. Additional loop required because applying warm-starting affects two objects, not just one.
-        // TODO: ^ fix, currently it doesn't snapshot for static objects, because they're not part of island-objects()
-
         // Setup: Merge manifold contact points together into ResolvingContact wrappers with pre-calculated values & apply warm-starting
         for (PhysicsObject obj : island.dynamicObjects()) obj.snapshotPreSolveVelocity(); // So targetVelocity can use the velocity from before warm-starting was applied. Additional loop required because applying warm-starting affects two objects, not just one.
         for (PhysicsObject obj : island.staticObjects()) obj.snapshotPreSolveVelocity();
