@@ -31,6 +31,7 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
     private static final ItemStack DEFAULT_ITEM_STACK = new ItemStack(Items.STONE);
 
     public static final double MIN_SCALE = 0.01;
+    private static final double SMALL_ANGLE_EPSILON = 1e-4;
 
     public PhysicsObject(EntityType<?> type, Level world) {
         super(type, world);
@@ -351,11 +352,17 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
         double normalizedAxisZ = axisZ * inverseAxisLength;
 
         double halfAngle = angle * 0.5;
-        double sinHalfAngle = Math.sin(halfAngle);
+        double sinHalfAngle, qw;
+        if (Math.abs(halfAngle) < SMALL_ANGLE_EPSILON) { // Small-angle Taylor approximation
+            sinHalfAngle = halfAngle - halfAngle*halfAngle*halfAngle / 6.0;
+            qw = 1.0 - halfAngle*halfAngle * 0.5;
+        } else {
+            sinHalfAngle = Math.sin(halfAngle);
+            qw = Math.cos(halfAngle);
+        }
         double qx = normalizedAxisX * sinHalfAngle;
         double qy = normalizedAxisY * sinHalfAngle;
         double qz = normalizedAxisZ * sinHalfAngle;
-        double qw = Math.cos(halfAngle);
 
         orientation.premul(qx, qy, qz, qw);
         orientation.normalize(); // Could suffice to do it once every few ticks
@@ -403,3 +410,5 @@ public final class PhysicsObject extends Display.ItemDisplay implements PolymerE
 }
 
 // TODO: Maybe split PhysicsObject into the minecraft entity and "PhysicsBody", single-responsibility?
+// TODO: Add angularVelocityFromAcceleration when outside forces are implemented (they add to velocityFromAcceleration)
+// TODO: Add leashes & springs (connected objects must be in the same island)

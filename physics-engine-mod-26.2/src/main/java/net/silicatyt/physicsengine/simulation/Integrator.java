@@ -18,6 +18,9 @@ public class Integrator {
 
     public static final double EPSILON = 1e-12;
     public static final double EPSILON_SQUARED = EPSILON * EPSILON;
+    private static final double MIN_ROTATION_EPSILON = 1e-8;
+    private static final double MIN_ROTATION_EPSILON_SQUARED = MIN_ROTATION_EPSILON * MIN_ROTATION_EPSILON;
+
 
     // Phases
     public static void phaseOne(PhysicsObject obj) { // Update internal state
@@ -109,7 +112,7 @@ public class Integrator {
 
     private static void updateOrientation(PhysicsObject obj, double angularVelocityX, double angularVelocityY, double angularVelocityZ) { // Approach: Exponential map integration
         double lengthSquared = Vector3d.lengthSquared(angularVelocityX, angularVelocityY, angularVelocityZ);
-        if (lengthSquared < EPSILON_SQUARED) return; // No orientation change. Continuing here (normalizing at some point) would produce NaN.
+        if (lengthSquared < MIN_ROTATION_EPSILON_SQUARED) return; // No orientation change. Continuing here (normalizing at some point) would produce NaN or too small of a rotation to bother with.
         double angle = Math.sqrt(lengthSquared) * DELTA_TIME;
         obj.rotateOrientation(angle, angularVelocityX, angularVelocityY, angularVelocityZ);
     }

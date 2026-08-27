@@ -17,9 +17,9 @@ public final class CollisionResolver {
     private static final int NOF_VELOCITY_RESOLUTION_ITERATIONS = 20;
     private static final int NOF_PENETRATION_RESOLUTION_ITERATIONS = 20;
 
-    private static final double MIN_DELTA_IMPULSE = 0.0005; // TODO: Finetune by measuring
+    private static final double MIN_DELTA_IMPULSE = 0.001; // TODO: Finetune by measuring
     private static final double MIN_DELTA_IMPULSE_SQUARED = MIN_DELTA_IMPULSE * MIN_DELTA_IMPULSE;
-    private static final double MIN_PENETRATION_CORRECTION = 0.0005; // TODO: Finetune
+    private static final double MIN_PENETRATION_CORRECTION = 0.001; // TODO: Finetune
     private static final double PENETRATION_SLOP = 0.01; // TODO: Finetune
     private static final double BAUMGARTE_FACTOR = 0.25; // TODO: Finetune
     private static final double INVERSE_BAUMGARTE_FACTOR = 1.0 / BAUMGARTE_FACTOR;
@@ -29,7 +29,7 @@ public final class CollisionResolver {
     public static void resolve(Island island) {
         // Setup: Merge manifold contact points together into ResolvingContact wrappers with pre-calculated values & apply warm-starting
         for (PhysicsObject obj : island.dynamicObjects()) obj.snapshotPreSolveVelocity(); // So targetVelocity can use the velocity from before warm-starting was applied. Additional loop required because applying warm-starting affects two objects, not just one.
-        for (PhysicsObject obj : island.staticObjects()) obj.snapshotPreSolveVelocity();
+        for (PhysicsObject obj : island.staticObjects()) obj.snapshotPreSolveVelocity(); // TODO: Fix concurrency bug (write operation with later reads, static objects can be part of several islands)
 
         List<ResolvingContact> allContacts = new ArrayList<>();
         for (Manifold m : island.manifolds()) {
@@ -52,7 +52,7 @@ public final class CollisionResolver {
         }
 
         // Velocity resolution
-        allContacts.sort(Comparator.comparingDouble((ResolvingContact c) -> c.state().accumulatedImpulseContactSpace.x()).reversed()); // Sorted by warm-start impulse along contact normal (desc) for stack stability
+        allContacts.sort(Comparator.comparingDouble((ResolvingContact c) -> c.state().accumulatedImpulseContactSpace.x()).reversed()); // Sorted by warm-start impulse along contact normal (desc) for stack stability (TODO: Check whether other sorting might be better)
         for (int i = 0; i < NOF_VELOCITY_RESOLUTION_ITERATIONS; i++) {
             double maxDeltaImpulseSquared = 0.0;
             for (ResolvingContact c : allContacts) {
@@ -86,6 +86,7 @@ public final class CollisionResolver {
     }
 
     private static ContactSolverContext buildContactContext(ContactPoint p, Manifold m, ManifoldSolverContext ctx) {
+        // TODO: If b is static, skip several calculations (relativeContactPosB, RB, angularImpulseFactorB, optimize targetClosingVelocity, etc)
         Vector3dc contactPos = p.getPosition();
         boolean relativeToA = p.isPositionRelativeToA();
 
@@ -378,3 +379,16 @@ public final class CollisionResolver {
 // TODO: Is my naming convention clean (build for creating new objects, calculate for returning value, update for in-place)? Not used consistently (i.e., calculateImpulseLinearVelocity() in PhysicsObject)
 // TODO: Maybe make penetrationSlop or BAUMGARTE_FACTOR scale with the object sizes? Very small objects noticeably sink into the floor
 // TODO: Maybe cache the friction and restitution coefficients and only update the combined one if a's or b's changes
+
+// TODO: Sleeping:
+//  - Object ready to sleep after 10 ticks of linearVelocitySquared below threshold, splitLinearVelocitySquared below threshold, angularVelocitySquared * maxHalfExtent below threshold and splitAngularVelocitySquared * maxHalfExtent below threshold
+//  - Check at start of resolution if all objects of the island are already asleep (incl. static objects). If yes, skip everything.
+//  - Check at end of resolution if all objects of the island (only dynamic?) are ready to sleep (timer at 10 ticks). If yes, make them sleep.
+//  - Update (increment or reset) the timer in integration phaseTwo
+//    - If the object is ready to sleep AND is static, immediately make it sleep (Not part of an island, so it's not affected by them)
+//  - Return after fixEntityPos if sleeping
+//  - Changes in internalPos, scale, inverseMass, friction & velocities should wake up the object
+//  - If an object is removed from a sleeping island (teleported, killed, unloaded, changed dimension etc), wake up the entire island
+//  - Keep sleeping manifolds in a separate list or hashmap: Otherwise an awakened island will have a bad time
+//  - Skip as much as possible for sleeping objects: Both integration phases, AABB & SAT & ContactGeneration, resolution
+//  - Keep the number of loops over lists at a minimum, needs to be optimized

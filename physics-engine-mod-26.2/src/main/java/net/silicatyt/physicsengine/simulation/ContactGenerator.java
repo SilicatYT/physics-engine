@@ -242,8 +242,7 @@ public final class ContactGenerator { // TODO: This whole file is a mess and nee
             isProjectionNegative = projection < 0;
         }
 
-        int incidentFaceIndex = calculateFaceIndex(incidentAxisIndex, isProjectionNegative);
-        return incidentFaceIndex;
+        return calculateFaceIndex(incidentAxisIndex, isProjectionNegative);
     }
 
     private static int calculateFaceIndex(int axisIndex, boolean facingOutward) { return 2 * axisIndex + (facingOutward ? 1 : 0); }
