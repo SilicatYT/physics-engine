@@ -1,0 +1,77 @@
+{
+  "type": "minecraft:multi_action",
+  "title": "Physics Engine — Socials",
+  "inputs": [],
+  "pause": false,
+  "columns": 1,
+  "actions": [
+    {
+      "label": [
+        "",
+        {
+          "text": "Twitter",
+          "color": "#00a2f3"
+        },
+        ": @SilicatYT"
+      ],
+      "tooltip": "Click to open URL",
+      "action": {
+        "type": "minecraft:open_url",
+        "url": "https://twitter.com/SilicatYT"
+      }
+    },
+    {
+      "label": [
+        "",
+        {
+          "text": "Discord",
+          "color": "#5865f2"
+        },
+        ": @silicatyt"
+      ],
+      "action": {
+        "type": "minecraft:show_dialog",
+        "dialog": "physics:socials"
+      }
+    },
+    {
+      "label": [
+        "",
+        {
+          "text": "YouTube",
+          "color": "#ff0000"
+        },
+        ": SilicatYT"
+      ],
+      "tooltip": "Click to open URL",
+      "action": {
+        "type": "minecraft:open_url",
+        "url": "https://youtube.com/SilicatYT"
+      }
+    },
+    {
+      "label": [
+        "",
+        {
+          "text": "YouTube",
+          "color": "#ff0000"
+        },
+        ": CMDred"
+      ],
+      "tooltip": "Click to open URL",
+      "action": {
+        "type": "minecraft:open_url",
+        "url": "https://youtube.com/channel/UCOciQE1CLCQmmxVveggt2Lg"
+      }
+    },
+    {
+      "label": "← Previous page",
+      "tooltip": "Click to open",
+      "width": 100,
+      "action": {
+        "type": "minecraft:show_dialog",
+        "dialog": "physics:main"
+      }
+    }
+  ]
+}

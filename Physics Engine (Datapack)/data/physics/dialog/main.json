@@ -1,0 +1,58 @@
+{
+  "type": "minecraft:multi_action",
+  "title": "Physics Engine",
+  "body": {
+    "type": "minecraft:plain_message",
+    "contents": [
+      "Created by: ",
+      {
+        "player": {
+          "id": [
+            1101629270,
+            -853851629,
+            -1258987245,
+            63230154
+          ]
+        }
+      },
+      " SilicatYT"
+    ]
+  },
+  "inputs": [],
+  "pause": false,
+  "columns": 1,
+  "actions": [
+    {
+      "label": "Open Config",
+      "tooltip": "Click to open",
+      "action": {
+        "type": "minecraft:run_command",
+        "command": "function physics:zprivate/settings/show"
+      }
+    },
+    {
+      "label": "Download Page (Modrinth)",
+      "tooltip": "Click to open URL",
+      "action": {
+        "type": "minecraft:open_url",
+        "url": "https://modrinth.com/datapack/placeholder"
+      }
+    },
+    {
+      "label": "Issue Tracker (GitHub)",
+      "tooltip": "Click to open URL",
+      "action": {
+        "type": "minecraft:open_url",
+        "url": "https://github.com/SilicatYT/physics-engine"
+      }
+    },
+    {
+      "label": "Socials",
+      "tooltip": "Click to open",
+      "action": {
+        "type": "minecraft:show_dialog",
+        "dialog": "physics:socials"
+      }
+    }
+  ]
+}
