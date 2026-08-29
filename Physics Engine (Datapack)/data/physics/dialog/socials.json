@@ -2,7 +2,6 @@
   "type": "minecraft:multi_action",
   "title": "Physics Engine — Socials",
   "inputs": [],
-  "pause": false,
   "columns": 1,
   "actions": [
     {
@@ -65,9 +64,9 @@
       }
     },
     {
-      "label": "← Previous page",
+      "label": "← Previous",
       "tooltip": "Click to open",
-      "width": 100,
+      "width": 75,
       "action": {
         "type": "minecraft:show_dialog",
         "dialog": "physics:main"

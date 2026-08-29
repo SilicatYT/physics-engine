@@ -1,0 +1,36 @@
+NOTE: These values are not final and are subject to change
+NOTE: Scaling factors should be powers of two to avoid floating point rounding during the calculations
+
+Settings:
+- LinearDampingPerTick: 16,384x (OR USE FLOATS DIRECTLY)
+- AngularDampingPerTick: 16,384x
+- GravityPerTick: 16,384x (Same as LinearVelocity)
+
+Object:
+- BlockPos: 1x
+- PosWithinBlock: 131,072x
+   - (OVERTHINK: Maybe entirely use data storages. Maybe number providers can eventually access entity pos directly, at which case I'd only need a single low-scaled score for global AABB calculation)
+- LinearVelocity: 16,384x
+- AngularVelocity: 16,384x
+- Scale: 1,024x
+   - Allowed range: 64-10,240 (1/16 - 10 blocks) (Maybe increase the max possible size, after making sure it doesn't cause overflows anywhere)
+- InverseMass: 268,435,456x
+   - (OVERTHINK: Maybe such a high value causes floating point issues in the calculations? Perhaps there's a balance between "Not too low: precision loss due to ints" and "Not too high: precision loss due to floats"?)
+   - (If possible, try to use a float directly)
+   - Maybe scale a little lower. Right now, it can increment ~200g, and 16,000 tons is the largest possible mass before it becomes infinite. A lower scale would preserve more floating point accuracy when applying impulses.
+- Orientation: 16,384x
+
+
+
+
+
+BENCHMARK:
+- inline vs file value provider => Files are faster
+- value provider on scores (Extra operations for downscaling) vs data storages (direct, no extra operations)
+- Value re-use vs put everything in the same provider
+
+MAYBE USE NUMBER PROVIDERS AND "match_block" TO GET HITBOX SIZES? (Although, it would only support single hitboxes)
+   - Maybe use an "if block" check to see how many hitboxes it has (hardcoded), then run the numberproviders for "hitbox1", "hitbox2", etc?
+
+
+Make data storage paths for maths as short as possible, longer paths are slower. Use "physics:maths ..." or "physics:zprivate maths"
