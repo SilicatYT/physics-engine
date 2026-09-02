@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:conditional",
+  "condition": {
+    "type": "minecraft:float_value_check",
+    "value": {
+      "type": "minecraft:storage",
+      "storage": "physics:zprivate",
+      "path": "temp.inverse_mass",
+      "fallback": -1
+    },
+    "test": {
+      "min": 0
+    }
+  },
+  "on_true": 1
+}

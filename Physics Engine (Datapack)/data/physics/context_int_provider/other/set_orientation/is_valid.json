@@ -1,0 +1,55 @@
+{
+  "type": "minecraft:conditional",
+  "condition": {
+    "type": "minecraft:float_value_check",
+    "value": {
+      "type": "minecraft:add",
+      "inputs": [
+        {
+          "type": "minecraft:pow",
+          "base": {
+            "type": "minecraft:storage",
+            "storage": "physics:zprivate",
+            "path": "temp.orientation[0]"
+          },
+          "exponent": 2
+        },
+        {
+          "type": "minecraft:pow",
+          "base": {
+            "type": "minecraft:storage",
+            "storage": "physics:zprivate",
+            "path": "temp.orientation[1]"
+          },
+          "exponent": 2
+        },
+        {
+          "type": "minecraft:pow",
+          "base": {
+            "type": "minecraft:storage",
+            "storage": "physics:zprivate",
+            "path": "temp.orientation[2]"
+          },
+          "exponent": 2
+        },
+        {
+          "type": "minecraft:pow",
+          "base": {
+            "type": "minecraft:storage",
+            "storage": "physics:zprivate",
+            "path": "temp.orientation[3]"
+          },
+          "exponent": 2
+        }
+      ]
+    },
+    "test": {
+      "min": {
+        "type": "minecraft:storage",
+        "storage": "physics:zprivate",
+        "path": "constants.quaternion_min_squared_length"
+      }
+    }
+  },
+  "on_true": 1
+}

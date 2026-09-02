@@ -1,0 +1,31 @@
+{
+  "type": "minecraft:add",
+  "inputs": [
+    {
+      "type": "minecraft:mul",
+      "inputs": [
+        {
+          "type": "minecraft:from_int",
+          "input": {
+            "type": "minecraft:score",
+            "target": "this",
+            "score": "Physics.Object.LinearVelocity.z"
+          }
+        },
+        {
+          "type": "minecraft:storage",
+          "storage": "physics:zprivate",
+          "path": "settings.simulation.derived.linear_damping_per_tick"
+        }
+      ]
+    },
+    {
+      "type": "minecraft:from_int",
+      "input": {
+        "type": "minecraft:score",
+        "target": "this",
+        "score": "Physics.Object.LinearVelocityFromAcceleration.z"
+      }
+    }
+  ]
+}

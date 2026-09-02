@@ -1,0 +1,72 @@
+{
+  "type": "minecraft:conditional",
+  "condition": {
+    "type": "minecraft:all_of",
+    "terms": [
+      {
+        "type": "minecraft:float_value_check",
+        "value": {
+          "type": "minecraft:storage",
+          "storage": "physics:zprivate",
+          "path": "temp.scale[0]"
+        },
+        "test": {
+          "min": {
+            "type": "minecraft:storage",
+            "storage": "physics:zprivate",
+            "path": "constants.min_scale"
+          },
+          "max": {
+            "type": "minecraft:storage",
+            "storage": "physics:zprivate",
+            "path": "constants.max_scale"
+          }
+        },
+        "": "minecraft:float_value_check"
+      },
+      {
+        "type": "minecraft:float_value_check",
+        "value": {
+          "type": "minecraft:storage",
+          "storage": "physics:zprivate",
+          "path": "temp.scale[1]"
+        },
+        "test": {
+          "min": {
+            "type": "minecraft:storage",
+            "storage": "physics:zprivate",
+            "path": "constants.min_scale"
+          },
+          "max": {
+            "type": "minecraft:storage",
+            "storage": "physics:zprivate",
+            "path": "constants.max_scale"
+          }
+        },
+        "": "minecraft:float_value_check"
+      },
+      {
+        "type": "minecraft:float_value_check",
+        "value": {
+          "type": "minecraft:storage",
+          "storage": "physics:zprivate",
+          "path": "temp.scale[2]"
+        },
+        "test": {
+          "min": {
+            "type": "minecraft:storage",
+            "storage": "physics:zprivate",
+            "path": "constants.min_scale"
+          },
+          "max": {
+            "type": "minecraft:storage",
+            "storage": "physics:zprivate",
+            "path": "constants.max_scale"
+          }
+        },
+        "": "minecraft:float_value_check"
+      }
+    ]
+  },
+  "on_true": 1
+}

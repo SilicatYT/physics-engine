@@ -5,14 +5,97 @@ tellraw @a ["",{text:"Physics Engine >> ",color:"#12D9D6"},"Installed Physics En
 
 # Add scoreboard objectives
   # Object
+  scoreboard objectives add Physics.Object.BlockPos.x dummy
+  scoreboard objectives add Physics.Object.BlockPos.y dummy
+  scoreboard objectives add Physics.Object.BlockPos.z dummy
+
+  scoreboard objectives add Physics.Object.PosWithinBlock.x dummy
+  scoreboard objectives add Physics.Object.PosWithinBlock.y dummy
+  scoreboard objectives add Physics.Object.PosWithinBlock.z dummy
+
+  scoreboard objectives add Physics.Object.LinearVelocity.x dummy
+  scoreboard objectives add Physics.Object.LinearVelocity.y dummy
+  scoreboard objectives add Physics.Object.LinearVelocity.z dummy
+
+  scoreboard objectives add Physics.Object.AngularVelocity.x dummy
+  scoreboard objectives add Physics.Object.AngularVelocity.y dummy
+  scoreboard objectives add Physics.Object.AngularVelocity.z dummy
+
+  scoreboard objectives add Physics.Object.Scale.x dummy
+  scoreboard objectives add Physics.Object.Scale.y dummy
+  scoreboard objectives add Physics.Object.Scale.z dummy
+
+  scoreboard objectives add Physics.Object.InverseMass dummy
+
+  scoreboard objectives add Physics.Object.Orientation.x dummy
+  scoreboard objectives add Physics.Object.Orientation.y dummy
+  scoreboard objectives add Physics.Object.Orientation.z dummy
+  scoreboard objectives add Physics.Object.Orientation.a dummy
+
+xxx
+xxx
+xxx
 
   # Object (Derived)
+  scoreboard objectives add Physics.Object.RotationMatrix.00 dummy
+  scoreboard objectives add Physics.Object.RotationMatrix.01 dummy
+  scoreboard objectives add Physics.Object.RotationMatrix.02 dummy
+  scoreboard objectives add Physics.Object.RotationMatrix.10 dummy
+  scoreboard objectives add Physics.Object.RotationMatrix.11 dummy
+  scoreboard objectives add Physics.Object.RotationMatrix.12 dummy
+  scoreboard objectives add Physics.Object.RotationMatrix.20 dummy
+  scoreboard objectives add Physics.Object.RotationMatrix.21 dummy
+  scoreboard objectives add Physics.Object.RotationMatrix.22 dummy
+
+  scoreboard objectives add Physics.Object.SpecificInverseInertiaLocal.x dummy
+  scoreboard objectives add Physics.Object.SpecificInverseInertiaLocal.y dummy
+  scoreboard objectives add Physics.Object.SpecificInverseInertiaLocal.z dummy
+
+  scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.00 dummy
+  scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.01 dummy
+  scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.02 dummy
+  scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.10 dummy
+  scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.11 dummy
+  scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.12 dummy
+  scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.20 dummy
+  scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.21 dummy
+  scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.22 dummy
+
+  # Object (Other, transient)
+  scoreboard objectives add Physics.Object.AccumulatedForce.x dummy
+  scoreboard objectives add Physics.Object.AccumulatedForce.y dummy
+  scoreboard objectives add Physics.Object.AccumulatedForce.z dummy
+
+  scoreboard objectives add Physics.Object.AccumulatedTorque.x dummy
+  scoreboard objectives add Physics.Object.AccumulatedTorque.y dummy
+  scoreboard objectives add Physics.Object.AccumulatedTorque.z dummy
+
+  scoreboard objectives add Physics.Object.LinearVelocityFromAcceleration.x dummy
+  scoreboard objectives add Physics.Object.LinearVelocityFromAcceleration.y dummy
+  scoreboard objectives add Physics.Object.LinearVelocityFromAcceleration.z dummy
+
+  scoreboard objectives add Physics.Object.AngularVelocityFromTorque.x dummy
+  scoreboard objectives add Physics.Object.AngularVelocityFromTorque.y dummy
+  scoreboard objectives add Physics.Object.AngularVelocityFromTorque.z dummy
 
   # Player
 
 # Set initial scores
 
 # Set data storages
+data modify storage physics:object default set value {\
+  scale: [1f, 1f, 1f],\
+  orientation: [0f, 0f, 0f, 1f],\
+  inverse_mass: 0.001f\
+}
+data modify storage physics:object set set from storage physics:object default
+data modify storage physics:zprivate fallback_default set from storage physics:object default
+
+data modify storage physics:zprivate constants set value {\
+  quaternion_min_squared_length: 0.000001f,\
+  min_scale: 0.0625f,\
+  max_scale: 10\
+}
 
 # Set initial config dialog
 data modify storage physics:zprivate settings.dialog set value \

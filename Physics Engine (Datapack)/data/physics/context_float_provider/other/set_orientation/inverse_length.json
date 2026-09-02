@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:div",
+  "left": 1,
+  "right": {
+    "type": "minecraft:length",
+    "inputs": [
+      {
+        "type": "minecraft:storage",
+        "storage": "physics:zprivate",
+        "path": "temp.orientation[0]"
+      },
+      {
+        "type": "minecraft:storage",
+        "storage": "physics:zprivate",
+        "path": "temp.orientation[1]"
+      },
+      {
+        "type": "minecraft:storage",
+        "storage": "physics:zprivate",
+        "path": "temp.orientation[2]"
+      },
+      {
+        "type": "minecraft:storage",
+        "storage": "physics:zprivate",
+        "path": "temp.orientation[3]"
+      }
+    ]
+  }
+}

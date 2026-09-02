@@ -2,6 +2,9 @@
 scoreboard objectives add Physics dummy
 execute unless score #Physics.Init Physics matches 1 run function physics:zprivate/init
 
+# Tick
+schedule function physics:zprivate/tick 1t
+
 # Tellraw
 # (TODO): Modrinth link is currently a placeholder
 execute if score #Physics.Settings.ShowReloadMessage Physics matches 0 run return 0

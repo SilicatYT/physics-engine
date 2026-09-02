@@ -2,9 +2,7 @@ NOTE: These values are not final and are subject to change
 NOTE: Scaling factors should be powers of two to avoid floating point rounding during the calculations
 
 Settings:
-- LinearDampingPerTick: 16,384x (OR USE FLOATS DIRECTLY)
-- AngularDampingPerTick: 16,384x
-- GravityPerTick: 16,384x (Same as LinearVelocity)
+- ...
 
 Object:
 - BlockPos: 1x
@@ -17,8 +15,17 @@ Object:
 - InverseMass: 268,435,456x
    - (OVERTHINK: Maybe such a high value causes floating point issues in the calculations? Perhaps there's a balance between "Not too low: precision loss due to ints" and "Not too high: precision loss due to floats"?)
    - (If possible, try to use a float directly)
-   - Maybe scale a little lower. Right now, it can increment ~200g, and 16,000 tons is the largest possible mass before it becomes infinite. A lower scale would preserve more floating point accuracy when applying impulses.
+   - Maybe scale a little lower. Right now, it can increment ~200g, and 537,000 tonnes is the largest possible mass before it becomes infinite. A lower scale would preserve more floating point accuracy when applying impulses.
 - Orientation: 16,384x
+- AccumulatedForce: 16,384x
+- AccumulatedTorque: 16,384x
+- LinearVelocityFromAcceleration: 16,384x
+- AngularVelocityFromTorque: 16,384x
+- RotationMatrix & Transpose: 16,384x
+- SpecificInverseInertiaLocal: 16,384x (InverseInertiaTensorLocal without mass, necessary to avoid overflows or precision errors while storing)
+- SpecificInverseInertiaWorld: 16,384x (InverseInertiaTensorWorld without mass, necessary to avoid overflows or precision errors)
+   - Have to avoid overflows. Store in the entity as floats as soon as possible. I could also store it in 2 ints so I could actually store the inverse inertia tensor with the mass component.
+- Axes: 16,384x (Same as RotationMatrix)
 
 
 

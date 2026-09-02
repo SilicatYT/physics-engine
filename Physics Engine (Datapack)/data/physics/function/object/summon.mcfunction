@@ -1,0 +1,1 @@
+execute summon minecraft:item_display run function physics:object/turn_into_physics_object

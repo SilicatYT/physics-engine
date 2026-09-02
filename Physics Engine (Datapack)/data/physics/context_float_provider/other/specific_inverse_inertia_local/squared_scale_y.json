@@ -1,0 +1,16 @@
+{
+  "type": "minecraft:pow",
+  "base": {
+    "type": "minecraft:div",
+    "left": {
+      "type": "minecraft:from_int",
+      "input": {
+        "type": "minecraft:score",
+        "target": "this",
+        "score": "Physics.Object.Scale.y"
+      }
+    },
+    "right": 1024
+  },
+  "exponent": 2
+}

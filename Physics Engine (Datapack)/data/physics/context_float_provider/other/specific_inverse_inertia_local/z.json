@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:div",
+  "left": 12,
+  "right": {
+    "type": "minecraft:add",
+    "inputs": [
+      {
+        "type": "minecraft:storage",
+        "storage": "physics:zprivate",
+        "path": "temp.squared_scale_x"
+      },
+      {
+        "type": "minecraft:storage",
+        "storage": "physics:zprivate",
+        "path": "temp.squared_scale_y"
+      }
+    ]
+  }
+}
