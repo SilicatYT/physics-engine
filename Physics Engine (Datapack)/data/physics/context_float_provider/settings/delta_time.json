@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:div",
+  "left": 1,
+  "right": {
+    "type": "minecraft:from_int",
+    "input": {
+      "type": "minecraft:score",
+      "target": {
+        "type": "minecraft:fixed",
+        "name": "#Physics.Settings.DeltaTimeDenominator"
+      },
+      "score": "Physics"
+    }
+  }
+}

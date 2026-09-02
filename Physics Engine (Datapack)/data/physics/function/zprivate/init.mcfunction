@@ -11,7 +11,6 @@ tellraw @a ["",{text:"Physics Engine >> ",color:"#12D9D6"},"Installed Physics En
   # Player
 
 # Set initial scores
-scoreboard players set #Physics.Settings.ShowReloadMessage Physics 1
 
 # Set data storages
 

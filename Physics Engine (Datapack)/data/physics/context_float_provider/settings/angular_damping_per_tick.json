@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:pow",
+  "base": {
+    "type": "minecraft:storage",
+    "storage": "physics:zprivate",
+    "path": "settings.simulation.angular_damping"
+  },
+  "exponent": {
+    "type": "minecraft:storage",
+    "storage": "physics:zprivate",
+    "path": "settings.simulation.derived.delta_time"
+  }
+}
