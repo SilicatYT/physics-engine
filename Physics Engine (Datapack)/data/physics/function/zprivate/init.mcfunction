@@ -32,34 +32,36 @@ tellraw @a ["",{text:"Physics Engine >> ",color:"#12D9D6"},"Installed Physics En
   scoreboard objectives add Physics.Object.Orientation.z dummy
   scoreboard objectives add Physics.Object.Orientation.a dummy
 
-xxx
-xxx
-xxx
-
   # Object (Derived)
-  scoreboard objectives add Physics.Object.RotationMatrix.00 dummy
-  scoreboard objectives add Physics.Object.RotationMatrix.01 dummy
-  scoreboard objectives add Physics.Object.RotationMatrix.02 dummy
-  scoreboard objectives add Physics.Object.RotationMatrix.10 dummy
-  scoreboard objectives add Physics.Object.RotationMatrix.11 dummy
-  scoreboard objectives add Physics.Object.RotationMatrix.12 dummy
-  scoreboard objectives add Physics.Object.RotationMatrix.20 dummy
-  scoreboard objectives add Physics.Object.RotationMatrix.21 dummy
-  scoreboard objectives add Physics.Object.RotationMatrix.22 dummy
+  scoreboard objectives add Physics.Object.RotationMatrix.xx dummy
+  scoreboard objectives add Physics.Object.RotationMatrix.xy dummy
+  scoreboard objectives add Physics.Object.RotationMatrix.xz dummy
+  scoreboard objectives add Physics.Object.RotationMatrix.yx dummy
+  scoreboard objectives add Physics.Object.RotationMatrix.yy dummy
+  scoreboard objectives add Physics.Object.RotationMatrix.yz dummy
+  scoreboard objectives add Physics.Object.RotationMatrix.zx dummy
+  scoreboard objectives add Physics.Object.RotationMatrix.zy dummy
+  scoreboard objectives add Physics.Object.RotationMatrix.zz dummy
 
   scoreboard objectives add Physics.Object.SpecificInverseInertiaLocal.x dummy
   scoreboard objectives add Physics.Object.SpecificInverseInertiaLocal.y dummy
   scoreboard objectives add Physics.Object.SpecificInverseInertiaLocal.z dummy
 
-  scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.00 dummy
-  scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.01 dummy
-  scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.02 dummy
-  scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.10 dummy
-  scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.11 dummy
-  scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.12 dummy
-  scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.20 dummy
-  scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.21 dummy
-  scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.22 dummy
+  scoreboard objectives add Physics.Object.SpecificInverseInertiaLocal.ReferenceAxis.Index dummy
+  scoreboard objectives add Physics.Object.SpecificInverseInertiaLocal.ReferenceAxis.Value dummy
+  scoreboard objectives add Physics.Object.SpecificInverseInertiaLocal.TangentDifference.x dummy
+  scoreboard objectives add Physics.Object.SpecificInverseInertiaLocal.TangentDifference.y dummy
+  scoreboard objectives add Physics.Object.SpecificInverseInertiaLocal.TangentDifference.z dummy
+
+  scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.xx dummy
+  scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.xy dummy
+  scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.xz dummy
+  scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.yx dummy
+  scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.yy dummy
+  scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.yz dummy
+  scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.zx dummy
+  scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.zy dummy
+  scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.zz dummy
 
   # Object (Other, transient)
   scoreboard objectives add Physics.Object.AccumulatedForce.x dummy

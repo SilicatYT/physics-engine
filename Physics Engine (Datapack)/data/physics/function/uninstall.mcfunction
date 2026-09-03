@@ -9,6 +9,9 @@ scoreboard players reset #Physics.Init
 
     # Helper scores
     scoreboard players reset #Physics.IsTrue
+    scoreboard players reset #Physics.Check1
+    scoreboard players reset #Physics.Check2
+    scoreboard players reset #Physics.Check3
 
 # Remove scoreboard objectives
 scoreboard objectives remove Physics
@@ -40,29 +43,35 @@ scoreboard objectives remove Physics.Object.Orientation.y
 scoreboard objectives remove Physics.Object.Orientation.z
 scoreboard objectives remove Physics.Object.Orientation.a
 
-scoreboard objectives remove Physics.Object.RotationMatrix.00
-scoreboard objectives remove Physics.Object.RotationMatrix.01
-scoreboard objectives remove Physics.Object.RotationMatrix.02
-scoreboard objectives remove Physics.Object.RotationMatrix.10
-scoreboard objectives remove Physics.Object.RotationMatrix.11
-scoreboard objectives remove Physics.Object.RotationMatrix.12
-scoreboard objectives remove Physics.Object.RotationMatrix.20
-scoreboard objectives remove Physics.Object.RotationMatrix.21
-scoreboard objectives remove Physics.Object.RotationMatrix.22
+scoreboard objectives remove Physics.Object.RotationMatrix.xx
+scoreboard objectives remove Physics.Object.RotationMatrix.xy
+scoreboard objectives remove Physics.Object.RotationMatrix.xz
+scoreboard objectives remove Physics.Object.RotationMatrix.yx
+scoreboard objectives remove Physics.Object.RotationMatrix.yy
+scoreboard objectives remove Physics.Object.RotationMatrix.yz
+scoreboard objectives remove Physics.Object.RotationMatrix.zx
+scoreboard objectives remove Physics.Object.RotationMatrix.zy
+scoreboard objectives remove Physics.Object.RotationMatrix.zz
 
 scoreboard objectives remove Physics.Object.SpecificInverseInertiaLocal.x
 scoreboard objectives remove Physics.Object.SpecificInverseInertiaLocal.y
 scoreboard objectives remove Physics.Object.SpecificInverseInertiaLocal.z
 
-scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.00
-scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.01
-scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.02
-scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.10
-scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.11
-scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.12
-scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.20
-scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.21
-scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.22
+scoreboard objectives remove Physics.Object.SpecificInverseInertiaLocal.ReferenceAxis.Index
+scoreboard objectives remove Physics.Object.SpecificInverseInertiaLocal.ReferenceAxis.Value
+scoreboard objectives remove Physics.Object.SpecificInverseInertiaLocal.TangentDifference.x
+scoreboard objectives remove Physics.Object.SpecificInverseInertiaLocal.TangentDifference.y
+scoreboard objectives remove Physics.Object.SpecificInverseInertiaLocal.TangentDifference.z
+
+scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.xx
+scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.xy
+scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.xz
+scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.yx
+scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.yy
+scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.yz
+scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.zx
+scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.zy
+scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.zz
 
 scoreboard objectives remove Physics.Object.AccumulatedForce.x
 scoreboard objectives remove Physics.Object.AccumulatedForce.y

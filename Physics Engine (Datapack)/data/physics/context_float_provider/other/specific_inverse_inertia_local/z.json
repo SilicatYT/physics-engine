@@ -1,19 +1,28 @@
 {
-  "type": "minecraft:div",
-  "left": 12,
-  "right": {
-    "type": "minecraft:add",
-    "inputs": [
-      {
-        "type": "minecraft:storage",
-        "storage": "physics:zprivate",
-        "path": "temp.squared_scale_x"
-      },
-      {
-        "type": "minecraft:storage",
-        "storage": "physics:zprivate",
-        "path": "temp.squared_scale_y"
-      }
-    ]
+  "type": "minecraft:round",
+  "input": {
+    "type": "minecraft:div",
+    "left": {
+      "type": "minecraft:mul",
+      "inputs": [
+        12,
+        16384
+      ]
+    },
+    "right": {
+      "type": "minecraft:add",
+      "inputs": [
+        {
+          "type": "minecraft:storage",
+          "storage": "physics:zprivate",
+          "path": "temp.squared_scale_x"
+        },
+        {
+          "type": "minecraft:storage",
+          "storage": "physics:zprivate",
+          "path": "temp.squared_scale_y"
+        }
+      ]
+    }
   }
 }

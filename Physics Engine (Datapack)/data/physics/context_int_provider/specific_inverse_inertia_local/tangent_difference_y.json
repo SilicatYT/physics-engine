@@ -1,0 +1,13 @@
+{
+  "type": "minecraft:sub",
+  "left": {
+    "type": "minecraft:score",
+    "target": "this",
+    "score": "Physics.Object.SpecificInverseInertiaLocal.TangentDifference.y"
+  },
+  "right": {
+    "type": "minecraft:score",
+    "target": "this",
+    "score": "Physics.Object.SpecificInverseInertiaLocal.ReferenceAxis.Value"
+  }
+}

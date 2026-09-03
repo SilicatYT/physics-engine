@@ -1,31 +1,29 @@
 NOTE: These values are not final and are subject to change
 NOTE: Scaling factors should be powers of two to avoid floating point rounding during the calculations
+NOTE: Floats can represent 24bit integers losslessly, so I can scale values to at least "max value = 2^24 = 16777216" and downscale them in context float providers unless I intend to use them in integer calculations.
+NOTE: +-/* for floats that are scaled up by a power of two doesn't require dividing the individual numbers by their scaling factor first. Precision doesn't get lost.
 
 Settings:
 - ...
 
 Object:
 - BlockPos: 1x
-- PosWithinBlock: 131,072x
-   - (OVERTHINK: Maybe entirely use data storages. Maybe number providers can eventually access entity pos directly, at which case I'd only need a single low-scaled score for global AABB calculation)
-- LinearVelocity: 16,384x
-- AngularVelocity: 16,384x
-- Scale: 1,024x
-   - Allowed range: 64-10,240 (1/16 - 10 blocks) (Maybe increase the max possible size, after making sure it doesn't cause overflows anywhere)
-- InverseMass: 268,435,456x
+- PosWithinBlock: 16,777,216x (2^24. Max value of 1.0, so a scale of 2^24 works)
+- LinearVelocity: 131,072x (2^17, so 7 bits for whole-block velocity, meaning a max velocity of 128 blocks, over 5 blocks per tick. Far more than I can handle anyway)
+- AngularVelocity: 262,144x (2^18, so 6 bits for radians. Max 64 radians, or ~10 rotations per second. Supporting any more would be useless)
+- Scale: 65,536x (2^16, so 8 bits for full blocks. Leaves opportunity for objects spanning 256 blocks across. Inertia breaks way before that currently (2^14), but it's good to support for static objects)
+- InverseMass: 268,435,456x (2^28)
    - (OVERTHINK: Maybe such a high value causes floating point issues in the calculations? Perhaps there's a balance between "Not too low: precision loss due to ints" and "Not too high: precision loss due to floats"?)
-   - (If possible, try to use a float directly)
    - Maybe scale a little lower. Right now, it can increment ~200g, and 537,000 tonnes is the largest possible mass before it becomes infinite. A lower scale would preserve more floating point accuracy when applying impulses.
-- Orientation: 16,384x
-- AccumulatedForce: 16,384x
-- AccumulatedTorque: 16,384x
-- LinearVelocityFromAcceleration: 16,384x
-- AngularVelocityFromTorque: 16,384x
-- RotationMatrix & Transpose: 16,384x
-- SpecificInverseInertiaLocal: 16,384x (InverseInertiaTensorLocal without mass, necessary to avoid overflows or precision errors while storing)
-- SpecificInverseInertiaWorld: 16,384x (InverseInertiaTensorWorld without mass, necessary to avoid overflows or precision errors)
+- Orientation: 16,777,216x (2^24. Max value of 1.0, so a scale of 2^24 works)
+- AccumulatedForce: 16,384x (2^14. Maybe decrease to 2^12 to support larger force for heavy objects, while losing some precision for small force?)
+- AccumulatedTorque: 16,384x (2^14. Maybe decrease to 2^12 to support larger torque for heavy objects, while losing some precision for small torque?)
+- LinearVelocityFromAcceleration: 131,072x
+- AngularVelocityFromTorque: 262,144x
+- RotationMatrix: 16,777,216x (2^24. Max value of 1.0, so a scale of 2^24 works)
+- SpecificInverseInertiaLocal: 16,384x (2^14. InverseInertiaTensorLocal without mass, necessary to avoid overflows or precision errors while storing)
+- SpecificInverseInertiaWorld: 16,384x (21^4. InverseInertiaTensorWorld without mass, necessary to avoid overflows or precision errors)
    - Have to avoid overflows. Store in the entity as floats as soon as possible. I could also store it in 2 ints so I could actually store the inverse inertia tensor with the mass component.
-- Axes: 16,384x (Same as RotationMatrix)
 
 
 
@@ -35,6 +33,7 @@ BENCHMARK:
 - inline vs file value provider => Files are faster
 - value provider on scores (Extra operations for downscaling) vs data storages (direct, no extra operations)
 - Value re-use vs put everything in the same provider
+- Scaling the final result of compute vs adding "mul"
 
 MAYBE USE NUMBER PROVIDERS AND "match_block" TO GET HITBOX SIZES? (Although, it would only support single hitboxes)
    - Maybe use an "if block" check to see how many hitboxes it has (hardcoded), then run the numberproviders for "hitbox1", "hitbox2", etc?
