@@ -1,5 +1,5 @@
 # Integration (Phase 1)
-execute as @e[type=minecraft:item_display,tag=Physics.Object] run function physics:zprivate/simulation/integration/phase_one/main
+execute as @e[type=minecraft:item_display,tag=Physics.Object] at @s run function physics:zprivate/simulation/integration/phase_one/main
 
 # Collision Detection
 # (Note): Leads into Contact Generation

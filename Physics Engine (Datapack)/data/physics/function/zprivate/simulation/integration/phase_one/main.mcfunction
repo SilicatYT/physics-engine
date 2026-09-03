@@ -20,16 +20,16 @@ execute store result score @s Physics.Object.PosWithinBlock.z run data get stora
     # (Formula): (AccumulatedForce * InverseMass + Gravity) * DeltaTime
     # (TODO): Check if a division by the DeltaTimeDenominator score is faster than a multiplication with the data storage
     # (TODO): Right now it re-calculates the scaled down inverseMass 3x. Check if calculating it once and storing in in a data storage is faster.
-    execute unless score @s Physics.Object.InverseMass matches 0 store result score @s Physics.Object.LinearVelocityFromAcceleration.x Physics run compute default float physics:integration/linear_velocity_from_acceleration_x 131072
-    execute unless score @s Physics.Object.InverseMass matches 0 store result score @s Physics.Object.LinearVelocityFromAcceleration.y Physics run compute default float physics:integration/linear_velocity_from_acceleration_y 131072
-    execute unless score @s Physics.Object.InverseMass matches 0 store result score @s Physics.Object.LinearVelocityFromAcceleration.z Physics run compute default float physics:integration/linear_velocity_from_acceleration_z 131072
+    execute unless score @s Physics.Object.InverseMass matches 0 store result score @s Physics.Object.LinearVelocityFromAcceleration.x run compute default float physics:integration/linear_velocity_from_acceleration/x 131072
+    execute unless score @s Physics.Object.InverseMass matches 0 store result score @s Physics.Object.LinearVelocityFromAcceleration.y run compute default float physics:integration/linear_velocity_from_acceleration/y 131072
+    execute unless score @s Physics.Object.InverseMass matches 0 store result score @s Physics.Object.LinearVelocityFromAcceleration.z run compute default float physics:integration/linear_velocity_from_acceleration/z 131072
 
     # Apply damping, then acceleration
     # (Formula): LinearVelocity * LinearDampingPerTick + LinearVelocityFromAcceleration
     # (Note): The values are not scaled down during the calculation, so no compute scaling factor necessary here.
-    execute store result score @s Physics.Object.LinearVelocity.x run compute default float physics:integration/damped_linear_velocity_plus_acceleration_x
-    execute store result score @s Physics.Object.LinearVelocity.y run compute default float physics:integration/damped_linear_velocity_plus_acceleration_y
-    execute store result score @s Physics.Object.LinearVelocity.z run compute default float physics:integration/damped_linear_velocity_plus_acceleration_z
+    execute store result score @s Physics.Object.LinearVelocity.x run compute default float physics:integration/damped_linear_velocity_plus_acceleration/x
+    execute store result score @s Physics.Object.LinearVelocity.y run compute default float physics:integration/damped_linear_velocity_plus_acceleration/y
+    execute store result score @s Physics.Object.LinearVelocity.z run compute default float physics:integration/damped_linear_velocity_plus_acceleration/z
 
 # Update angular velocity
     # Apply torque (Constant, affected by deltatime)

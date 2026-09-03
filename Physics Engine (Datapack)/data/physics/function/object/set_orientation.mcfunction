@@ -10,9 +10,10 @@ data modify storage physics:zprivate temp.orientation[2] set compute default flo
 data modify storage physics:zprivate temp.orientation[3] set compute default float physics:other/set_orientation/a
 data modify entity @s transformation.left_rotation set from storage physics:zprivate temp.orientation
 
-execute store result score @s Physics.Object.Orientation.x run data get storage physics:zprivate temp.orientation[0] 16384
-execute store result score @s Physics.Object.Orientation.y run data get storage physics:zprivate temp.orientation[1] 16384
-execute store result score @s Physics.Object.Orientation.z run data get storage physics:zprivate temp.orientation[2] 16384
-execute store result score @s Physics.Object.Orientation.a run data get storage physics:zprivate temp.orientation[3] 16384
+execute store result score @s Physics.Object.Orientation.x run data get storage physics:zprivate temp.orientation[0] 16777216
+execute store result score @s Physics.Object.Orientation.y run data get storage physics:zprivate temp.orientation[1] 16777216
+execute store result score @s Physics.Object.Orientation.z run data get storage physics:zprivate temp.orientation[2] 16777216
+execute store result score @s Physics.Object.Orientation.a run data get storage physics:zprivate temp.orientation[3] 16777216
 
-# Update axes, rotation matrix, its transpose, inverseInertiaTensorWorld
+# Update rotation matrix & specific inverse inertia (world)
+function physics:zprivate/update_dependencies/orientation

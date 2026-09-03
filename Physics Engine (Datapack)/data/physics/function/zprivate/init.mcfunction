@@ -3,6 +3,9 @@ scoreboard players set #Physics.Init Physics 1
 # Tellraw
 tellraw @a ["",{text:"Physics Engine >> ",color:"#12D9D6"},"Installed Physics Engine (v0.0.1)"]
 
+# Gamerules
+gamerule max_command_sequence_length 2147483647
+
 # Add scoreboard objectives
   # Object
   scoreboard objectives add Physics.Object.BlockPos.x dummy
