@@ -3,7 +3,7 @@
   "left": {
     "type": "minecraft:score",
     "target": "this",
-    "score": "Physics.Object.SpecificInverseInertiaLocal.TangentDifference.z"
+    "score": "Physics.Object.SpecificInverseInertiaLocal.z"
   },
   "right": {
     "type": "minecraft:score",

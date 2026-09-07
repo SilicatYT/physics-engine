@@ -3,9 +3,9 @@ $data modify storage physics:zprivate temp.scale set value $(scale)
 execute store result score #Physics.IsTrue Physics run compute default integer physics:other/set_scale/is_valid
 execute if score #Physics.IsTrue Physics matches 0 run data modify storage physics:zprivate temp.scale set from storage physics:zprivate fallback_default.scale
 
-execute store result score @s Physics.Object.Scale.x run data get storage physics:zprivate temp.scale[0] 1024
-execute store result score @s Physics.Object.Scale.y run data get storage physics:zprivate temp.scale[1] 1024
-execute store result score @s Physics.Object.Scale.z run data get storage physics:zprivate temp.scale[2] 1024
+execute store result score @s Physics.Object.Scale.x run data get storage physics:zprivate temp.scale[0] 65536
+execute store result score @s Physics.Object.Scale.y run data get storage physics:zprivate temp.scale[1] 65536
+execute store result score @s Physics.Object.Scale.z run data get storage physics:zprivate temp.scale[2] 65536
 data modify entity @s transformation.scale set from storage physics:zprivate temp.scale
 
 # Update specific inverse inertia (local)
@@ -28,7 +28,8 @@ scoreboard players reset @s Physics.Object.SpecificInverseInertiaLocal.TangentDi
 scoreboard players reset @s Physics.Object.SpecificInverseInertiaLocal.TangentDifference.z
 
 tag @s remove Physics.IsIsotropic
-execute if score @s Physics.Object.SpecificInverseInertiaLocal.x = @s Physics.Object.SpecificInverseInertiaLocal.y if score @s Physics.Object.SpecificInverseInertiaLocal.y = @s Physics.Object.SpecificInverseInertiaLocal.z run return run tag @s add Physics.IsIsotropic
+execute if score @s Physics.Object.SpecificInverseInertiaLocal.x = @s Physics.Object.SpecificInverseInertiaLocal.y if score @s Physics.Object.SpecificInverseInertiaLocal.y = @s Physics.Object.SpecificInverseInertiaLocal.z run tag @s add Physics.IsIsotropic
+execute if entity @s[tag=Physics.IsIsotropic] store result score @s Physics.Object.SpecificInverseInertiaWorld.xx store result score @s Physics.Object.SpecificInverseInertiaWorld.yy run return run scoreboard players operation @s Physics.Object.SpecificInverseInertiaWorld.zz = @s Physics.Object.SpecificInverseInertiaLocal.x
 
 execute if score @s Physics.Object.SpecificInverseInertiaLocal.x = @s Physics.Object.SpecificInverseInertiaLocal.y run scoreboard players set @s Physics.Object.SpecificInverseInertiaLocal.ReferenceAxis.Index 0
 execute if score @s Physics.Object.SpecificInverseInertiaLocal.x = @s Physics.Object.SpecificInverseInertiaLocal.y run scoreboard players operation @s Physics.Object.SpecificInverseInertiaLocal.ReferenceAxis.Value = @s Physics.Object.SpecificInverseInertiaLocal.x

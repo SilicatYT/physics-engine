@@ -6,7 +6,8 @@
       "type": "minecraft:mul",
       "inputs": [
         12,
-        16384
+        65536,
+        262144
       ]
     },
     "right": {

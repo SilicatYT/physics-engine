@@ -13,7 +13,6 @@ Object:
 - AngularVelocity: 262,144x (2^18, so 6 bits for radians. Max 64 radians, or ~10 rotations per second. Supporting any more would be useless)
 - Scale: 65,536x (2^16, so 8 bits for full blocks. Leaves opportunity for objects spanning 256 blocks across. Inertia breaks way before that currently (2^14), but it's good to support for static objects)
 - InverseMass: 268,435,456x (2^28)
-   - (OVERTHINK: Maybe such a high value causes floating point issues in the calculations? Perhaps there's a balance between "Not too low: precision loss due to ints" and "Not too high: precision loss due to floats"?)
    - Maybe scale a little lower. Right now, it can increment ~200g, and 537,000 tonnes is the largest possible mass before it becomes infinite. A lower scale would preserve more floating point accuracy when applying impulses.
 - Orientation: 16,777,216x (2^24. Max value of 1.0, so a scale of 2^24 works)
 - AccumulatedForce: 16,384x (2^14. Maybe decrease to 2^12 to support larger force for heavy objects, while losing some precision for small force?)
@@ -21,9 +20,10 @@ Object:
 - LinearVelocityFromAcceleration: 131,072x
 - AngularVelocityFromTorque: 262,144x
 - RotationMatrix: 16,777,216x (2^24. Max value of 1.0, so a scale of 2^24 works)
-- SpecificInverseInertiaLocal: 16,384x (2^14. InverseInertiaTensorLocal without mass, necessary to avoid overflows or precision errors while storing)
-- SpecificInverseInertiaWorld: 16,384x (21^4. InverseInertiaTensorWorld without mass, necessary to avoid overflows or precision errors)
-   - Have to avoid overflows. Store in the entity as floats as soon as possible. I could also store it in 2 ints so I could actually store the inverse inertia tensor with the mass component.
+- SpecificInverseInertiaLocal: 262,144x (2^18. InverseInertiaTensorLocal without mass, necessary to avoid overflows or precision errors while storing)
+- SpecificInverseInertiaWorld: 262,144x (2^18. InverseInertiaTensorWorld without mass, necessary to avoid overflows or precision errors while storing)
+   - With this, it supports a max scale of ~32 and works for the min scale. Going higher would get close to overflowing, whereas going lower wouldn't do anything beneficial for my supported object scale.
+   - I could also store it in 2 ints so I could actually store the inverse inertia tensor with the mass component.
 
 
 

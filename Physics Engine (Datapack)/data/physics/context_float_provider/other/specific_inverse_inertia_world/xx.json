@@ -1,0 +1,147 @@
+{
+  "type": "minecraft:add",
+  "inputs": [
+    {
+      "type": "minecraft:from_int",
+      "input": {
+        "type": "minecraft:score",
+        "target": "this",
+        "score": "Physics.Object.SpecificInverseInertiaLocal.ReferenceAxis.Value"
+      }
+    },
+    {
+      "type": "minecraft:round",
+      "input": {
+        "type": "minecraft:mul",
+        "inputs": [
+          {
+            "type": "minecraft:add",
+            "inputs": [
+              {
+                "type": "minecraft:conditional",
+                "condition": {
+                  "type": "minecraft:inverted",
+                  "term": {
+                    "type": "minecraft:int_value_check",
+                    "value": {
+                      "type": "minecraft:score",
+                      "target": "this",
+                      "score": "Physics.Object.SpecificInverseInertiaLocal.ReferenceAxis.Index"
+                    },
+                    "test": 0
+                  }
+                },
+                "on_true": {
+                  "type": "minecraft:mul",
+                  "inputs": [
+                    {
+                      "type": "minecraft:pow",
+                      "base": {
+                        "type": "minecraft:from_int",
+                        "input": {
+                          "type": "minecraft:score",
+                          "target": "this",
+                          "score": "Physics.Object.RotationMatrix.xx"
+                        }
+                      },
+                      "exponent": 2
+                    },
+                    {
+                      "type": "minecraft:from_int",
+                      "input": {
+                        "type": "minecraft:score",
+                        "target": "this",
+                        "score": "Physics.Object.SpecificInverseInertiaLocal.TangentDifference.x"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "minecraft:conditional",
+                "condition": {
+                  "type": "minecraft:inverted",
+                  "term": {
+                    "type": "minecraft:int_value_check",
+                    "value": {
+                      "type": "minecraft:score",
+                      "target": "this",
+                      "score": "Physics.Object.SpecificInverseInertiaLocal.ReferenceAxis.Index"
+                    },
+                    "test": 1
+                  }
+                },
+                "on_true": {
+                  "type": "minecraft:mul",
+                  "inputs": [
+                    {
+                      "type": "minecraft:pow",
+                      "base": {
+                        "type": "minecraft:from_int",
+                        "input": {
+                          "type": "minecraft:score",
+                          "target": "this",
+                          "score": "Physics.Object.RotationMatrix.xy"
+                        }
+                      },
+                      "exponent": 2
+                    },
+                    {
+                      "type": "minecraft:from_int",
+                      "input": {
+                        "type": "minecraft:score",
+                        "target": "this",
+                        "score": "Physics.Object.SpecificInverseInertiaLocal.TangentDifference.y"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "type": "minecraft:conditional",
+                "condition": {
+                  "type": "minecraft:inverted",
+                  "term": {
+                    "type": "minecraft:int_value_check",
+                    "value": {
+                      "type": "minecraft:score",
+                      "target": "this",
+                      "score": "Physics.Object.SpecificInverseInertiaLocal.ReferenceAxis.Index"
+                    },
+                    "test": 2
+                  }
+                },
+                "on_true": {
+                  "type": "minecraft:mul",
+                  "inputs": [
+                    {
+                      "type": "minecraft:pow",
+                      "base": {
+                        "type": "minecraft:from_int",
+                        "input": {
+                          "type": "minecraft:score",
+                          "target": "this",
+                          "score": "Physics.Object.RotationMatrix.xz"
+                        }
+                      },
+                      "exponent": 2
+                    },
+                    {
+                      "type": "minecraft:from_int",
+                      "input": {
+                        "type": "minecraft:score",
+                        "target": "this",
+                        "score": "Physics.Object.SpecificInverseInertiaLocal.TangentDifference.z"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          3.552713678800501e-15
+        ]
+      }
+    }
+  ]
+}
