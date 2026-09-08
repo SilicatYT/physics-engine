@@ -21,11 +21,16 @@ execute store result score @s Physics.Object.SpecificInverseInertiaLocal.z run c
 
 # Perform pre-calculations for specific inverse inertia (world)
 # (Note): If a scale is repeated twice, I can skip some calculations.
+# (Note): I also reset the off-diagonal world tensor values here, because if the object is isotropic, the tensor is directly set to be diagonal-only in this function.
 scoreboard players reset @s Physics.Object.SpecificInverseInertiaLocal.ReferenceAxis.Index
 scoreboard players reset @s Physics.Object.SpecificInverseInertiaLocal.ReferenceAxis.Value
 scoreboard players reset @s Physics.Object.SpecificInverseInertiaLocal.TangentDifference.x
 scoreboard players reset @s Physics.Object.SpecificInverseInertiaLocal.TangentDifference.y
 scoreboard players reset @s Physics.Object.SpecificInverseInertiaLocal.TangentDifference.z
+
+scoreboard players reset @s Physics.Object.SpecificInverseInertiaWorld.xy
+scoreboard players reset @s Physics.Object.SpecificInverseInertiaWorld.xz
+scoreboard players reset @s Physics.Object.SpecificInverseInertiaWorld.yz
 
 tag @s remove Physics.IsIsotropic
 execute if score @s Physics.Object.SpecificInverseInertiaLocal.x = @s Physics.Object.SpecificInverseInertiaLocal.y if score @s Physics.Object.SpecificInverseInertiaLocal.y = @s Physics.Object.SpecificInverseInertiaLocal.z run tag @s add Physics.IsIsotropic

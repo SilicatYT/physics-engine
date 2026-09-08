@@ -17,8 +17,8 @@ Object:
 - Orientation: 16,777,216x (2^24. Max value of 1.0, so a scale of 2^24 works)
 - AccumulatedForce: 16,384x (2^14. Maybe decrease to 2^12 to support larger force for heavy objects, while losing some precision for small force?)
 - AccumulatedTorque: 16,384x (2^14. Maybe decrease to 2^12 to support larger torque for heavy objects, while losing some precision for small torque?)
-- LinearVelocityFromAcceleration: 131,072x
-- AngularVelocityFromTorque: 262,144x
+- LinearVelocityFromAcceleration: 131,072x (2^17)
+- AngularVelocityFromTorque: 262,144x (2^18)
 - RotationMatrix: 16,777,216x (2^24. Max value of 1.0, so a scale of 2^24 works)
 - SpecificInverseInertiaLocal: 262,144x (2^18. InverseInertiaTensorLocal without mass, necessary to avoid overflows or precision errors while storing)
 - SpecificInverseInertiaWorld: 262,144x (2^18. InverseInertiaTensorWorld without mass, necessary to avoid overflows or precision errors while storing)

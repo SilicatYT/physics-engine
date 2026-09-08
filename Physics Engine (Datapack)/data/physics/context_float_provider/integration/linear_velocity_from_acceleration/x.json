@@ -2,38 +2,26 @@
   "type": "minecraft:mul",
   "inputs": [
     {
-      "type": "minecraft:mul",
-      "inputs": [
-        {
-          "type": "minecraft:div",
-          "left": {
-            "type": "minecraft:from_int",
-            "input": {
-              "type": "minecraft:score",
-              "target": "this",
-              "score": "Physics.Object.InverseMass"
-            }
-          },
-          "right": 268435456
-        },
-        {
-          "type": "minecraft:div",
-          "left": {
-            "type": "minecraft:from_int",
-            "input": {
-              "type": "minecraft:score",
-              "target": "this",
-              "score": "Physics.Object.AccumulatedForce.x"
-            }
-          },
-          "right": 16384
-        }
-      ]
+      "type": "minecraft:from_int",
+      "input": {
+        "type": "minecraft:score",
+        "target": "this",
+        "score": "Physics.Object.AccumulatedForce.x"
+      }
+    },
+    {
+      "type": "minecraft:from_int",
+      "input": {
+        "type": "minecraft:score",
+        "target": "this",
+        "score": "Physics.Object.InverseMass"
+      }
     },
     {
       "type": "minecraft:storage",
       "storage": "physics:zprivate",
       "path": "settings.simulation.derived.delta_time"
-    }
+    },
+    2.9802322387695312e-8
   ]
 }

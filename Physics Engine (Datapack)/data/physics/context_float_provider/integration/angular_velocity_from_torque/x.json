@@ -1,0 +1,82 @@
+{
+  "type": "minecraft:mul",
+  "inputs": [
+    {
+      "type": "minecraft:add",
+      "inputs": [
+        {
+          "type": "minecraft:mul",
+          "inputs": [
+            {
+              "type": "minecraft:from_int",
+              "input": {
+                "type": "minecraft:score",
+                "target": "this",
+                "score": "Physics.Object.SpecificInverseInertiaWorld.xx"
+              }
+            },
+            {
+              "type": "minecraft:from_int",
+              "input": {
+                "type": "minecraft:score",
+                "target": "this",
+                "score": "Physics.Object.AccumulatedTorque.x"
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:mul",
+          "inputs": [
+            {
+              "type": "minecraft:from_int",
+              "input": {
+                "type": "minecraft:score",
+                "target": "this",
+                "score": "Physics.Object.SpecificInverseInertiaWorld.xy"
+              }
+            },
+            {
+              "type": "minecraft:from_int",
+              "input": {
+                "type": "minecraft:score",
+                "target": "this",
+                "score": "Physics.Object.AccumulatedTorque.y"
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:mul",
+          "inputs": [
+            {
+              "type": "minecraft:from_int",
+              "input": {
+                "type": "minecraft:score",
+                "target": "this",
+                "score": "Physics.Object.SpecificInverseInertiaWorld.xz"
+              }
+            },
+            {
+              "type": "minecraft:from_int",
+              "input": {
+                "type": "minecraft:score",
+                "target": "this",
+                "score": "Physics.Object.AccumulatedTorque.z"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "minecraft:from_int",
+      "input": {
+        "type": "minecraft:score",
+        "target": "this",
+        "score": "Physics.Object.InverseMass"
+      }
+    },
+    2.27373675443232059478759765625e-13
+  ]
+}
