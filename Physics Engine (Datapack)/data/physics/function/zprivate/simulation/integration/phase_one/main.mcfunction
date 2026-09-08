@@ -16,6 +16,9 @@ execute store result score @s Physics.Object.PosWithinBlock.y run data get stora
 execute store result score @s Physics.Object.PosWithinBlock.z run data get storage physics:zprivate entity_data.Pos[2] 16777216
 
 # Update linear velocity
+# (Note): I use round() in all these calculations because damping rounding keeps negative values at a minimum -390 without rounding, or -195 with rounding. And gravity causes linearVelocityFromAcceleration to be at least -1 unless gravity is exactly 0, increasing the minimum linear velocity without rounding to -780.
+# (TODO): Check if this is acceptable, or if I should implement a real fix that gets to 0.
+
     # Velocity from acceleration (AccumulatedForce + gravity) (Constant, affected by deltatime)
     # (Formula): (AccumulatedForce * InverseMass + Gravity) * DeltaTime
     # (TODO): Check if a division by the DeltaTimeDenominator score is faster than a multiplication with the data storage.
@@ -32,6 +35,9 @@ execute store result score @s Physics.Object.PosWithinBlock.z run data get stora
     execute store result score @s Physics.Object.LinearVelocity.z run compute default float physics:integration/damped_linear_velocity_plus_acceleration/z
 
 # Update angular velocity
+# (Note): I use round() in all these calculations because damping rounding keeps negative values at a minimum -390 without rounding, or -195 with rounding.
+# (TODO): Check if this is acceptable, or if I should implement a real fix that gets to 0.
+
     # Apply torque (Constant, affected by deltatime)
     # (Formula): InverseInertiaTensorWorld * AccumulatedTorque => Each entry is a dot product: angularVelocityFromTorque[0] = <first row of inertia tensor> * AccumulatedTorque[0]
     # (Note): Because inverseMass isn't included in the inertia I store (for scaling reasons: not enough bits), I additionally multiply each entry by inverseMass here.
@@ -45,6 +51,5 @@ execute store result score @s Physics.Object.PosWithinBlock.z run data get stora
     execute store result score @s Physics.Object.AngularVelocity.y run compute default float physics:integration/damped_angular_velocity_plus_torque/y
     execute store result score @s Physics.Object.AngularVelocity.z run compute default float physics:integration/damped_angular_velocity_plus_torque/z
 
-# TODO: Check if I need to add guards to make sure velocity doesn't get stuck at 1 or -1 forever
 # TODO: InverseInertiaTensorWorld is symmetrical, so I only need 6 components
 # TODO: Check if performing the int addition of damped_linear_velocity_plus_acceleration in an integer number provider is faster or more precise

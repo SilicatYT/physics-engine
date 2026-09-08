@@ -1,31 +1,34 @@
 {
-  "type": "minecraft:add",
-  "inputs": [
-    {
-      "type": "minecraft:mul",
-      "inputs": [
-        {
-          "type": "minecraft:from_int",
-          "input": {
-            "type": "minecraft:score",
-            "target": "this",
-            "score": "Physics.Object.LinearVelocity.x"
+  "type": "minecraft:round",
+  "input": {
+    "type": "minecraft:add",
+    "inputs": [
+      {
+        "type": "minecraft:mul",
+        "inputs": [
+          {
+            "type": "minecraft:from_int",
+            "input": {
+              "type": "minecraft:score",
+              "target": "this",
+              "score": "Physics.Object.LinearVelocity.x"
+            }
+          },
+          {
+            "type": "minecraft:storage",
+            "storage": "physics:zprivate",
+            "path": "settings.simulation.derived.linear_damping_per_tick"
           }
-        },
-        {
-          "type": "minecraft:storage",
-          "storage": "physics:zprivate",
-          "path": "settings.simulation.derived.linear_damping_per_tick"
+        ]
+      },
+      {
+        "type": "minecraft:from_int",
+        "input": {
+          "type": "minecraft:score",
+          "target": "this",
+          "score": "Physics.Object.LinearVelocityFromAcceleration.x"
         }
-      ]
-    },
-    {
-      "type": "minecraft:from_int",
-      "input": {
-        "type": "minecraft:score",
-        "target": "this",
-        "score": "Physics.Object.LinearVelocityFromAcceleration.x"
       }
-    }
-  ]
+    ]
+  }
 }

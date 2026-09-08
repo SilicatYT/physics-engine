@@ -6,4 +6,12 @@ execute if score #Physics.IsTrue Physics matches 0 run data modify storage physi
 execute store result score @s Physics.Object.InverseMass run data get storage physics:zprivate temp.inverse_mass 268435456
 
 # Reset values that need to be 0 if object has infinite mass
-execute if score @s Physics.Object.InverseMass matches 0 store result score @s Physics.Object.LinearVelocityFromAcceleration.x store result score @s Physics.Object.LinearVelocityFromAcceleration.y run scoreboard players set @s Physics.Object.LinearVelocityFromAcceleration.x 0
+execute if score @s Physics.Object.InverseMass matches 1 run return 0
+
+scoreboard players reset @s Physics.Object.LinearVelocityFromAcceleration.x
+scoreboard players reset @s Physics.Object.LinearVelocityFromAcceleration.y
+scoreboard players reset @s Physics.Object.LinearVelocityFromAcceleration.z
+
+scoreboard players reset @s Physics.Object.AngularVelocityFromTorque.x
+scoreboard players reset @s Physics.Object.AngularVelocityFromTorque.y
+scoreboard players reset @s Physics.Object.AngularVelocityFromTorque.z
