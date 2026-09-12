@@ -1,8 +1,8 @@
 $data modify storage physics:zprivate settings.new set value {\
     delta_time_denominator:$(delta_time_denominator),\
-    gravity:$(gravity),\
-    linear_damping:$(linear_damping),\
-    angular_damping:$(angular_damping)\
+    gravity:$(gravity)f,\
+    linear_damping:$(linear_damping)f,\
+    angular_damping:$(angular_damping)f\
 }
 
 # (Note): All setting values are updated every time, because adding guards doesn't matter for one-time calls' performance, and some values depend on others.

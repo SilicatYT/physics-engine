@@ -13,7 +13,7 @@ Object:
 - AngularVelocity: 262,144x (2^18, so 6 bits for radians. Max 64 radians, or ~10 rotations per second. Supporting any more would be useless)
 - Scale: 65,536x (2^16, so 8 bits for full blocks. Leaves opportunity for objects spanning 256 blocks across. Inertia breaks way before that currently (2^14), but it's good to support for static objects)
 - InverseMass: 268,435,456x (2^28)
-   - Maybe scale a little lower. Right now, it can increment ~200g, and 537,000 tonnes is the largest possible mass before it becomes infinite. A lower scale would preserve more floating point accuracy when applying impulses.
+   - Right now, it has small increments, and 268,000 tonnes is the largest possible mass before it becomes infinite. A lower scale would preserve more floating point accuracy when applying impulses.
 - Orientation: 16,777,216x (2^24. Max value of 1.0, so a scale of 2^24 works)
 - AccumulatedForce: 16,384x (2^14. Maybe decrease to 2^12 to support larger force for heavy objects, while losing some precision for small force?)
 - AccumulatedTorque: 16,384x (2^14. Maybe decrease to 2^12 to support larger torque for heavy objects, while losing some precision for small torque?)

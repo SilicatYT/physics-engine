@@ -4,6 +4,7 @@ scoreboard players reset #Physics.Init
     # Datapack Settings
     scoreboard players reset #Physics.Settings.ShowReloadMessage
     scoreboard players reset #Physics.Settings.DeltaTimeDenominator
+    scoreboard players reset #Physics.Settings.Derived.ScaledGravityPerTick
 
     # Simulation settings
 
@@ -73,13 +74,6 @@ scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.zx
 scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.zy
 scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.zz
 
-scoreboard objectives remove Physics.Object.AccumulatedForce.x
-scoreboard objectives remove Physics.Object.AccumulatedForce.y
-scoreboard objectives remove Physics.Object.AccumulatedForce.z
-
-scoreboard objectives remove Physics.Object.AccumulatedTorque.x
-scoreboard objectives remove Physics.Object.AccumulatedTorque.y
-scoreboard objectives remove Physics.Object.AccumulatedTorque.z
 
 scoreboard objectives remove Physics.Object.LinearVelocityFromAcceleration.x
 scoreboard objectives remove Physics.Object.LinearVelocityFromAcceleration.y
@@ -98,3 +92,5 @@ data remove storage physics:zprivate constants
 
 data remove storage physics:object default
 data remove storage physics:object set
+data remove storage physics:object apply_force
+data remove storage physics:object apply_torque

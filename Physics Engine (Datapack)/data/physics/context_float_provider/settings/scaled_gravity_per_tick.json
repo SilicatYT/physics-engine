@@ -1,0 +1,28 @@
+{
+  "type": "minecraft:round",
+  "input": {
+    "type": "minecraft:mul",
+    "inputs": [
+      {
+        "type": "minecraft:div",
+        "left": {
+          "type": "minecraft:storage",
+          "storage": "physics:zprivate",
+          "path": "settings.simulation.gravity"
+        },
+        "right": {
+          "type": "minecraft:from_int",
+          "input": {
+            "type": "minecraft:score",
+            "target": {
+              "type": "minecraft:fixed",
+              "name": "#Physics.Settings.DeltaTimeDenominator"
+            },
+            "score": "Physics"
+          }
+        }
+      },
+      131072
+    ]
+  }
+}

@@ -16,40 +16,35 @@ execute store result score @s Physics.Object.PosWithinBlock.y run data get stora
 execute store result score @s Physics.Object.PosWithinBlock.z run data get storage physics:zprivate entity_data.Pos[2] 16777216
 
 # Update linear velocity
-# (Note): I use round() in all these calculations because damping rounding keeps negative values at a minimum -390 without rounding, or -195 with rounding. And gravity causes linearVelocityFromAcceleration to be at least -1 unless gravity is exactly 0, increasing the minimum linear velocity without rounding to -780.
-# (TODO): Check if this is acceptable, or if I should implement a real fix that gets to 0.
+    # Gravity
+    # (Note): I don't have an "AccumulatedForce" intermediate because it would easily overflow for large objects before any meaningful acceleration is achieved. So when applying force, it's directly converted to LinearVelocityFromAcceleration. So I don't need an additional step calculating that.
+    # (Note): I use round() here for extra precision.
+    execute unless score @s Physics.Object.InverseMass matches 0 run scoreboard players operation @s Physics.Object.LinearVelocityFromAcceleration.y += #Physics.Settings.Derived.ScaledGravityPerTick Physics
 
-    # Velocity from acceleration (AccumulatedForce + gravity) (Constant, affected by deltatime)
-    # (Formula): (AccumulatedForce * InverseMass + Gravity) * DeltaTime
-    # (TODO): Check if a division by the DeltaTimeDenominator score is faster than a multiplication with the data storage.
-    # (TODO): Check if I can reasonably store gravity as a score (for 1 less storage access).
-    # (TODO): Check if I can pre-calculate inverseMass * deltaTime and store it as a score, to remove 1 multiplication from each component.
-    execute unless score @s Physics.Object.InverseMass matches 0 store result score @s Physics.Object.LinearVelocityFromAcceleration.x run compute default float physics:integration/linear_velocity_from_acceleration/x
-    execute unless score @s Physics.Object.InverseMass matches 0 store result score @s Physics.Object.LinearVelocityFromAcceleration.y run compute default float physics:integration/linear_velocity_from_acceleration/y
-    execute unless score @s Physics.Object.InverseMass matches 0 store result score @s Physics.Object.LinearVelocityFromAcceleration.z run compute default float physics:integration/linear_velocity_from_acceleration/z
-
-    # Apply damping, then acceleration
+    # Apply damping, then gravity + acceleration
     # (Formula): LinearVelocity * LinearDampingPerTick + LinearVelocityFromAcceleration
+    # (Note): The number provider clamps between -128 and +128 blocks per second to avoid overflows.
     execute store result score @s Physics.Object.LinearVelocity.x run compute default float physics:integration/damped_linear_velocity_plus_acceleration/x
     execute store result score @s Physics.Object.LinearVelocity.y run compute default float physics:integration/damped_linear_velocity_plus_acceleration/y
     execute store result score @s Physics.Object.LinearVelocity.z run compute default float physics:integration/damped_linear_velocity_plus_acceleration/z
 
 # Update angular velocity
-# (Note): I use round() in all these calculations because damping rounding keeps negative values at a minimum -390 without rounding, or -195 with rounding.
-# (TODO): Check if this is acceptable, or if I should implement a real fix that gets to 0.
-
-    # Apply torque (Constant, affected by deltatime)
-    # (Formula): InverseInertiaTensorWorld * AccumulatedTorque => Each entry is a dot product: angularVelocityFromTorque[0] = <first row of inertia tensor> * AccumulatedTorque[0]
-    # (Note): Because inverseMass isn't included in the inertia I store (for scaling reasons: not enough bits), I additionally multiply each entry by inverseMass here.
-    execute unless score @s Physics.Object.InverseMass matches 0 store result score @s Physics.Object.AngularVelocityFromTorque.x run compute default float physics:integration/angular_velocity_from_torque/x
-    execute unless score @s Physics.Object.InverseMass matches 0 store result score @s Physics.Object.AngularVelocityFromTorque.y run compute default float physics:integration/angular_velocity_from_torque/y
-    execute unless score @s Physics.Object.InverseMass matches 0 store result score @s Physics.Object.AngularVelocityFromTorque.z run compute default float physics:integration/angular_velocity_from_torque/z
+    # (Note): I don't have an "AccumulatedTorque" intermediate because it would easily overflow for large objects before any meaningful acceleration is achieved. So when applying torque, it's directly converted to AngularVelocityFromTorque. So I don't need an additional step calculating that.
 
     # Apply damping, then torque
     # (Formula): AngularVelocity * AngularDampingPerTick + AngularVelocityFromTorque
+    # (Note): The number provider clamps between -62 and +62 radians per second to avoid overflow.
     execute store result score @s Physics.Object.AngularVelocity.x run compute default float physics:integration/damped_angular_velocity_plus_torque/x
     execute store result score @s Physics.Object.AngularVelocity.y run compute default float physics:integration/damped_angular_velocity_plus_torque/y
     execute store result score @s Physics.Object.AngularVelocity.z run compute default float physics:integration/damped_angular_velocity_plus_torque/z
 
-# TODO: InverseInertiaTensorWorld is symmetrical, so I only need 6 components
-# TODO: Check if performing the int addition of damped_linear_velocity_plus_acceleration in an integer number provider is faster or more precise
+# (TODO): Check if performing the int addition of damped_linear_velocity_plus_acceleration in an integer number provider is faster or more precise
+# (TODO): Check if a division by the DeltaTimeDenominator score is faster than a multiplication with the data storage.
+# (TODO): Check if I can pre-calculate inverseMass * deltaTime and store it as a score, to remove 1 multiplication from each component when calculating the acceleration from a force.
+
+
+
+
+# TODO: Add "update orientation", "update rotation matrix & world inertia tensor", NOT "update corner pos" (I'll calculate it when a collision happens, tracked with a score or tag), "update AABB (local & global)" & "update half extent axis projections" to Integration phase 2, as well as "reset velocity from acceleration".
+# ^ but only calculate some of these (half extent axis projections) if there's an object in the AABB. Or is that not worth it for the extra function call? There are no other necessary precalculations *for object-object*. So maybe I'll just calculate it every time, but add a TODO to revisit it later on.
+# ^ Only use an AABB in global pos, scaled up by 64, so I can use it directly in the AABB check. I don't need it anywhere else. But it needs to be rounded properly so it completely covers the object. So min has to be floored, max has to be ceiled

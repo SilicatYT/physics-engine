@@ -1,34 +1,46 @@
 {
-  "type": "minecraft:round",
-  "input": {
-    "type": "minecraft:add",
-    "inputs": [
-      {
-        "type": "minecraft:mul",
-        "inputs": [
-          {
-            "type": "minecraft:from_int",
-            "input": {
-              "type": "minecraft:score",
-              "target": "this",
-              "score": "Physics.Object.AngularVelocity.x"
+  "type": "minecraft:min",
+  "inputs": [
+    {
+      "type": "minecraft:max",
+      "inputs": [
+        {
+          "type": "minecraft:add",
+          "inputs": [
+            {
+              "type": "minecraft:truncate",
+              "input": {
+                "type": "minecraft:mul",
+                "inputs": [
+                  {
+                    "type": "minecraft:from_int",
+                    "input": {
+                      "type": "minecraft:score",
+                      "target": "this",
+                      "score": "Physics.Object.AngularVelocity.x"
+                    }
+                  },
+                  {
+                    "type": "minecraft:storage",
+                    "storage": "physics:zprivate",
+                    "path": "settings.simulation.derived.angular_damping_per_tick"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "minecraft:from_int",
+              "input": {
+                "type": "minecraft:score",
+                "target": "this",
+                "score": "Physics.Object.AngularVelocityFromTorque.x"
+              }
             }
-          },
-          {
-            "type": "minecraft:storage",
-            "storage": "physics:zprivate",
-            "path": "settings.simulation.derived.angular_damping_per_tick"
-          }
-        ]
-      },
-      {
-        "type": "minecraft:from_int",
-        "input": {
-          "type": "minecraft:score",
-          "target": "this",
-          "score": "Physics.Object.AngularVelocityFromTorque.x"
-        }
-      }
-    ]
-  }
+          ]
+        },
+        -16252928
+      ]
+    },
+    16252928
+  ]
 }

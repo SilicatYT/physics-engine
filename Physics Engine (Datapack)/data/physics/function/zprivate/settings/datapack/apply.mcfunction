@@ -1,5 +1,5 @@
 $data modify storage physics:zprivate settings.new set value {\
-    show_reload_message:$(show_reload_message)\
+    show_reload_message:$(show_reload_message)b\
 }
 
 # Setting: Show Reload Message

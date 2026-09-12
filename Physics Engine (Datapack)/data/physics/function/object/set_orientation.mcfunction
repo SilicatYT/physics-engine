@@ -15,5 +15,6 @@ execute store result score @s Physics.Object.Orientation.y run data get storage 
 execute store result score @s Physics.Object.Orientation.z run data get storage physics:zprivate temp.orientation[2] 16777216
 execute store result score @s Physics.Object.Orientation.a run data get storage physics:zprivate temp.orientation[3] 16777216
 
-# Update rotation matrix & specific inverse inertia (world)
-function physics:zprivate/update_dependencies/orientation
+# Update derived data
+function physics:zprivate/update_derived_data/rotation_matrix
+function physics:zprivate/update_derived_data/specific_inverse_world_inertia

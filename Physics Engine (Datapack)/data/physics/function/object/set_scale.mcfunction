@@ -30,7 +30,10 @@ scoreboard players reset @s Physics.Object.SpecificInverseInertiaLocal.TangentDi
 
 scoreboard players reset @s Physics.Object.SpecificInverseInertiaWorld.xy
 scoreboard players reset @s Physics.Object.SpecificInverseInertiaWorld.xz
+scoreboard players reset @s Physics.Object.SpecificInverseInertiaWorld.yx
 scoreboard players reset @s Physics.Object.SpecificInverseInertiaWorld.yz
+scoreboard players reset @s Physics.Object.SpecificInverseInertiaWorld.zx
+scoreboard players reset @s Physics.Object.SpecificInverseInertiaWorld.zy
 
 tag @s remove Physics.IsIsotropic
 execute if score @s Physics.Object.SpecificInverseInertiaLocal.x = @s Physics.Object.SpecificInverseInertiaLocal.y if score @s Physics.Object.SpecificInverseInertiaLocal.y = @s Physics.Object.SpecificInverseInertiaLocal.z run tag @s add Physics.IsIsotropic

@@ -1,0 +1,94 @@
+{
+  "type": "minecraft:round",
+  "input": {
+    "type": "minecraft:add",
+    "inputs": [
+      {
+        "type": "minecraft:mul",
+        "inputs": [
+          {
+            "type": "minecraft:add",
+            "inputs": [
+              {
+                "type": "minecraft:mul",
+                "inputs": [
+                  {
+                    "type": "minecraft:from_int",
+                    "input": {
+                      "type": "minecraft:score",
+                      "target": "this",
+                      "score": "Physics.Object.SpecificInverseInertiaWorld.xx"
+                    }
+                  },
+                  {
+                    "type": "minecraft:storage",
+                    "storage": "physics:object",
+                    "path": "apply_torque[0]"
+                  }
+                ]
+              },
+              {
+                "type": "minecraft:mul",
+                "inputs": [
+                  {
+                    "type": "minecraft:from_int",
+                    "input": {
+                      "type": "minecraft:score",
+                      "target": "this",
+                      "score": "Physics.Object.SpecificInverseInertiaWorld.xy"
+                    }
+                  },
+                  {
+                    "type": "minecraft:storage",
+                    "storage": "physics:object",
+                    "path": "apply_torque[1]"
+                  }
+                ]
+              },
+              {
+                "type": "minecraft:mul",
+                "inputs": [
+                  {
+                    "type": "minecraft:from_int",
+                    "input": {
+                      "type": "minecraft:score",
+                      "target": "this",
+                      "score": "Physics.Object.SpecificInverseInertiaWorld.xz"
+                    }
+                  },
+                  {
+                    "type": "minecraft:storage",
+                    "storage": "physics:object",
+                    "path": "apply_torque[2]"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "type": "minecraft:storage",
+            "storage": "physics:zprivate",
+            "path": "settings.simulation.derived.delta_time"
+          },
+          {
+            "type": "minecraft:from_int",
+            "input": {
+              "type": "minecraft:score",
+              "target": "this",
+              "score": "Physics.Object.InverseMass"
+            }
+          },
+          3.725290298461914e-9
+        ]
+      },
+      {
+        "type": "minecraft:from_int",
+        "input": {
+          "type": "minecraft:score",
+          "target": "this",
+          "score": "Physics.Object.AngularVelocityFromTorque.x"
+        }
+      }
+    ]
+  }
+}

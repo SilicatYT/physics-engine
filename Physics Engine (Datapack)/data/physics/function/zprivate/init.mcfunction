@@ -66,15 +66,8 @@ gamerule max_command_sequence_length 2147483647
   scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.zy dummy
   scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.zz dummy
 
+
   # Object (Other, transient)
-  scoreboard objectives add Physics.Object.AccumulatedForce.x dummy
-  scoreboard objectives add Physics.Object.AccumulatedForce.y dummy
-  scoreboard objectives add Physics.Object.AccumulatedForce.z dummy
-
-  scoreboard objectives add Physics.Object.AccumulatedTorque.x dummy
-  scoreboard objectives add Physics.Object.AccumulatedTorque.y dummy
-  scoreboard objectives add Physics.Object.AccumulatedTorque.z dummy
-
   scoreboard objectives add Physics.Object.LinearVelocityFromAcceleration.x dummy
   scoreboard objectives add Physics.Object.LinearVelocityFromAcceleration.y dummy
   scoreboard objectives add Physics.Object.LinearVelocityFromAcceleration.z dummy
@@ -99,7 +92,7 @@ data modify storage physics:zprivate fallback_default set from storage physics:o
 data modify storage physics:zprivate constants set value {\
   quaternion_min_squared_length: 0.000001f,\
   min_scale: 0.0625f,\
-  max_scale: 10\
+  max_scale: 10f\
 }
 
 # Set initial config dialog
@@ -139,7 +132,7 @@ data modify storage physics:zprivate settings.dialog set value \
           "width": 150,\
           "action": {\
             "type": "minecraft:dynamic/run_command",\
-            "template": "function physics:zprivate/settings/datapack/apply {show_reload_message:$(show_reload_message)}"\
+            "template": "function physics:zprivate/settings/datapack/apply {show_reload_message:$(show_reload_message)b}"\
           }\
         },\
         {\
@@ -222,7 +215,7 @@ data modify storage physics:zprivate settings.dialog set value \
           "width": 150,\
           "action": {\
             "type": "minecraft:dynamic/run_command",\
-            "template": "function physics:zprivate/settings/simulation/apply {delta_time_denominator:$(delta_time_denominator),gravity:$(gravity),linear_damping:$(linear_damping),angular_damping:$(angular_damping)}"\
+            "template": "function physics:zprivate/settings/simulation/apply {delta_time_denominator:$(delta_time_denominator),gravity:$(gravity)f,linear_damping:$(linear_damping)f,angular_damping:$(angular_damping)f}"\
           }\
         },\
         {\

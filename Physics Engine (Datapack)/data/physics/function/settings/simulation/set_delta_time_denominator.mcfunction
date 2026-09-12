@@ -2,3 +2,8 @@
 $scoreboard players set #Physics.Settings.DeltaTimeDenominator Physics $(value)
 execute store result storage physics:zprivate settings.dialog.dialogs[1].inputs[0].initial byte 1 run scoreboard players get #Physics.Settings.DeltaTimeDenominator Physics
 data modify storage physics:zprivate settings.simulation.derived.delta_time set compute default float physics:settings/delta_time
+
+# Update derived settings
+data modify storage physics:zprivate settings.simulation.derived.linear_damping_per_tick set compute default float physics:settings/linear_damping_per_tick
+data modify storage physics:zprivate settings.simulation.derived.angular_damping_per_tick set compute default float physics:settings/angular_damping_per_tick
+execute store result score #Physics.Settings.Derived.ScaledGravityPerTick Physics run compute default float physics:settings/scaled_gravity_per_tick

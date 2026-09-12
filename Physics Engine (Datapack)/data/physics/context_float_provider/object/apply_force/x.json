@@ -1,0 +1,40 @@
+{
+  "type": "minecraft:round",
+  "input": {
+    "type": "minecraft:add",
+    "inputs": [
+      {
+        "type": "minecraft:mul",
+        "inputs": [
+          {
+            "type": "minecraft:storage",
+            "storage": "physics:object",
+            "path": "apply_force[0]"
+          },
+          {
+            "type": "minecraft:from_int",
+            "input": {
+              "type": "minecraft:score",
+              "target": "this",
+              "score": "Physics.Object.InverseMass"
+            }
+          },
+          {
+            "type": "minecraft:storage",
+            "storage": "physics:zprivate",
+            "path": "settings.simulation.derived.delta_time"
+          },
+          0.00048828125
+        ]
+      },
+      {
+        "type": "minecraft:from_int",
+        "input": {
+          "type": "minecraft:score",
+          "target": "this",
+          "score": "Physics.Object.LinearVelocityFromAcceleration.x"
+        }
+      }
+    ]
+  }
+}
