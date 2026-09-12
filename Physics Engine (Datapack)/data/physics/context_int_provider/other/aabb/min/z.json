@@ -1,0 +1,36 @@
+{
+  "type": "minecraft:sub",
+  "left": {
+    "type": "minecraft:add",
+    "inputs": [
+      {
+        "type": "minecraft:mul",
+        "inputs": [
+          {
+            "type": "minecraft:score",
+            "target": "this",
+            "score": "Physics.Object.BlockPos.z"
+          },
+          64
+        ]
+      },
+      {
+        "type": "minecraft:div",
+        "left": {
+          "type": "minecraft:score",
+          "target": "this",
+          "score": "Physics.Object.PosWithinBlock.z"
+        },
+        "right": 262144
+      }
+    ]
+  },
+  "right": {
+    "type": "minecraft:score",
+    "target": {
+      "type": "minecraft:fixed",
+      "name": "#Physics.Math.2"
+    },
+    "score": "Physics"
+  }
+}

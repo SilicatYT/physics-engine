@@ -41,10 +41,3 @@ execute store result score @s Physics.Object.PosWithinBlock.z run data get stora
 # (TODO): Check if performing the int addition of damped_linear_velocity_plus_acceleration in an integer number provider is faster or more precise
 # (TODO): Check if a division by the DeltaTimeDenominator score is faster than a multiplication with the data storage.
 # (TODO): Check if I can pre-calculate inverseMass * deltaTime and store it as a score, to remove 1 multiplication from each component when calculating the acceleration from a force.
-
-
-
-
-# TODO: Add "update orientation", "update rotation matrix & world inertia tensor", NOT "update corner pos" (I'll calculate it when a collision happens, tracked with a score or tag), "update AABB (local & global)" & "update half extent axis projections" to Integration phase 2, as well as "reset velocity from acceleration".
-# ^ but only calculate some of these (half extent axis projections) if there's an object in the AABB. Or is that not worth it for the extra function call? There are no other necessary precalculations *for object-object*. So maybe I'll just calculate it every time, but add a TODO to revisit it later on.
-# ^ Only use an AABB in global pos, scaled up by 64, so I can use it directly in the AABB check. I don't need it anywhere else. But it needs to be rounded properly so it completely covers the object. So min has to be floored, max has to be ceiled

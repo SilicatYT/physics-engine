@@ -1,0 +1,34 @@
+{
+  "type": "minecraft:div",
+  "left": {
+    "type": "minecraft:add",
+    "inputs": [
+      {
+        "type": "minecraft:abs",
+        "input": {
+          "type": "minecraft:score",
+          "target": "this",
+          "score": "Physics.Object.HalfExtentAxisProjection.xz"
+        }
+      },
+      {
+        "type": "minecraft:abs",
+        "input": {
+          "type": "minecraft:score",
+          "target": "this",
+          "score": "Physics.Object.HalfExtentAxisProjection.yz"
+        }
+      },
+      {
+        "type": "minecraft:abs",
+        "input": {
+          "type": "minecraft:score",
+          "target": "this",
+          "score": "Physics.Object.HalfExtentAxisProjection.zz"
+        }
+      },
+      131071
+    ]
+  },
+  "right": 131072
+}

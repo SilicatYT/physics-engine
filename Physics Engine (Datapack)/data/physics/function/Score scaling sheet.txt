@@ -25,6 +25,8 @@ Object:
    - With this, it supports a max scale of ~32 and works for the min scale. Going higher would get close to overflowing, whereas going lower wouldn't do anything beneficial for my supported object scale.
    - I could also store it in 2 ints so I could actually store the inverse inertia tensor with the mass component.
 
+- HalfExtentAxisProjections: 8,388,608x (2^23, so it supports objects of 256 size. Can't scale up more, because small inaccuracies could cause the value to barely overflow)
+- AABB: 64x (2^6. World position, necessary for fast object-object AABB checks. If I need a more accurate one for terrain, that can be added later on.)
 
 
 

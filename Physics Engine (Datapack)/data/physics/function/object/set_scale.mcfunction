@@ -71,3 +71,7 @@ execute store success score #Physics.Check3 Physics if score @s Physics.Object.S
 execute unless score @s Physics.Object.SpecificInverseInertiaLocal.ReferenceAxis.Index matches 0 store result score @s Physics.Object.SpecificInverseInertiaLocal.TangentDifference.x run compute default integer physics:other/specific_inverse_inertia_local/tangent_difference_x
 execute unless score @s Physics.Object.SpecificInverseInertiaLocal.ReferenceAxis.Index matches 1 store result score @s Physics.Object.SpecificInverseInertiaLocal.TangentDifference.y run compute default integer physics:other/specific_inverse_inertia_local/tangent_difference_y
 execute unless score @s Physics.Object.SpecificInverseInertiaLocal.ReferenceAxis.Index matches 2 store result score @s Physics.Object.SpecificInverseInertiaLocal.TangentDifference.z run compute default integer physics:other/specific_inverse_inertia_local/tangent_difference_z
+
+# Update other derived data
+function physics:zprivate/update_derived_data/half_extent_axis_projections
+function physics:zprivate/update_derived_data/aabb

@@ -18,3 +18,5 @@ execute store result score @s Physics.Object.Orientation.a run data get storage 
 # Update derived data
 function physics:zprivate/update_derived_data/rotation_matrix
 function physics:zprivate/update_derived_data/specific_inverse_world_inertia
+function physics:zprivate/update_derived_data/half_extent_axis_projections
+function physics:zprivate/update_derived_data/aabb

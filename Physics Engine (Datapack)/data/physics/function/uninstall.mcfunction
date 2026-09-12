@@ -14,6 +14,10 @@ scoreboard players reset #Physics.Init
     scoreboard players reset #Physics.Check2
     scoreboard players reset #Physics.Check3
 
+    scoreboard players reset #Physics.Math.0
+    scoreboard players reset #Physics.Math.1
+    scoreboard players reset #Physics.Math.2
+
 # Remove scoreboard objectives
 scoreboard objectives remove Physics
 
@@ -74,6 +78,22 @@ scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.zx
 scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.zy
 scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.zz
 
+scoreboard objectives remove Physics.Object.HalfExtentAxisProjection.xx
+scoreboard objectives remove Physics.Object.HalfExtentAxisProjection.xy
+scoreboard objectives remove Physics.Object.HalfExtentAxisProjection.xz
+scoreboard objectives remove Physics.Object.HalfExtentAxisProjection.yx
+scoreboard objectives remove Physics.Object.HalfExtentAxisProjection.yy
+scoreboard objectives remove Physics.Object.HalfExtentAxisProjection.yz
+scoreboard objectives remove Physics.Object.HalfExtentAxisProjection.zx
+scoreboard objectives remove Physics.Object.HalfExtentAxisProjection.zy
+scoreboard objectives remove Physics.Object.HalfExtentAxisProjection.zz
+
+scoreboard objectives remove Physics.Object.Aabb.Max.x
+scoreboard objectives remove Physics.Object.Aabb.Max.y
+scoreboard objectives remove Physics.Object.Aabb.Max.z
+scoreboard objectives remove Physics.Object.Aabb.Min.x
+scoreboard objectives remove Physics.Object.Aabb.Min.y
+scoreboard objectives remove Physics.Object.Aabb.Min.z
 
 scoreboard objectives remove Physics.Object.LinearVelocityFromAcceleration.x
 scoreboard objectives remove Physics.Object.LinearVelocityFromAcceleration.y

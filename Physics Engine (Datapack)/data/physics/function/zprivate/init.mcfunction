@@ -66,6 +66,22 @@ gamerule max_command_sequence_length 2147483647
   scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.zy dummy
   scoreboard objectives add Physics.Object.SpecificInverseInertiaWorld.zz dummy
 
+  scoreboard objectives add Physics.Object.HalfExtentAxisProjection.xx dummy
+  scoreboard objectives add Physics.Object.HalfExtentAxisProjection.xy dummy
+  scoreboard objectives add Physics.Object.HalfExtentAxisProjection.xz dummy
+  scoreboard objectives add Physics.Object.HalfExtentAxisProjection.yx dummy
+  scoreboard objectives add Physics.Object.HalfExtentAxisProjection.yy dummy
+  scoreboard objectives add Physics.Object.HalfExtentAxisProjection.yz dummy
+  scoreboard objectives add Physics.Object.HalfExtentAxisProjection.zx dummy
+  scoreboard objectives add Physics.Object.HalfExtentAxisProjection.zy dummy
+  scoreboard objectives add Physics.Object.HalfExtentAxisProjection.zz dummy
+
+  scoreboard objectives add Physics.Object.Aabb.Max.x dummy
+  scoreboard objectives add Physics.Object.Aabb.Max.y dummy
+  scoreboard objectives add Physics.Object.Aabb.Max.z dummy
+  scoreboard objectives add Physics.Object.Aabb.Min.x dummy
+  scoreboard objectives add Physics.Object.Aabb.Min.y dummy
+  scoreboard objectives add Physics.Object.Aabb.Min.z dummy
 
   # Object (Other, transient)
   scoreboard objectives add Physics.Object.LinearVelocityFromAcceleration.x dummy
