@@ -1,0 +1,35 @@
+{
+  "type": "minecraft:mul",
+  "inputs": [
+    {
+      "type": "minecraft:length",
+      "inputs": [
+        {
+          "type": "minecraft:from_int",
+          "input": {
+            "type": "minecraft:score",
+            "target": "this",
+            "score": "Physics.Object.AngularVelocity.x"
+          }
+        },
+        {
+          "type": "minecraft:from_int",
+          "input": {
+            "type": "minecraft:score",
+            "target": "this",
+            "score": "Physics.Object.AngularVelocity.y"
+          }
+        },
+        {
+          "type": "minecraft:from_int",
+          "input": {
+            "type": "minecraft:score",
+            "target": "this",
+            "score": "Physics.Object.AngularVelocity.z"
+          }
+        }
+      ]
+    },
+    0.000003814697265625
+  ]
+}

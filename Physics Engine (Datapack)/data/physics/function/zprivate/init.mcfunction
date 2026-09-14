@@ -97,6 +97,8 @@ gamerule max_command_sequence_length 2147483647
 # Set initial scores
 
 # Set data storages
+data modify storage physics:zprivate temp.orientation set value [0f, 0f , 0f, 1f]
+
 data modify storage physics:object default set value {\
   scale: [1f, 1f, 1f],\
   orientation: [0f, 0f, 0f, 1f],\
@@ -106,7 +108,7 @@ data modify storage physics:object set set from storage physics:object default
 data modify storage physics:zprivate fallback_default set from storage physics:object default
 
 data modify storage physics:zprivate constants set value {\
-  quaternion_min_squared_length: 0.000001f,\
+  quaternion_min_length_squared: 0.000001f,\
   min_scale: 0.0625f,\
   max_scale: 10f\
 }

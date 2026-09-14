@@ -1,5 +1,6 @@
 tag @s add Physics.Object
 item replace entity @s contents with minecraft:stone
+data merge entity @s {teleport_duration:1, interpolation_duration:1}
 
 # Default values
 function physics:object/set_inverse_mass with storage physics:object default

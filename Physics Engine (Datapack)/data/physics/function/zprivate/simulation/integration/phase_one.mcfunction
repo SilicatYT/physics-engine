@@ -8,12 +8,19 @@ execute store result score @s Physics.Object.BlockPos.y store result storage phy
 execute store result score @s Physics.Object.BlockPos.z store result storage physics:zprivate temp.z int -1 run data get storage physics:zprivate entity_data.Pos[2]
 
 # (Note): I need the PosWithinBlock at high precision. Number providers use floats, so it would be much less precise to use one at large coordinates.
-function physics:zprivate/simulation/integration/phase_one/get_pos_within_block with storage physics:zprivate temp
+function physics:zprivate/macro/relative_tp with storage physics:zprivate temp
 data modify storage physics:zprivate entity_data.Pos set from entity @s Pos
 tp @s ~ ~ ~
 execute store result score @s Physics.Object.PosWithinBlock.x run data get storage physics:zprivate entity_data.Pos[0] 16777216
 execute store result score @s Physics.Object.PosWithinBlock.y run data get storage physics:zprivate entity_data.Pos[1] 16777216
 execute store result score @s Physics.Object.PosWithinBlock.z run data get storage physics:zprivate entity_data.Pos[2] 16777216
+
+# Refresh orientation
+# (Note): Only necessary so it stays normalized.
+execute store result score @s Physics.Object.Orientation.x run data get storage physics:zprivate entity_data.transformation.left_rotation[0] 16777216
+execute store result score @s Physics.Object.Orientation.y run data get storage physics:zprivate entity_data.transformation.left_rotation[1] 16777216
+execute store result score @s Physics.Object.Orientation.z run data get storage physics:zprivate entity_data.transformation.left_rotation[2] 16777216
+execute store result score @s Physics.Object.Orientation.a run data get storage physics:zprivate entity_data.transformation.left_rotation[3] 16777216
 
 # Update linear velocity
     # Gravity
@@ -41,3 +48,4 @@ execute store result score @s Physics.Object.PosWithinBlock.z run data get stora
 # (TODO): Check if performing the int addition of damped_linear_velocity_plus_acceleration in an integer number provider is faster or more precise
 # (TODO): Check if a division by the DeltaTimeDenominator score is faster than a multiplication with the data storage.
 # (TODO): Check if I can pre-calculate inverseMass * deltaTime and store it as a score, to remove 1 multiplication from each component when calculating the acceleration from a force.
+# (TODO): In general, go over everything and check if I can turn it into an integer number provider without losing any visible precision.

@@ -47,7 +47,7 @@
       "min": {
         "type": "minecraft:storage",
         "storage": "physics:zprivate",
-        "path": "constants.quaternion_min_squared_length"
+        "path": "constants.quaternion_min_length_squared"
       }
     }
   },

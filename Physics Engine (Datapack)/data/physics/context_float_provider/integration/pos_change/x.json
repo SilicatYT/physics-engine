@@ -1,0 +1,19 @@
+{
+  "type": "minecraft:mul",
+  "inputs": [
+    {
+      "type": "minecraft:from_int",
+      "input": {
+        "type": "minecraft:score",
+        "target": "this",
+        "score": "Physics.Object.LinearVelocity.x"
+      }
+    },
+    {
+      "type": "minecraft:storage",
+      "storage": "physics:zprivate",
+      "path": "settings.simulation.derived.delta_time"
+    },
+    0.00000762939453125
+  ]
+}

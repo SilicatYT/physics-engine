@@ -1,8 +1,17 @@
 # TODO: Add split velocities from resolution
 
 # Apply velocity to position
+# (TODO): Check whether it's faster or more precise to use an int number provider (and divide by delta time denominator), or to use float and multiply by delta time.
+# (TODO): Check if there's a way to calculate the new Pos without needing a macro or reducing the precision. Currently, I calculate the relative position change.
+data modify storage physics:zprivate temp.x set compute default float physics:integration/pos_change/x
+data modify storage physics:zprivate temp.y set compute default float physics:integration/pos_change/y
+data modify storage physics:zprivate temp.z set compute default float physics:integration/pos_change/z
+function physics:zprivate/macro/relative_tp with storage physics:zprivate temp
 
 # Apply velocity to orientation
+# (Note): Check if I should add a small epsilon for the squared length as the guard, instead of an exact "is not zero" guard.
+data modify storage physics:zprivate temp.length set compute default float physics:integration/update_orientation/velocity_length
+execute if predicate physics:integration/update_orientation/length_is_enough run function physics:zprivate/simulation/integration/phase_two/update_orientation/main
 
 # Clear accumulators
 execute \

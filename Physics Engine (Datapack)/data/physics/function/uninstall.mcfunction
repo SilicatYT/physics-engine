@@ -17,6 +17,9 @@ scoreboard players reset #Physics.Init
     scoreboard players reset #Physics.Math.0
     scoreboard players reset #Physics.Math.1
     scoreboard players reset #Physics.Math.2
+    scoreboard players reset #Physics.Math.3
+
+    # Constants
 
 # Remove scoreboard objectives
 scoreboard objectives remove Physics

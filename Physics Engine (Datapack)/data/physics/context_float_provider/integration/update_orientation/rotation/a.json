@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:mul",
+  "inputs": [
+    {
+      "type": "minecraft:cos",
+      "input": {
+        "type": "minecraft:mul",
+        "inputs": [
+          {
+            "type": "minecraft:storage",
+            "storage": "physics:zprivate",
+            "path": "temp.length"
+          },
+          {
+            "type": "minecraft:storage",
+            "storage": "physics:zprivate",
+            "path": "settings.simulation.derived.delta_time"
+          },
+          0.5
+        ]
+      }
+    },
+    16777216
+  ]
+}

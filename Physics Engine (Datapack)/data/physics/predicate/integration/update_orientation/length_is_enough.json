@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:inverted",
+  "term": {
+    "type": "minecraft:float_value_check",
+    "value": {
+      "type": "minecraft:storage",
+      "storage": "physics:zprivate",
+      "path": "temp.length"
+    },
+    "test": 0
+  }
+}
