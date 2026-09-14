@@ -1,0 +1,45 @@
+{
+  "type": "minecraft:mul",
+  "inputs": [
+    {
+      "type": "minecraft:sin",
+      "input": {
+        "type": "minecraft:mul",
+        "inputs": [
+          {
+            "type": "minecraft:from_int",
+            "input": {
+              "type": "minecraft:score",
+              "target": {
+                "type": "minecraft:fixed",
+                "name": "#Physics.Math.YawRad"
+              },
+              "score": "Physics"
+            }
+          },
+          -3.7252902984619140625e-9
+        ]
+      }
+    },
+    {
+      "type": "minecraft:cos",
+      "input": {
+        "type": "minecraft:mul",
+        "inputs": [
+          {
+            "type": "minecraft:from_int",
+            "input": {
+              "type": "minecraft:score",
+              "target": {
+                "type": "minecraft:fixed",
+                "name": "#Physics.Math.PitchRad"
+              },
+              "score": "Physics"
+            }
+          },
+          3.7252902984619140625e-9
+        ]
+      }
+    }
+  ]
+}

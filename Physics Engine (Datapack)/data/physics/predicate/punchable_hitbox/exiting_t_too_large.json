@@ -1,0 +1,45 @@
+{
+  "type": "minecraft:float_value_check",
+  "value": {
+    "type": "minecraft:from_int",
+    "input": {
+      "type": "minecraft:score",
+      "target": {
+        "type": "minecraft:fixed",
+        "name": "#Physics.Math.t"
+      },
+      "score": "Physics"
+    }
+  },
+  "test": {
+    "min": {
+      "type": "minecraft:mul",
+      "inputs": [
+        {
+          "type": "minecraft:from_int",
+          "input": {
+            "type": "minecraft:max",
+            "inputs": [
+              {
+                "type": "minecraft:score",
+                "target": "this",
+                "score": "Physics.Object.AabbRelative.Max.x"
+              },
+              {
+                "type": "minecraft:score",
+                "target": "this",
+                "score": "Physics.Object.AabbRelative.Max.y"
+              },
+              {
+                "type": "minecraft:score",
+                "target": "this",
+                "score": "Physics.Object.AabbRelative.Max.z"
+              }
+            ]
+          }
+        },
+        0.0541267
+      ]
+    }
+  }
+}

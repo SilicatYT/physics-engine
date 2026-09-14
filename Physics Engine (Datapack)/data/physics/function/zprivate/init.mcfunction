@@ -6,6 +6,10 @@ tellraw @a ["",{text:"Physics Engine >> ",color:"#12D9D6"},"Installed Physics En
 # Gamerules
 gamerule max_command_sequence_length 2147483647
 
+# Summon entities
+# (Note): The marker is used for getting the position at any given command context. It's hexadecimal UUID is: "575f7af5-d0dc-4c2c-9182-17931969f0ba".
+summon minecraft:marker ~ ~ ~ {UUID:[I;1465875189,-790868948,-1853745261,426373306]}
+
 # Add scoreboard objectives
   # Object
   scoreboard objectives add Physics.Object.BlockPos.x dummy
@@ -83,6 +87,13 @@ gamerule max_command_sequence_length 2147483647
   scoreboard objectives add Physics.Object.Aabb.Min.y dummy
   scoreboard objectives add Physics.Object.Aabb.Min.z dummy
 
+  scoreboard objectives add Physics.Object.AabbRelative.Max.x dummy
+  scoreboard objectives add Physics.Object.AabbRelative.Max.y dummy
+  scoreboard objectives add Physics.Object.AabbRelative.Max.z dummy
+  scoreboard objectives add Physics.Object.AabbRelative.Min.x dummy
+  scoreboard objectives add Physics.Object.AabbRelative.Min.y dummy
+  scoreboard objectives add Physics.Object.AabbRelative.Min.z dummy
+
   # Object (Other, transient)
   scoreboard objectives add Physics.Object.LinearVelocityFromAcceleration.x dummy
   scoreboard objectives add Physics.Object.LinearVelocityFromAcceleration.y dummy
@@ -93,8 +104,27 @@ gamerule max_command_sequence_length 2147483647
   scoreboard objectives add Physics.Object.AngularVelocityFromTorque.z dummy
 
   # Player
+  scoreboard objectives add Physics.Player.Id dummy
+  scoreboard objectives add Physics.Player.LookingAt.Id dummy
+  scoreboard objectives add Physics.Player.LookingAt.Direction.x dummy
+  scoreboard objectives add Physics.Player.LookingAt.Direction.y dummy
+  scoreboard objectives add Physics.Player.LookingAt.Direction.z dummy
+  scoreboard objectives add Physics.Player.LookingAt.BlockPos.x dummy
+  scoreboard objectives add Physics.Player.LookingAt.BlockPos.y dummy
+  scoreboard objectives add Physics.Player.LookingAt.BlockPos.z dummy
+  scoreboard objectives add Physics.Player.LookingAt.PosWithinBlock.x dummy
+  scoreboard objectives add Physics.Player.LookingAt.PosWithinBlock.y dummy
+  scoreboard objectives add Physics.Player.LookingAt.PosWithinBlock.z dummy
+
+  scoreboard objectives add Physics.Player.PunchStrength dummy
+
+  # Punchable Hitbox
+  scoreboard objectives add Physics.Hitbox.Gametime dummy
 
 # Set initial scores
+scoreboard players set #Physics.Constant.-1 Physics -1
+
+scoreboard players set #Physics.MinDistance Physics 2147483647
 
 # Set data storages
 data modify storage physics:zprivate temp.orientation set value [0f, 0f , 0f, 1f]

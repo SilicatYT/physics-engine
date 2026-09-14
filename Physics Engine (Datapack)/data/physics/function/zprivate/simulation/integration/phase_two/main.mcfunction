@@ -1,12 +1,22 @@
 # TODO: Add split velocities from resolution
 
 # Apply velocity to position
-# (TODO): Check whether it's faster or more precise to use an int number provider (and divide by delta time denominator), or to use float and multiply by delta time.
+# (Note): I update BlockPos and PosWithinBlock here because they're used in the ray intersection checks for "punchable_hitbox", as well as the global AABB calculation (which I COULD move to phase_one, but it doesn't change anything here). The Pos updates automatically in phase_one again.
+# (Note): PosChange is scaled by 2^24.
+# (TODO): Check whether it's faster or more precise to use an int number provider (and divide), or to use float and multiply.
 # (TODO): Check if there's a way to calculate the new Pos without needing a macro or reducing the precision. Currently, I calculate the relative position change.
-data modify storage physics:zprivate temp.x set compute default float physics:integration/pos_change/x
-data modify storage physics:zprivate temp.y set compute default float physics:integration/pos_change/y
-data modify storage physics:zprivate temp.z set compute default float physics:integration/pos_change/z
+# (TODO): Check whether storing the "BlockPosChange" in a score (to skip the 2 floor_mod in the PosWithinBlock update) is worth it.
+execute store result storage physics:zprivate temp.x float 0.000000059604644775390625 store result score #Physics.PosChange.x Physics run compute default integer physics:integration/pos_change/x
+execute store result storage physics:zprivate temp.y float 0.000000059604644775390625 store result score #Physics.PosChange.y Physics run compute default integer physics:integration/pos_change/y
+execute store result storage physics:zprivate temp.z float 0.000000059604644775390625 store result score #Physics.PosChange.z Physics run compute default integer physics:integration/pos_change/z
 function physics:zprivate/macro/relative_tp with storage physics:zprivate temp
+
+execute store result score @s Physics.Object.BlockPos.x run compute default integer physics:integration/pos_change/new_block_pos/x
+execute store result score @s Physics.Object.BlockPos.y run compute default integer physics:integration/pos_change/new_block_pos/y
+execute store result score @s Physics.Object.BlockPos.z run compute default integer physics:integration/pos_change/new_block_pos/z
+execute store result score @s Physics.Object.PosWithinBlock.x run compute default integer physics:integration/pos_change/new_pos_within_block/x
+execute store result score @s Physics.Object.PosWithinBlock.y run compute default integer physics:integration/pos_change/new_pos_within_block/y
+execute store result score @s Physics.Object.PosWithinBlock.z run compute default integer physics:integration/pos_change/new_pos_within_block/z
 
 # Apply velocity to orientation
 # (Note): Check if I should add a small epsilon for the squared length as the guard, instead of an exact "is not zero" guard.
@@ -53,9 +63,13 @@ execute store result score @s Physics.Object.RotationMatrix.zz run compute defau
 
 # Update AABB
 # (Note): Inlined from 'physics:zprivate/update_derived_data/aabb'
-execute store result score #Physics.Math.0 Physics run compute default integer physics:other/aabb/half_size/x
-execute store result score #Physics.Math.1 Physics run compute default integer physics:other/aabb/half_size/y
-execute store result score #Physics.Math.2 Physics run compute default integer physics:other/aabb/half_size/z
+execute store result score @s Physics.Object.AabbRelative.Min.x store result score @s Physics.Object.AabbRelative.Max.x run compute default integer physics:other/aabb/half_size/x
+execute store result score @s Physics.Object.AabbRelative.Min.y store result score @s Physics.Object.AabbRelative.Max.y run compute default integer physics:other/aabb/half_size/y
+execute store result score @s Physics.Object.AabbRelative.Min.z store result score @s Physics.Object.AabbRelative.Max.z run compute default integer physics:other/aabb/half_size/z
+
+scoreboard players operation @s Physics.Object.AabbRelative.Min.x *= #Physics.Constant.-1 Physics
+scoreboard players operation @s Physics.Object.AabbRelative.Min.y *= #Physics.Constant.-1 Physics
+scoreboard players operation @s Physics.Object.AabbRelative.Min.z *= #Physics.Constant.-1 Physics
 
 execute store result score @s Physics.Object.Aabb.Min.x run compute default integer physics:other/aabb/min/x
 execute store result score @s Physics.Object.Aabb.Min.y run compute default integer physics:other/aabb/min/y

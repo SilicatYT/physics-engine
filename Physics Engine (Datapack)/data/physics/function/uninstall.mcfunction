@@ -1,5 +1,6 @@
 # Reset scores
 scoreboard players reset #Physics.Init
+scoreboard players reset #Physics
 
     # Datapack Settings
     scoreboard players reset #Physics.Settings.ShowReloadMessage
@@ -14,12 +15,46 @@ scoreboard players reset #Physics.Init
     scoreboard players reset #Physics.Check2
     scoreboard players reset #Physics.Check3
 
+    scoreboard players reset #Physics.PosChange.x
+    scoreboard players reset #Physics.PosChange.y
+    scoreboard players reset #Physics.PosChange.z
+
+    scoreboard players reset #Physics.Gametime
+    scoreboard players reset #Physics.InteractionCount
+    scoreboard players reset #Physics.SuccessfulTeleportCount
+    scoreboard players reset #Physics.GotRay
+    scoreboard players reset #Physics.EntityInteractionRange
+    scoreboard players reset #Physics.MinDistance
+    scoreboard players reset #Physics.Ray.BlockPos.x
+    scoreboard players reset #Physics.Ray.BlockPos.y
+    scoreboard players reset #Physics.Ray.BlockPos.z
+    scoreboard players reset #Physics.Ray.PosWithinBlock.x
+    scoreboard players reset #Physics.Ray.PosWithinBlock.y
+    scoreboard players reset #Physics.Ray.PosWithinBlock.z
+    scoreboard players reset #Physics.Ray.Direction.x
+    scoreboard players reset #Physics.Ray.Direction.y
+    scoreboard players reset #Physics.Ray.Direction.z
+    scoreboard players reset #Physics.Ray.RelativePos.x
+    scoreboard players reset #Physics.Ray.RelativePos.y
+    scoreboard players reset #Physics.Ray.RelativePos.z
+    scoreboard players reset #Physics.Ray.IntersectionPoint.y
+    scoreboard players reset #Physics.Ray.IntersectionPoint.z
+    scoreboard players reset #Physics.IsExitingFace
+
+    scoreboard players reset #Physics.Math.PitchRad
+    scoreboard players reset #Physics.Math.YawRad
+    scoreboard players reset #Physics.Math.t
+
     scoreboard players reset #Physics.Math.0
     scoreboard players reset #Physics.Math.1
     scoreboard players reset #Physics.Math.2
     scoreboard players reset #Physics.Math.3
 
     # Constants
+    scoreboard players reset #Physics.Constant.-1
+
+# Kill entities
+kill 575f7af5-d0dc-4c2c-9182-17931969f0ba
 
 # Remove scoreboard objectives
 scoreboard objectives remove Physics
@@ -98,6 +133,13 @@ scoreboard objectives remove Physics.Object.Aabb.Min.x
 scoreboard objectives remove Physics.Object.Aabb.Min.y
 scoreboard objectives remove Physics.Object.Aabb.Min.z
 
+scoreboard objectives remove Physics.Object.AabbRelative.Max.x
+scoreboard objectives remove Physics.Object.AabbRelative.Max.y
+scoreboard objectives remove Physics.Object.AabbRelative.Max.z
+scoreboard objectives remove Physics.Object.AabbRelative.Min.x
+scoreboard objectives remove Physics.Object.AabbRelative.Min.y
+scoreboard objectives remove Physics.Object.AabbRelative.Min.z
+
 scoreboard objectives remove Physics.Object.LinearVelocityFromAcceleration.x
 scoreboard objectives remove Physics.Object.LinearVelocityFromAcceleration.y
 scoreboard objectives remove Physics.Object.LinearVelocityFromAcceleration.z
@@ -105,6 +147,21 @@ scoreboard objectives remove Physics.Object.LinearVelocityFromAcceleration.z
 scoreboard objectives remove Physics.Object.AngularVelocityFromTorque.x
 scoreboard objectives remove Physics.Object.AngularVelocityFromTorque.y
 scoreboard objectives remove Physics.Object.AngularVelocityFromTorque.z
+
+scoreboard objectives remove Physics.Player.Id
+scoreboard objectives remove Physics.Player.LookingAt.Id
+scoreboard objectives remove Physics.Player.LookingAt.Direction.x
+scoreboard objectives remove Physics.Player.LookingAt.Direction.y
+scoreboard objectives remove Physics.Player.LookingAt.Direction.z
+scoreboard objectives remove Physics.Player.LookingAt.BlockPos.x
+scoreboard objectives remove Physics.Player.LookingAt.BlockPos.y
+scoreboard objectives remove Physics.Player.LookingAt.BlockPos.z
+scoreboard objectives remove Physics.Player.LookingAt.PosWithinBlock.x
+scoreboard objectives remove Physics.Player.LookingAt.PosWithinBlock.y
+scoreboard objectives remove Physics.Player.LookingAt.PosWithinBlock.z
+scoreboard objectives remove Physics.Player.PunchStrength
+
+scoreboard objectives remove Physics.Hitbox.Gametime
 
 # Delete data storages
 data remove storage physics:zprivate settings

@@ -30,7 +30,7 @@ execute store result score @s Physics.Object.Orientation.a run data get storage 
 
     # Apply damping, then gravity + acceleration
     # (Formula): LinearVelocity * LinearDampingPerTick + LinearVelocityFromAcceleration
-    # (Note): The number provider clamps between -128 and +128 blocks per second to avoid overflows.
+    # (Note): The number provider clamps between -128 and +128 blocks per second to avoid overflows. It actually clamps it 1 unit lower than +128, so that the position update in phase_two doesn't overflow (would reach exactly 2^31, which overflows to -2^31).
     execute store result score @s Physics.Object.LinearVelocity.x run compute default float physics:integration/damped_linear_velocity_plus_acceleration/x
     execute store result score @s Physics.Object.LinearVelocity.y run compute default float physics:integration/damped_linear_velocity_plus_acceleration/y
     execute store result score @s Physics.Object.LinearVelocity.z run compute default float physics:integration/damped_linear_velocity_plus_acceleration/z
@@ -48,4 +48,11 @@ execute store result score @s Physics.Object.Orientation.a run data get storage 
 # (TODO): Check if performing the int addition of damped_linear_velocity_plus_acceleration in an integer number provider is faster or more precise
 # (TODO): Check if a division by the DeltaTimeDenominator score is faster than a multiplication with the data storage.
 # (TODO): Check if I can pre-calculate inverseMass * deltaTime and store it as a score, to remove 1 multiplication from each component when calculating the acceleration from a force.
-# (TODO): In general, go over everything and check if I can turn it into an integer number provider without losing any visible precision.
+# (TODO): In general, go over everything and check if I can turn it into an integer number provider or move things from storage to score without losing any visible precision.
+
+
+
+
+
+# TODO: Replace (and benchmark) the current PosWithinBlock retrieval method: Use "set string storage" to get the number of digits of BlockPos, then cut off the first X characters with a macro (will almost always be cached, but it needs 3 macro lines. There are 9 possible lengths, so honestly, just add an exception for ..-10M), then use a single macro to set entity_data.Pos to {0.$(x)f, 0.$(y)f, 0.$(z)f}
+# => 2 function calls & 1 macro compared to 2 function calls, 1 macro & 1 data call. ALSO REPLACE IT IN THE HITBOX CODE

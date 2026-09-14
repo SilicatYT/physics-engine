@@ -1,0 +1,32 @@
+{
+  "type": "minecraft:add",
+  "inputs": [
+    8.6602540378,
+    {
+      "type": "minecraft:mul",
+      "inputs": [
+        {
+          "type": "minecraft:ceil",
+          "input": {
+            "type": "minecraft:mul",
+            "inputs": [
+              {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.EntityInteractionRange"
+                  },
+                  "score": "Physics"
+                }
+              },
+              0.00012207031
+            ]
+          }
+        },
+        8
+      ]
+    }
+  ]
+}

@@ -1,36 +1,34 @@
 {
-  "type": "minecraft:sub",
-  "left": {
-    "type": "minecraft:add",
-    "inputs": [
-      {
-        "type": "minecraft:mul",
-        "inputs": [
-          {
-            "type": "minecraft:score",
-            "target": "this",
-            "score": "Physics.Object.BlockPos.y"
-          },
-          64
-        ]
-      },
-      {
-        "type": "minecraft:div",
-        "left": {
+  "type": "minecraft:add",
+  "inputs": [
+    {
+      "type": "minecraft:mul",
+      "inputs": [
+        {
           "type": "minecraft:score",
           "target": "this",
-          "score": "Physics.Object.PosWithinBlock.y"
+          "score": "Physics.Object.BlockPos.y"
         },
-        "right": 262144
-      }
-    ]
-  },
-  "right": {
-    "type": "minecraft:score",
-    "target": {
-      "type": "minecraft:fixed",
-      "name": "#Physics.Math.1"
+        64
+      ]
     },
-    "score": "Physics"
-  }
+    {
+      "type": "minecraft:div",
+      "left": {
+        "type": "minecraft:score",
+        "target": "this",
+        "score": "Physics.Object.PosWithinBlock.y"
+      },
+      "right": 262144
+    },
+    {
+      "type": "minecraft:floor_div",
+      "left": {
+        "type": "minecraft:score",
+        "target": "this",
+        "score": "Physics.Object.AabbRelative.Min.y"
+      },
+      "right": 1024
+    }
+  ]
 }

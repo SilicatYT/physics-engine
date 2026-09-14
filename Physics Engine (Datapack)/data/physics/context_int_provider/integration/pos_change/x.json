@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:div",
+  "left": {
+    "type": "minecraft:mul",
+    "inputs": [
+      {
+        "type": "minecraft:score",
+        "target": "this",
+        "score": "Physics.Object.LinearVelocity.x"
+      },
+      128
+    ]
+  },
+  "right": {
+    "type": "minecraft:score",
+    "target": {
+      "type": "minecraft:fixed",
+      "name": "#Physics.Settings.DeltaTimeDenominator"
+    },
+    "score": "Physics"
+  }
+}

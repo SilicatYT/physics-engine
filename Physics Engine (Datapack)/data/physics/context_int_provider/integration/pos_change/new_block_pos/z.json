@@ -1,0 +1,32 @@
+{
+  "type": "minecraft:add",
+  "inputs": [
+    {
+      "type": "minecraft:score",
+      "target": "this",
+      "score": "Physics.Object.BlockPos.z"
+    },
+    {
+      "type": "minecraft:floor_div",
+      "left": {
+        "type": "minecraft:add",
+        "inputs": [
+          {
+            "type": "minecraft:score",
+            "target": "this",
+            "score": "Physics.Object.PosWithinBlock.z"
+          },
+          {
+            "type": "minecraft:score",
+            "target": {
+              "type": "minecraft:fixed",
+              "name": "#Physics.PosChange.z"
+            },
+            "score": "Physics"
+          }
+        ]
+      },
+      "right": 16777216
+    }
+  ]
+}

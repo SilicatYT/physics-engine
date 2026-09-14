@@ -11,7 +11,7 @@ Object:
 - PosWithinBlock: 16,777,216x (2^24. Max value of 1.0, so a scale of 2^24 works)
 - LinearVelocity: 131,072x (2^17, so 7 bits for whole-block velocity, meaning a max velocity of 128 blocks, over 5 blocks per tick. Far more than I can handle anyway)
 - AngularVelocity: 262,144x (2^18, so 6 bits for radians. Max 64 radians, or ~10 rotations per second. Supporting any more would be useless)
-- Scale: 65,536x (2^16, so 8 bits for full blocks. Leaves opportunity for objects spanning 256 blocks across. Inertia breaks way before that currently (2^14), but it's good to support for static objects)
+- Scale: 65,536x (2^16, so 8 bits for full blocks. Leaves opportunity for (static) objects spanning 256 blocks across. Inertia breaks way before that currently (2^14), but it's good to support for static objects)
 - InverseMass: 268,435,456x (2^28)
    - Right now, it has small increments, and 268,000 tonnes is the largest possible mass before it becomes infinite. A lower scale would preserve more floating point accuracy when applying impulses.
 - Orientation: 16,777,216x (2^24. Max value of 1.0, so a scale of 2^24 works)
@@ -24,6 +24,7 @@ Object:
    - I could also store it in 2 ints so I could actually store the inverse inertia tensor with the mass component.
 - HalfExtentAxisProjections: 8,388,608x (2^23, so it supports objects of 256 size. Can't scale up more, because small inaccuracies could cause the value to barely overflow)
 - AABB: 64x (2^6. World position, necessary for fast object-object AABB checks. If I need a more accurate one for terrain, that can be added later on.)
+- AABBRelative: 65536x (2^16. 2^6 should be sufficient, but having the same scaling as "Ray.RelativePos" makes it faster, and some extra precision can't hurt.)
 
 
 
