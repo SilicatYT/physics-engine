@@ -40,6 +40,7 @@ scoreboard players reset #Physics
     scoreboard players reset #Physics.Ray.IntersectionPoint.y
     scoreboard players reset #Physics.Ray.IntersectionPoint.z
     scoreboard players reset #Physics.IsExitingFace
+    scoreboard players reset #Physics.HitboxKillSuccess
 
     scoreboard players reset #Physics.Math.PitchRad
     scoreboard players reset #Physics.Math.YawRad
@@ -166,6 +167,7 @@ scoreboard objectives remove Physics.Hitbox.Gametime
 # Delete data storages
 data remove storage physics:zprivate settings
 data remove storage physics:zprivate entity_data
+data remove storage physics:zprivate hitbox_data
 data remove storage physics:zprivate temp
 data remove storage physics:zprivate fallback_default
 data remove storage physics:zprivate constants

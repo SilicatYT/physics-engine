@@ -12,7 +12,6 @@ execute store result score #Physics.Ray.RelativePos.z Physics run compute defaul
 # (Note): If the ray hits the AABB (& the distance is less than the current MinDistance, in case another object is in front of that), it runs the detailed check.
 # (TODO): Check if adding "if outside the AABB and looking away from it -> Don't check any entering face" would be worth it.
     # Entering faces
-    scoreboard players set #Physics.IsExitingFace Physics 0
         # x axis
         execute if score #Physics.Ray.RelativePos.x Physics < @s Physics.Object.AabbRelative.Min.x if score #Physics.Ray.Direction.x Physics matches 1.. if function physics:zprivate/punchable_hitbox/aabb_intersection/neg_x run return run function physics:zprivate/punchable_hitbox/obb_intersection/check
         execute if score #Physics.Ray.RelativePos.x Physics > @s Physics.Object.AabbRelative.Max.x if score #Physics.Ray.Direction.x Physics matches ..-1 if function physics:zprivate/punchable_hitbox/aabb_intersection/pos_x run return run function physics:zprivate/punchable_hitbox/obb_intersection/check
@@ -26,26 +25,6 @@ execute store result score #Physics.Ray.RelativePos.z Physics run compute defaul
         execute if score #Physics.Ray.RelativePos.z Physics > @s Physics.Object.AabbRelative.Max.z if score #Physics.Ray.Direction.z Physics matches ..-1 if function physics:zprivate/punchable_hitbox/aabb_intersection/pos_z run return run function physics:zprivate/punchable_hitbox/obb_intersection/check
 
     # Exiting faces
-    # (Note): For AABB, when exiting faces, I ignore the EntityInteractionRange and MinDistance. That's because the distance to exit the AABB can be vastly greater than the distance to intersect with the model itself.
+    # (Note): For AABB, when exiting faces, I ignore the EntityInteractionRange and MinDistance. That's because the distance to exit the AABB can be vastly greater than the distance to intersect with the model itself. Because of that, any ray that starts inside the AABB will trigger a "hit", meaning I can remove the checks for the AABB. I don't need to know the distance here.
     # (Note): Careful about overflows in the intersection point calculations here, as t can become very large on exiting faces.
-    # (Note): I have to explicitly check "Only run exiting checks if the ray originates inside the AABB", because if the entering checks fail because it's out of range, it would still try the exiting faces and potentially succeed because the range checks don't apply.
-    execute if score #Physics.Ray.RelativePos.x Physics < @s Physics.Object.AabbRelative.Min.x run return 0
-    execute if score #Physics.Ray.RelativePos.x Physics > @s Physics.Object.AabbRelative.Max.x run return 0
-    execute if score #Physics.Ray.RelativePos.y Physics < @s Physics.Object.AabbRelative.Min.y run return 0
-    execute if score #Physics.Ray.RelativePos.y Physics > @s Physics.Object.AabbRelative.Max.y run return 0
-    execute if score #Physics.Ray.RelativePos.z Physics < @s Physics.Object.AabbRelative.Min.z run return 0
-    execute if score #Physics.Ray.RelativePos.z Physics > @s Physics.Object.AabbRelative.Max.z run return 0
-
-    scoreboard players set #Physics.IsExitingFace Physics 1
-
-        # x axis
-        execute if score #Physics.Ray.Direction.x Physics matches ..-1 if function physics:zprivate/punchable_hitbox/aabb_intersection/neg_x run return run function physics:zprivate/punchable_hitbox/obb_intersection/check
-        execute if score #Physics.Ray.Direction.x Physics matches 1.. if function physics:zprivate/punchable_hitbox/aabb_intersection/pos_x run return run function physics:zprivate/punchable_hitbox/obb_intersection/check
-
-        # y axis
-        execute if score #Physics.Ray.Direction.y Physics matches ..-1 if function physics:zprivate/punchable_hitbox/aabb_intersection/neg_y run return run function physics:zprivate/punchable_hitbox/obb_intersection/check
-        execute if score #Physics.Ray.Direction.y Physics matches 1.. if function physics:zprivate/punchable_hitbox/aabb_intersection/pos_y run return run function physics:zprivate/punchable_hitbox/obb_intersection/check
-
-        # z axis
-        execute if score #Physics.Ray.Direction.z Physics matches ..-1 if function physics:zprivate/punchable_hitbox/aabb_intersection/neg_z run return run function physics:zprivate/punchable_hitbox/obb_intersection/check
-        execute if score #Physics.Ray.Direction.z Physics matches 1.. if function physics:zprivate/punchable_hitbox/aabb_intersection/pos_z run function physics:zprivate/punchable_hitbox/obb_intersection/check
+    execute if score #Physics.Ray.RelativePos.x Physics >= @s Physics.Object.AabbRelative.Min.x if score #Physics.Ray.RelativePos.x Physics <= @s Physics.Object.AabbRelative.Max.x if score #Physics.Ray.RelativePos.y Physics >= @s Physics.Object.AabbRelative.Min.y if score #Physics.Ray.RelativePos.y Physics <= @s Physics.Object.AabbRelative.Max.y if score #Physics.Ray.RelativePos.z Physics >= @s Physics.Object.AabbRelative.Min.z if score #Physics.Ray.RelativePos.z Physics <= @s Physics.Object.AabbRelative.Max.z run function physics:zprivate/punchable_hitbox/obb_intersection/check

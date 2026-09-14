@@ -5,10 +5,8 @@
 execute store result score #Physics.Math.t Physics run compute default integer physics:punchable_hitbox/aabb_intersection/x/pos_t
 
 # If t is too large, stop. This means no collision with this face is happening (or too late).
-# (Note): If "IsExitingFace", I reject a t that's larger than the longest possible diagonal (sqrt(3) * 2 * Max(AABB.x, AABB.y, AABB.z)) because the ray has to originate inside the AABB. So it's an early out and a protection against too large t's that would cause overflows in the intersection calculation later.
-execute if score #Physics.IsExitingFace Physics matches 0 if score #Physics.Math.t Physics > #Physics.EntityInteractionRange Physics run return 0
-execute if score #Physics.IsExitingFace Physics matches 0 if score #Physics.Math.t Physics >= #Physics.MinDistance Physics run return 0
-execute if score #Physics.IsExitingFace Physics matches 1 if predicate physics:punchable_hitbox/exiting_t_too_large run return 0
+execute if score #Physics.Math.t Physics > #Physics.EntityInteractionRange Physics run return 0
+execute if score #Physics.Math.t Physics >= #Physics.MinDistance Physics run return 0
 
 # Calculate the intersection point and check if it's in-bounds for the other two axes
 # (Formula): Ray.RelativePos + t * Ray.Direction

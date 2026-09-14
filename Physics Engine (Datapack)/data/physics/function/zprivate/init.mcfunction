@@ -128,6 +128,7 @@ scoreboard players set #Physics.MinDistance Physics 2147483647
 
 # Set data storages
 data modify storage physics:zprivate temp.orientation set value [0f, 0f , 0f, 1f]
+data modify storage physics:zprivate hitbox_data set value {height: 0.3f, width: 0.3f, Pos: [0f, 0f, 0f]}
 
 data modify storage physics:object default set value {\
   scale: [1f, 1f, 1f],\

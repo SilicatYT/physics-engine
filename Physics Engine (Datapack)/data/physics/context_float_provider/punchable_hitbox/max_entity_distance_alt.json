@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:add",
+  "inputs": [
+    {
+      "type": "minecraft:storage",
+      "storage": "physics:zprivate",
+      "path": "temp.distance"
+    },
+    0.2
+  ]
+}
