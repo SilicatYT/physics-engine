@@ -23,9 +23,7 @@ execute if score #Physics.MinDistance Physics matches 2147483647 run return run 
     # (Formula): RayDirection * t
     # (Note): Scaled up by 2^16.
     execute store result score @s Physics.Player.LookingAt.RelativePos.x store result storage physics:zprivate temp.x float 0.0000152587890625 run compute default integer physics:punchable_hitbox/relative_intersection_pos/scaled_direction/x
-    execute store result score @s Physics.Player.LookingAt.RelativePos.y run compute default integer physics:punchable_hitbox/relative_intersection_pos/scaled_direction/y
-    execute store result storage physics:zprivate temp.y float 0.0000152587890625 run scoreboard players remove @s Physics.Player.LookingAt.RelativePos.y 9830
-    scoreboard players add @s Physics.Player.LookingAt.RelativePos.y 9830
+    execute store result score @s Physics.Player.LookingAt.RelativePos.y store result storage physics:zprivate temp.y float 0.0000152587890625 run compute default integer physics:punchable_hitbox/relative_intersection_pos/scaled_direction/y
     execute store result score @s Physics.Player.LookingAt.RelativePos.z store result storage physics:zprivate temp.z float 0.0000152587890625 run compute default integer physics:punchable_hitbox/relative_intersection_pos/scaled_direction/z
 
     # Calculate the intersection position (Relative to the object)
@@ -43,8 +41,8 @@ execute if score #Physics.MinDistance Physics matches 2147483647 run return run 
     execute if score @s Physics.Player.LookingAt.Id matches 1.. run scoreboard players set #Physics.MinDistance Physics -1
     scoreboard players operation @s Physics.Player.LookingAt.Id = #Physics Physics.Player.LookingAt.Id
 
-    execute if score #Physics.MinDistance Physics matches -1 if score #Physics.EntityInteractionRange Physics matches 1..3072 as @e[type=minecraft:interaction,predicate=physics:same_player_id,distance=..11.8602540378,limit=1] run return run function physics:zprivate/punchable_hitbox/tp/main
-    execute if score #Physics.MinDistance Physics matches -1 if score #Physics.EntityInteractionRange Physics matches 3073..5120 as @e[type=minecraft:interaction,predicate=physics:same_player_id,distance=..13.8602540378,limit=1] run return run function physics:zprivate/punchable_hitbox/tp/main
+    execute if score #Physics.MinDistance Physics matches -1 if score #Physics.EntityInteractionRange Physics matches 1..3072 as @e[type=minecraft:interaction,predicate=physics:same_player_id,distance=..11.8602540378,limit=1] positioned ~ ~-0.15 ~ run return run function physics:zprivate/punchable_hitbox/tp/main
+    execute if score #Physics.MinDistance Physics matches -1 if score #Physics.EntityInteractionRange Physics matches 3073..5120 as @e[type=minecraft:interaction,predicate=physics:same_player_id,distance=..13.8602540378,limit=1] positioned ~ ~-0.15 ~ run return run function physics:zprivate/punchable_hitbox/tp/main
     execute if score #Physics.MinDistance Physics matches -1 if score #Physics.EntityInteractionRange Physics matches 5121.. run data modify storage physics:zprivate temp.distance_alt set compute default float physics:punchable_hitbox/max_entity_distance_alt
     execute if score #Physics.MinDistance Physics matches -1 if score #Physics.EntityInteractionRange Physics matches 5121.. run return run function physics:zprivate/punchable_hitbox/tp/dynamic_range with storage physics:zprivate temp
 
@@ -52,4 +50,8 @@ execute if score #Physics.MinDistance Physics matches 2147483647 run return run 
 
     # Summon a new interaction entity
     # (Note): I use a block display as the vehicle because it makes the teleportation much smoother. As of 26.3, interaction entities only teleport at 4hz.
-    execute summon minecraft:interaction run function physics:zprivate/punchable_hitbox/summon_hitbox
+    summon minecraft:block_display ~ ~ ~ {Passengers:[{id:"minecraft:interaction",width:0.3f,height:0.3f,response:1b,Tags:["Physics.Hitbox","Physics.Temp"]}]}
+    execute as @e[type=minecraft:interaction,tag=Physics.Temp,distance=..0.1,limit=1] positioned ~ ~-0.15 ~ run function physics:zprivate/punchable_hitbox/summon_hitbox
+
+# (TODO): Maybe kill & respawn the entity each tick to make the movement more responsive.
+# (TODO): Maybe scale the interaction entity with the MinDistance.

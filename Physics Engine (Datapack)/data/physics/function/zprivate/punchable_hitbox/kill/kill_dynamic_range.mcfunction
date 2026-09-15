@@ -1,1 +1,1 @@
-$execute store success score #Physics.HitboxKillSuccess Physics run kill @e[type=minecraft:interaction,predicate=physics:same_player_id,distance=..$(distance_alt),limit=1]
+$execute as @e[type=minecraft:interaction,predicate=physics:same_player_id,distance=..$(distance_alt),limit=1] run function physics:zprivate/punchable_hitbox/kill/try_kill

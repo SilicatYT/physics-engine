@@ -1,5 +1,5 @@
 # Teleport the interaction entity to the targeted position
-function physics:zprivate/macro/relative_tp with storage physics:zprivate temp
+execute on vehicle run function physics:zprivate/macro/relative_tp with storage physics:zprivate temp
 scoreboard players operation @s Physics.Hitbox.Gametime = #Physics.Gametime Physics
 scoreboard players add #Physics.SuccessfulTeleportCount Physics 1
 
