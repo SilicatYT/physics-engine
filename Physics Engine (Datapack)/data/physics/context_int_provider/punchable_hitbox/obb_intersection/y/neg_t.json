@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:div",
+  "left": {
+    "type": "minecraft:mul",
+    "inputs": [
+      {
+        "type": "minecraft:sub",
+        "left": -32768,
+        "right": {
+          "type": "minecraft:score",
+          "target": {
+            "type": "minecraft:fixed",
+            "name": "#Physics.Ray.Local.RelativePos.y"
+          },
+          "score": "Physics"
+        }
+      },
+      256
+    ]
+  },
+  "right": {
+    "type": "minecraft:score",
+    "target": {
+      "type": "minecraft:fixed",
+      "name": "#Physics.Ray.Local.Direction.y"
+    },
+    "score": "Physics"
+  }
+}

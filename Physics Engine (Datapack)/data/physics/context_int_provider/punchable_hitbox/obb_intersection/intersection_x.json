@@ -1,0 +1,44 @@
+{
+  "type": "minecraft:add",
+  "inputs": [
+    {
+      "type": "minecraft:score",
+      "target": {
+        "type": "minecraft:fixed",
+        "name": "#Physics.Ray.Local.RelativePos.x"
+      },
+      "score": "Physics"
+    },
+    {
+      "type": "minecraft:from_float",
+      "input": {
+        "type": "minecraft:mul",
+        "inputs": [
+          {
+            "type": "minecraft:from_int",
+            "input": {
+              "type": "minecraft:score",
+              "target": {
+                "type": "minecraft:fixed",
+                "name": "#Physics.Math.t"
+              },
+              "score": "Physics"
+            }
+          },
+          {
+            "type": "minecraft:from_int",
+            "input": {
+              "type": "minecraft:score",
+              "target": {
+                "type": "minecraft:fixed",
+                "name": "#Physics.Ray.Local.Direction.x"
+              },
+              "score": "Physics"
+            }
+          },
+          0.00390625
+        ]
+      }
+    }
+  ]
+}

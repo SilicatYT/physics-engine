@@ -37,9 +37,18 @@ scoreboard players reset #Physics
     scoreboard players reset #Physics.Ray.RelativePos.x
     scoreboard players reset #Physics.Ray.RelativePos.y
     scoreboard players reset #Physics.Ray.RelativePos.z
+    scoreboard players reset #Physics.Ray.WinnerRelativePos.x
+    scoreboard players reset #Physics.Ray.WinnerRelativePos.y
+    scoreboard players reset #Physics.Ray.WinnerRelativePos.z
+    scoreboard players reset #Physics.Ray.Local.RelativePos.x
+    scoreboard players reset #Physics.Ray.Local.RelativePos.y
+    scoreboard players reset #Physics.Ray.Local.RelativePos.z
+    scoreboard players reset #Physics.Ray.Local.Direction.x
+    scoreboard players reset #Physics.Ray.Local.Direction.y
+    scoreboard players reset #Physics.Ray.Local.Direction.z
+    scoreboard players reset #Physics.Ray.IntersectionPoint.x
     scoreboard players reset #Physics.Ray.IntersectionPoint.y
     scoreboard players reset #Physics.Ray.IntersectionPoint.z
-    scoreboard players reset #Physics.IsExitingFace
     scoreboard players reset #Physics.HitboxKillSuccess
 
     scoreboard players reset #Physics.Math.PitchRad
@@ -59,6 +68,8 @@ kill 575f7af5-d0dc-4c2c-9182-17931969f0ba
 
 # Remove scoreboard objectives
 scoreboard objectives remove Physics
+
+scoreboard objectives remove Physics.Object.Id
 
 scoreboard objectives remove Physics.Object.BlockPos.x
 scoreboard objectives remove Physics.Object.BlockPos.y
@@ -154,12 +165,9 @@ scoreboard objectives remove Physics.Player.LookingAt.Id
 scoreboard objectives remove Physics.Player.LookingAt.Direction.x
 scoreboard objectives remove Physics.Player.LookingAt.Direction.y
 scoreboard objectives remove Physics.Player.LookingAt.Direction.z
-scoreboard objectives remove Physics.Player.LookingAt.BlockPos.x
-scoreboard objectives remove Physics.Player.LookingAt.BlockPos.y
-scoreboard objectives remove Physics.Player.LookingAt.BlockPos.z
-scoreboard objectives remove Physics.Player.LookingAt.PosWithinBlock.x
-scoreboard objectives remove Physics.Player.LookingAt.PosWithinBlock.y
-scoreboard objectives remove Physics.Player.LookingAt.PosWithinBlock.z
+scoreboard objectives remove Physics.Player.LookingAt.RelativePos.x
+scoreboard objectives remove Physics.Player.LookingAt.RelativePos.y
+scoreboard objectives remove Physics.Player.LookingAt.RelativePos.z
 scoreboard objectives remove Physics.Player.PunchStrength
 
 scoreboard objectives remove Physics.Hitbox.Gametime
@@ -167,7 +175,6 @@ scoreboard objectives remove Physics.Hitbox.Gametime
 # Delete data storages
 data remove storage physics:zprivate settings
 data remove storage physics:zprivate entity_data
-data remove storage physics:zprivate hitbox_data
 data remove storage physics:zprivate temp
 data remove storage physics:zprivate fallback_default
 data remove storage physics:zprivate constants

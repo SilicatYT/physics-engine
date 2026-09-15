@@ -5,18 +5,13 @@
 # (TODO): Check if all these "dynamic distance" checks & function calls are actually worth it for performance, or if it's just overhead.
 scoreboard players set #Physics.GotRay Physics 0
 execute store result score #Physics.EntityInteractionRange Physics run attribute @s minecraft:entity_interaction_range get 1024
-execute if score #Physics.EntityInteractionRange Physics matches 1..3072 at @s anchored eyes positioned ^ ^ ^ as @e[type=minecraft:item_display,tag=Physics.Object,distance=..11.6602540378,sort=nearest] run function physics:zprivate/punchable_hitbox/aabb_intersection/check
-execute if score #Physics.EntityInteractionRange Physics matches 3073..5120 at @s anchored eyes positioned ^ ^ ^ as @e[type=minecraft:item_display,tag=Physics.Object,distance=..13.6602540378,sort=nearest] run function physics:zprivate/punchable_hitbox/aabb_intersection/check
+execute if score #Physics.EntityInteractionRange Physics matches 1..3072 as @e[type=minecraft:item_display,tag=Physics.Punchable,distance=..11.6602540378,sort=nearest] run function physics:zprivate/punchable_hitbox/aabb_intersection/check
+execute if score #Physics.EntityInteractionRange Physics matches 3073..5120 as @e[type=minecraft:item_display,tag=Physics.Punchable,distance=..13.6602540378,sort=nearest] run function physics:zprivate/punchable_hitbox/aabb_intersection/check
 execute if score #Physics.EntityInteractionRange Physics matches 5121.. run data modify storage physics:zprivate temp.distance set compute default float physics:punchable_hitbox/max_entity_distance
 execute if score #Physics.EntityInteractionRange Physics matches 5121.. run function physics:zprivate/punchable_hitbox/use_dynamic_interaction_range with storage physics:zprivate temp
 
-
-
-return 0
-
-
 # No intersection happened
-execute if score #Physics.MinDistance Physics matches 2147483647 run return run execute if score @s Physics.Player.LookingAt.Id matches 1.. at @s run function physics:zprivate/punchable_hitbox/kill_hitbox
+execute if score #Physics.MinDistance Physics matches 2147483647 run return run execute if score @s Physics.Player.LookingAt.Id matches 1.. run function physics:zprivate/punchable_hitbox/kill/main
 
 # An intersection happened
     # Store the Ray Direction for later when punching
@@ -24,32 +19,22 @@ execute if score #Physics.MinDistance Physics matches 2147483647 run return run 
     scoreboard players operation @s Physics.Player.LookingAt.Direction.y = #Physics.Ray.Direction.y Physics
     scoreboard players operation @s Physics.Player.LookingAt.Direction.z = #Physics.Ray.Direction.z Physics
 
-    # Calculate the intersection position
-    # (Note): Relative to the player.
+    # Calculate the intersection position (Relative to the player's eyes)
+    # (Formula): RayDirection * t
+    # (Note): Scaled up by 2^16.
+    execute store result score @s Physics.Player.LookingAt.RelativePos.x store result storage physics:zprivate temp.x float 0.0000152587890625 run compute default integer physics:punchable_hitbox/relative_intersection_pos/scaled_direction/x
+    execute store result score @s Physics.Player.LookingAt.RelativePos.y run compute default integer physics:punchable_hitbox/relative_intersection_pos/scaled_direction/y
+    execute store result storage physics:zprivate temp.y float 0.0000152587890625 run scoreboard players remove @s Physics.Player.LookingAt.RelativePos.y 9830
+    scoreboard players add @s Physics.Player.LookingAt.RelativePos.y 9830
+    execute store result score @s Physics.Player.LookingAt.RelativePos.z store result storage physics:zprivate temp.z float 0.0000152587890625 run compute default integer physics:punchable_hitbox/relative_intersection_pos/scaled_direction/z
 
-
-
-
-
-    # REWORK v
-    #scoreboard players operation #Physics.RayDirectionOriginal.x Physics *= #Physics.MinDistance Physics
-    #scoreboard players operation #Physics.RayDirectionOriginal.x Physics /= #Physics.Constants.1000 Physics
-    #execute store result storage physics:zprivate temp.pos[0] double 0.001 store result score @s Physics.Player.LookingAt.Pos.x run scoreboard players operation #Physics.RayPosOriginal.x Physics += #Physics.RayDirectionOriginal.x Physics
-
-    #scoreboard players operation #Physics.RayDirectionOriginal.y Physics *= #Physics.MinDistance Physics
-    #scoreboard players operation #Physics.RayDirectionOriginal.y Physics /= #Physics.Constants.1000 Physics
-    #scoreboard players operation #Physics.RayPosOriginal.y Physics += #Physics.RayDirectionOriginal.y Physics
-    #execute store result storage physics:zprivate data.pos[1] double 0.001 store result score @s Physics.Player.LookingAt.Pos.y run scoreboard players remove #Physics.RayPosOriginal.y Physics 175
-
-    #scoreboard players operation #Physics.RayDirectionOriginal.z Physics *= #Physics.MinDistance Physics
-    #scoreboard players operation #Physics.RayDirectionOriginal.z Physics /= #Physics.Constants.1000 Physics
-    #execute store result storage physics:zprivate data.pos[2] double 0.001 store result score @s Physics.Player.LookingAt.Pos.z run scoreboard players operation #Physics.RayPosOriginal.z Physics += #Physics.RayDirectionOriginal.z Physics
-    # REWORK ^
-
-
-
-
-
+    # Calculate the intersection position (Relative to the object)
+    # (Formula): RayOriginRelative + RayDirection * t
+    # (Note): Scaled up by 2^16.
+    # (Note): Necessary for the impulse calculation if the player punches later on. I could skip this and WinnerRelativePos, but then I'd need a data call when punching to get the player coordinates, and I find this here to be a cleaner alternative. I could also store the absolute ray origin pos.
+    scoreboard players operation @s Physics.Player.LookingAt.RelativePos.x += #Physics.Ray.WinnerRelativePos.x Physics
+    scoreboard players operation @s Physics.Player.LookingAt.RelativePos.y += #Physics.Ray.WinnerRelativePos.y Physics
+    scoreboard players operation @s Physics.Player.LookingAt.RelativePos.z += #Physics.Ray.WinnerRelativePos.z Physics
 
     # Try to teleport the interaction entity
     # (Note): Same distance as before, but inflated by 0.2 blocks (same as in kill_hitbox).
@@ -58,12 +43,13 @@ execute if score #Physics.MinDistance Physics matches 2147483647 run return run 
     execute if score @s Physics.Player.LookingAt.Id matches 1.. run scoreboard players set #Physics.MinDistance Physics -1
     scoreboard players operation @s Physics.Player.LookingAt.Id = #Physics Physics.Player.LookingAt.Id
 
-    execute if score #Physics.MinDistance Physics matches -1 if score #Physics.EntityInteractionRange Physics matches 1..3072 at @s as @e[type=minecraft:interaction,predicate=physics:same_player_id,distance=..11.8602540378,limit=1] run return run function physics:zprivate/punchable_hitbox/tp_hitbox
-    execute if score #Physics.MinDistance Physics matches -1 if score #Physics.EntityInteractionRange Physics matches 3073..5120 at @s as @e[type=minecraft:interaction,predicate=physics:same_player_id,distance=..13.8602540378,limit=1] run return run function physics:zprivate/punchable_hitbox/tp_hitbox
+    execute if score #Physics.MinDistance Physics matches -1 if score #Physics.EntityInteractionRange Physics matches 1..3072 as @e[type=minecraft:interaction,predicate=physics:same_player_id,distance=..11.8602540378,limit=1] run return run function physics:zprivate/punchable_hitbox/tp/main
+    execute if score #Physics.MinDistance Physics matches -1 if score #Physics.EntityInteractionRange Physics matches 3073..5120 as @e[type=minecraft:interaction,predicate=physics:same_player_id,distance=..13.8602540378,limit=1] run return run function physics:zprivate/punchable_hitbox/tp/main
     execute if score #Physics.MinDistance Physics matches -1 if score #Physics.EntityInteractionRange Physics matches 5121.. run data modify storage physics:zprivate temp.distance_alt set compute default float physics:punchable_hitbox/max_entity_distance_alt
-    execute if score #Physics.MinDistance Physics matches -1 if score #Physics.EntityInteractionRange Physics matches 5121.. run return run function physics:zprivate/punchable_hitbox/tp_hitbox_dynamic_range with storage physics:zprivate temp
+    execute if score #Physics.MinDistance Physics matches -1 if score #Physics.EntityInteractionRange Physics matches 5121.. run return run function physics:zprivate/punchable_hitbox/tp/dynamic_range with storage physics:zprivate temp
 
-    #scoreboard players set #Physics.MinDistance Physics 2147483647
+    scoreboard players set #Physics.MinDistance Physics 2147483647
 
     # Summon a new interaction entity
+    # (Note): I use a block display as the vehicle because it makes the teleportation much smoother. As of 26.3, interaction entities only teleport at 4hz.
     execute summon minecraft:interaction run function physics:zprivate/punchable_hitbox/summon_hitbox

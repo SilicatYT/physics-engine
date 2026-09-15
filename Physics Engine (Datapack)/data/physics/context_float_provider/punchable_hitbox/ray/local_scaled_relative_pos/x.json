@@ -1,0 +1,94 @@
+{
+  "type": "minecraft:mul",
+  "inputs": [
+    {
+      "type": "minecraft:div",
+      "left": {
+        "type": "minecraft:add",
+        "inputs": [
+          {
+            "type": "minecraft:mul",
+            "inputs": [
+              {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": "this",
+                  "score": "Physics.Object.RotationMatrix.xx"
+                }
+              },
+              {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.Ray.RelativePos.x"
+                  },
+                  "score": "Physics"
+                }
+              }
+            ]
+          },
+          {
+            "type": "minecraft:mul",
+            "inputs": [
+              {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": "this",
+                  "score": "Physics.Object.RotationMatrix.yx"
+                }
+              },
+              {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.Ray.RelativePos.y"
+                  },
+                  "score": "Physics"
+                }
+              }
+            ]
+          },
+          {
+            "type": "minecraft:mul",
+            "inputs": [
+              {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": "this",
+                  "score": "Physics.Object.RotationMatrix.zx"
+                }
+              },
+              {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.Ray.RelativePos.z"
+                  },
+                  "score": "Physics"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "right": {
+        "type": "minecraft:from_int",
+        "input": {
+          "type": "minecraft:score",
+          "target": "this",
+          "score": "Physics.Object.Scale.x"
+        }
+      }
+    },
+    0.00390625
+  ]
+}

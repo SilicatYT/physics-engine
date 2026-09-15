@@ -1,0 +1,94 @@
+{
+  "type": "minecraft:mul",
+  "inputs": [
+    {
+      "type": "minecraft:div",
+      "left": {
+        "type": "minecraft:add",
+        "inputs": [
+          {
+            "type": "minecraft:mul",
+            "inputs": [
+              {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": "this",
+                  "score": "Physics.Object.RotationMatrix.xz"
+                }
+              },
+              {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.Ray.Direction.x"
+                  },
+                  "score": "Physics"
+                }
+              }
+            ]
+          },
+          {
+            "type": "minecraft:mul",
+            "inputs": [
+              {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": "this",
+                  "score": "Physics.Object.RotationMatrix.yz"
+                }
+              },
+              {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.Ray.Direction.y"
+                  },
+                  "score": "Physics"
+                }
+              }
+            ]
+          },
+          {
+            "type": "minecraft:mul",
+            "inputs": [
+              {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": "this",
+                  "score": "Physics.Object.RotationMatrix.zz"
+                }
+              },
+              {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.Ray.Direction.z"
+                  },
+                  "score": "Physics"
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "right": {
+        "type": "minecraft:from_int",
+        "input": {
+          "type": "minecraft:score",
+          "target": "this",
+          "score": "Physics.Object.Scale.z"
+        }
+      }
+    },
+    0.00390625
+  ]
+}

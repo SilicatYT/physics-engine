@@ -12,6 +12,8 @@ summon minecraft:marker ~ ~ ~ {UUID:[I;1465875189,-790868948,-1853745261,4263733
 
 # Add scoreboard objectives
   # Object
+  scoreboard objectives add Physics.Object.Id dummy
+
   scoreboard objectives add Physics.Object.BlockPos.x dummy
   scoreboard objectives add Physics.Object.BlockPos.y dummy
   scoreboard objectives add Physics.Object.BlockPos.z dummy
@@ -109,12 +111,9 @@ summon minecraft:marker ~ ~ ~ {UUID:[I;1465875189,-790868948,-1853745261,4263733
   scoreboard objectives add Physics.Player.LookingAt.Direction.x dummy
   scoreboard objectives add Physics.Player.LookingAt.Direction.y dummy
   scoreboard objectives add Physics.Player.LookingAt.Direction.z dummy
-  scoreboard objectives add Physics.Player.LookingAt.BlockPos.x dummy
-  scoreboard objectives add Physics.Player.LookingAt.BlockPos.y dummy
-  scoreboard objectives add Physics.Player.LookingAt.BlockPos.z dummy
-  scoreboard objectives add Physics.Player.LookingAt.PosWithinBlock.x dummy
-  scoreboard objectives add Physics.Player.LookingAt.PosWithinBlock.y dummy
-  scoreboard objectives add Physics.Player.LookingAt.PosWithinBlock.z dummy
+  scoreboard objectives add Physics.Player.LookingAt.RelativePos.x dummy
+  scoreboard objectives add Physics.Player.LookingAt.RelativePos.y dummy
+  scoreboard objectives add Physics.Player.LookingAt.RelativePos.z dummy
 
   scoreboard objectives add Physics.Player.PunchStrength dummy
 
@@ -128,7 +127,6 @@ scoreboard players set #Physics.MinDistance Physics 2147483647
 
 # Set data storages
 data modify storage physics:zprivate temp.orientation set value [0f, 0f , 0f, 1f]
-data modify storage physics:zprivate hitbox_data set value {height: 0.3f, width: 0.3f, Pos: [0f, 0f, 0f]}
 
 data modify storage physics:object default set value {\
   scale: [1f, 1f, 1f],\
