@@ -11,7 +11,8 @@ execute if score #Physics.EntityInteractionRange Physics matches 5121.. run data
 execute if score #Physics.EntityInteractionRange Physics matches 5121.. run function physics:zprivate/punchable_hitbox/use_dynamic_interaction_range with storage physics:zprivate temp
 
 # No intersection happened
-execute if score #Physics.MinDistance Physics matches 2147483647 run return run execute if score @s Physics.Player.LookingAt.Id matches 1.. run function physics:zprivate/punchable_hitbox/kill/main
+execute if score @s Physics.Player.LookingAt.Id matches 1.. run function physics:zprivate/punchable_hitbox/kill/main
+execute if score #Physics.MinDistance Physics matches 2147483647 run return 0
 
 # An intersection happened
     # Store the Ray Direction for later when punching
@@ -34,24 +35,12 @@ execute if score #Physics.MinDistance Physics matches 2147483647 run return run 
     scoreboard players operation @s Physics.Player.LookingAt.RelativePos.y += #Physics.Ray.WinnerRelativePos.y Physics
     scoreboard players operation @s Physics.Player.LookingAt.RelativePos.z += #Physics.Ray.WinnerRelativePos.z Physics
 
-    # Try to teleport the interaction entity
-    # (Note): Same distance as before, but inflated by 0.2 blocks (same as in kill_hitbox).
-    # (Note): If the distance check fails (rare), it summons a new interaction entity instead and kills the old one in the next tick.
-    scoreboard players operation #Physics Physics.Player.Id = @s Physics.Player.Id
-    execute if score @s Physics.Player.LookingAt.Id matches 1.. run scoreboard players set #Physics.MinDistance Physics -1
-    scoreboard players operation @s Physics.Player.LookingAt.Id = #Physics Physics.Player.LookingAt.Id
-
-    execute if score #Physics.MinDistance Physics matches -1 if score #Physics.EntityInteractionRange Physics matches 1..3072 as @e[type=minecraft:interaction,predicate=physics:same_player_id,distance=..11.8602540378,limit=1] positioned ~ ~-0.15 ~ run return run function physics:zprivate/punchable_hitbox/tp/main
-    execute if score #Physics.MinDistance Physics matches -1 if score #Physics.EntityInteractionRange Physics matches 3073..5120 as @e[type=minecraft:interaction,predicate=physics:same_player_id,distance=..13.8602540378,limit=1] positioned ~ ~-0.15 ~ run return run function physics:zprivate/punchable_hitbox/tp/main
-    execute if score #Physics.MinDistance Physics matches -1 if score #Physics.EntityInteractionRange Physics matches 5121.. run data modify storage physics:zprivate temp.distance_alt set compute default float physics:punchable_hitbox/max_entity_distance_alt
-    execute if score #Physics.MinDistance Physics matches -1 if score #Physics.EntityInteractionRange Physics matches 5121.. run return run function physics:zprivate/punchable_hitbox/tp/dynamic_range with storage physics:zprivate temp
-
-    scoreboard players set #Physics.MinDistance Physics 2147483647
-
     # Summon a new interaction entity
-    # (Note): I use a block display as the vehicle because it makes the teleportation much smoother. As of 26.3, interaction entities only teleport at 4hz.
-    summon minecraft:block_display ~ ~ ~ {Passengers:[{id:"minecraft:interaction",width:0.3f,height:0.3f,response:1b,Tags:["Physics.Hitbox","Physics.Temp"]}]}
-    execute as @e[type=minecraft:interaction,tag=Physics.Temp,distance=..0.1,limit=1] positioned ~ ~-0.15 ~ run function physics:zprivate/punchable_hitbox/summon_hitbox
+    # (Note): I currently spawn and kill the entity every tick for more responsive movement. If interaction entities ever teleport more than 4x per second, restore the teleportation behaviour from 15.09.2026. I don't use a vehicle because it introduces teleportation delay, which makes people miss their punches.
+    # (TODO): Could maybe be optimized by adding a check for "if the entity is already almost at the destination position, teleport it instead".
+    scoreboard players set #Physics.MinDistance Physics 2147483647
+    scoreboard players operation #Physics Physics.Player.Id = @s Physics.Player.Id
+    scoreboard players operation @s Physics.Player.LookingAt.Id = #Physics Physics.Player.LookingAt.Id
+    execute positioned ~ ~-0.15 ~ run function physics:zprivate/punchable_hitbox/summon/main with storage physics:zprivate temp
 
-# (TODO): Maybe kill & respawn the entity each tick to make the movement more responsive.
 # (TODO): Maybe scale the interaction entity with the MinDistance.
