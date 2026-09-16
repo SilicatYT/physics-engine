@@ -21,7 +21,7 @@ execute store result score @s Physics.Object.PosWithinBlock.z run compute defaul
 # Apply velocity to orientation
 # (Note): Check if I should add a small epsilon for the squared length as the guard, instead of an exact "is not zero" guard.
 data modify storage physics:zprivate temp.length set compute default float physics:integration/update_orientation/velocity_length
-execute if predicate physics:integration/update_orientation/length_is_enough run function physics:zprivate/simulation/integration/phase_two/update_orientation/main
+execute if predicate physics:integration/update_orientation/length_is_enough run function physics:zprivate/simulation/integration/phase_two/update_orientation
 
 # Clear accumulators
 execute \
@@ -30,7 +30,7 @@ execute \
     store result score @s Physics.Object.LinearVelocityFromAcceleration.z \
     store result score @s Physics.Object.AngularVelocityFromTorque.x \
     store result score @s Physics.Object.AngularVelocityFromTorque.y \
-    run scoreboard players set @s Physics.Object.AngularVelocityFromTorque.z 0
+        run scoreboard players set @s Physics.Object.AngularVelocityFromTorque.z 0
 
 # Update rotation matrix
 # (Note): Inlined from 'physics:zprivate/update_derived_data/rotation_matrix'

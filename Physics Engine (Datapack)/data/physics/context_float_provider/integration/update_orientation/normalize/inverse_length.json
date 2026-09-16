@@ -1,0 +1,41 @@
+{
+  "type": "minecraft:div",
+  "left": 16777216,
+  "right": {
+    "type": "minecraft:length",
+    "inputs": [
+      {
+        "type": "minecraft:from_int",
+        "input": {
+          "type": "minecraft:score",
+          "target": "this",
+          "score": "Physics.Object.Orientation.x"
+        }
+      },
+      {
+        "type": "minecraft:from_int",
+        "input": {
+          "type": "minecraft:score",
+          "target": "this",
+          "score": "Physics.Object.Orientation.y"
+        }
+      },
+      {
+        "type": "minecraft:from_int",
+        "input": {
+          "type": "minecraft:score",
+          "target": "this",
+          "score": "Physics.Object.Orientation.z"
+        }
+      },
+      {
+        "type": "minecraft:from_int",
+        "input": {
+          "type": "minecraft:score",
+          "target": "this",
+          "score": "Physics.Object.Orientation.a"
+        }
+      }
+    ]
+  }
+}

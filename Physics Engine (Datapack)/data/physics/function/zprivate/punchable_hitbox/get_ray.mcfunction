@@ -3,7 +3,6 @@ scoreboard players set #Physics.GotRay Physics 1
 # Setup for later
 scoreboard players operation #Physics.MinDistance Physics = #Physics.EntityInteractionRange Physics
 scoreboard players add #Physics.MinDistance Physics 1
-scoreboard players set #Physics Physics.Player.LookingAt.Id -1
 
 # Get ray origin
 # (Note): In world coordinates.

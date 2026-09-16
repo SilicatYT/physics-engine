@@ -13,6 +13,11 @@ execute store result score #Physics.Ray.Local.Direction.x Physics run compute de
 execute store result score #Physics.Ray.Local.Direction.y Physics run compute default float physics:punchable_hitbox/ray/local_scaled_direction/y
 execute store result score #Physics.Ray.Local.Direction.z Physics run compute default float physics:punchable_hitbox/ray/local_scaled_direction/z
 
+# (Note): I add 1 to the ray direction because the "Slab method" for intersection checks breaks for a direction component of 0. I could also add guards in the slab method, but that would get executed for every single object, not just once total.
+execute if score #Physics.Ray.Local.Direction.x Physics matches 0 run scoreboard players add #Physics.Ray.Local.Direction.x Physics 1
+execute if score #Physics.Ray.Local.Direction.y Physics matches 0 run scoreboard players add #Physics.Ray.Local.Direction.y Physics 1
+execute if score #Physics.Ray.Local.Direction.z Physics matches 0 run scoreboard players add #Physics.Ray.Local.Direction.z Physics 1
+
 # Check if / where the ray hits the object
 execute store result score #Physics.Math.t Physics run compute default integer physics:punchable_hitbox/obb_intersection/t_close
 execute if score #Physics.Math.t Physics >= #Physics.MinDistance Physics run return 0

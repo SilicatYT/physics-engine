@@ -1,27 +1,30 @@
 {
-  "type": "minecraft:div",
-  "left": {
-    "type": "minecraft:mul",
-    "inputs": [
-      {
-        "type": "minecraft:from_int",
-        "input": {
-          "type": "minecraft:score",
-          "target": "this",
-          "score": "Physics.Object.AngularVelocity.x"
-        }
-      },
-      {
-        "type": "minecraft:storage",
-        "storage": "physics:zprivate",
-        "path": "temp.sin_half_angle"
-      },
-      64
-    ]
-  },
-  "right": {
-    "type": "minecraft:storage",
-    "storage": "physics:zprivate",
-    "path": "temp.length"
+  "type": "minecraft:round",
+  "input": {
+    "type": "minecraft:div",
+    "left": {
+      "type": "minecraft:mul",
+      "inputs": [
+        {
+          "type": "minecraft:from_int",
+          "input": {
+            "type": "minecraft:score",
+            "target": "this",
+            "score": "Physics.Object.AngularVelocity.x"
+          }
+        },
+        {
+          "type": "minecraft:storage",
+          "storage": "physics:zprivate",
+          "path": "temp.sin_half_angle"
+        },
+        64
+      ]
+    },
+    "right": {
+      "type": "minecraft:storage",
+      "storage": "physics:zprivate",
+      "path": "temp.length"
+    }
   }
 }

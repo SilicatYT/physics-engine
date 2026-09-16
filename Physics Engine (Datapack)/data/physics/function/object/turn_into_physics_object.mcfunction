@@ -1,7 +1,8 @@
 tag @s add Physics.Object
 item replace entity @s contents with minecraft:stone
 data merge entity @s {teleport_duration:1, interpolation_duration:1}
-execute store result score @s Physics.Object.Id run scoreboard players add #Physics Physics.Object.Id 1
+execute store result score @s Physics.Object.Id store result score @s Physics.Object.Id.Mod200 run scoreboard players add #Physics Physics.Object.Id 1
+scoreboard players operation @s Physics.Object.Id.Mod200 %= #Physics.Constant.200 Physics
 
 # Default values
 function physics:object/set_inverse_mass with storage physics:object default

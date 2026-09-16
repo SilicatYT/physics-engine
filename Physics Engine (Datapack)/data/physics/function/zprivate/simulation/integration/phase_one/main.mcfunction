@@ -1,26 +1,19 @@
 # Get entity data
-data modify storage physics:zprivate entity_data set from entity @s
+tp 575f7af5-d0dc-4c2c-9182-17931969f0ba ~ ~ ~
+data modify storage physics:zprivate pos set from entity 575f7af5-d0dc-4c2c-9182-17931969f0ba Pos
 
 # Set internal pos to entity pos
 # (Explanation): If the entity gets teleported, it should automatically update the internal pos values rather than teleport back to its original position. That's why I update the pos scores every tick.
-execute store result score @s Physics.Object.BlockPos.x store result storage physics:zprivate temp.x int -1 run data get storage physics:zprivate entity_data.Pos[0]
-execute store result score @s Physics.Object.BlockPos.y store result storage physics:zprivate temp.y int -1 run data get storage physics:zprivate entity_data.Pos[1]
-execute store result score @s Physics.Object.BlockPos.z store result storage physics:zprivate temp.z int -1 run data get storage physics:zprivate entity_data.Pos[2]
+execute store result score @s Physics.Object.BlockPos.x store result storage physics:zprivate temp.x int -1 run data get storage physics:zprivate pos[0]
+execute store result score @s Physics.Object.BlockPos.y store result storage physics:zprivate temp.y int -1 run data get storage physics:zprivate pos[1]
+execute store result score @s Physics.Object.BlockPos.z store result storage physics:zprivate temp.z int -1 run data get storage physics:zprivate pos[2]
 
 # (Note): I need the PosWithinBlock at high precision. Number providers use floats, so it would be much less precise to use one at large coordinates.
-function physics:zprivate/macro/relative_tp with storage physics:zprivate temp
-data modify storage physics:zprivate entity_data.Pos set from entity @s Pos
-tp @s ~ ~ ~
-execute store result score @s Physics.Object.PosWithinBlock.x run data get storage physics:zprivate entity_data.Pos[0] 16777216
-execute store result score @s Physics.Object.PosWithinBlock.y run data get storage physics:zprivate entity_data.Pos[1] 16777216
-execute store result score @s Physics.Object.PosWithinBlock.z run data get storage physics:zprivate entity_data.Pos[2] 16777216
-
-# Refresh orientation
-# (Note): Only necessary so it stays normalized.
-execute store result score @s Physics.Object.Orientation.x run data get storage physics:zprivate entity_data.transformation.left_rotation[0] 16777216
-execute store result score @s Physics.Object.Orientation.y run data get storage physics:zprivate entity_data.transformation.left_rotation[1] 16777216
-execute store result score @s Physics.Object.Orientation.z run data get storage physics:zprivate entity_data.transformation.left_rotation[2] 16777216
-execute store result score @s Physics.Object.Orientation.a run data get storage physics:zprivate entity_data.transformation.left_rotation[3] 16777216
+execute as 575f7af5-d0dc-4c2c-9182-17931969f0ba run function physics:zprivate/macro/relative_tp with storage physics:zprivate temp
+data modify storage physics:zprivate pos set from entity 575f7af5-d0dc-4c2c-9182-17931969f0ba Pos
+execute store result score @s Physics.Object.PosWithinBlock.x run data get storage physics:zprivate pos[0] 16777216
+execute store result score @s Physics.Object.PosWithinBlock.y run data get storage physics:zprivate pos[1] 16777216
+execute store result score @s Physics.Object.PosWithinBlock.z run data get storage physics:zprivate pos[2] 16777216
 
 # Update linear velocity
     # Gravity
@@ -49,10 +42,3 @@ execute store result score @s Physics.Object.Orientation.a run data get storage 
 # (TODO): Check if a division by the DeltaTimeDenominator score is faster than a multiplication with the data storage.
 # (TODO): Check if I can pre-calculate inverseMass * deltaTime and store it as a score, to remove 1 multiplication from each component when calculating the acceleration from a force.
 # (TODO): In general, go over everything and check if I can turn it into an integer number provider or move things from storage to score without losing any visible precision.
-
-
-
-
-
-# TODO: Replace (and benchmark) the current PosWithinBlock retrieval method: Use "set string storage" to get the number of digits of BlockPos, then cut off the first X characters with a macro (will almost always be cached, but it needs 3 macro lines. There are 9 possible lengths, so honestly, just add an exception for ..-10M), then use a single macro to set entity_data.Pos to {0.$(x)f, 0.$(y)f, 0.$(z)f}
-# => 2 function calls & 1 macro compared to 2 function calls, 1 macro & 1 data call. ALSO REPLACE IT IN THE HITBOX CODE

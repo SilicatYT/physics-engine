@@ -1,108 +1,111 @@
 {
-  "type": "minecraft:mul",
-  "inputs": [
-    {
-      "type": "minecraft:add",
-      "inputs": [
-        {
-          "type": "minecraft:mul",
-          "inputs": [
-            {
-              "type": "minecraft:from_int",
-              "input": {
-                "type": "minecraft:score",
-                "target": {
-                  "type": "minecraft:fixed",
-                  "name": "#Physics.Math.3"
-                },
-                "score": "Physics"
+  "type": "minecraft:round",
+  "input": {
+    "type": "minecraft:mul",
+    "inputs": [
+      {
+        "type": "minecraft:add",
+        "inputs": [
+          {
+            "type": "minecraft:mul",
+            "inputs": [
+              {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.Math.3"
+                  },
+                  "score": "Physics"
+                }
+              },
+              {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": "this",
+                  "score": "Physics.Object.Orientation.z"
+                }
               }
-            },
-            {
-              "type": "minecraft:from_int",
-              "input": {
-                "type": "minecraft:score",
-                "target": "this",
-                "score": "Physics.Object.Orientation.z"
+            ]
+          },
+          {
+            "type": "minecraft:mul",
+            "inputs": [
+              {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.Math.0"
+                  },
+                  "score": "Physics"
+                }
+              },
+              {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": "this",
+                  "score": "Physics.Object.Orientation.y"
+                }
               }
-            }
-          ]
-        },
-        {
-          "type": "minecraft:mul",
-          "inputs": [
-            {
-              "type": "minecraft:from_int",
-              "input": {
-                "type": "minecraft:score",
-                "target": {
-                  "type": "minecraft:fixed",
-                  "name": "#Physics.Math.0"
-                },
-                "score": "Physics"
+            ]
+          },
+          {
+            "type": "minecraft:mul",
+            "inputs": [
+              {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.Math.1"
+                  },
+                  "score": "Physics"
+                }
+              },
+              {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": "this",
+                  "score": "Physics.Object.Orientation.x"
+                }
+              },
+              -1
+            ]
+          },
+          {
+            "type": "minecraft:mul",
+            "inputs": [
+              {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.Math.2"
+                  },
+                  "score": "Physics"
+                }
+              },
+              {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": "this",
+                  "score": "Physics.Object.Orientation.a"
+                }
               }
-            },
-            {
-              "type": "minecraft:from_int",
-              "input": {
-                "type": "minecraft:score",
-                "target": "this",
-                "score": "Physics.Object.Orientation.y"
-              }
-            }
-          ]
-        },
-        {
-          "type": "minecraft:mul",
-          "inputs": [
-            {
-              "type": "minecraft:from_int",
-              "input": {
-                "type": "minecraft:score",
-                "target": {
-                  "type": "minecraft:fixed",
-                  "name": "#Physics.Math.1"
-                },
-                "score": "Physics"
-              }
-            },
-            {
-              "type": "minecraft:from_int",
-              "input": {
-                "type": "minecraft:score",
-                "target": "this",
-                "score": "Physics.Object.Orientation.x"
-              }
-            },
-            -1
-          ]
-        },
-        {
-          "type": "minecraft:mul",
-          "inputs": [
-            {
-              "type": "minecraft:from_int",
-              "input": {
-                "type": "minecraft:score",
-                "target": {
-                  "type": "minecraft:fixed",
-                  "name": "#Physics.Math.2"
-                },
-                "score": "Physics"
-              }
-            },
-            {
-              "type": "minecraft:from_int",
-              "input": {
-                "type": "minecraft:score",
-                "target": "this",
-                "score": "Physics.Object.Orientation.a"
-              }
-            }
-          ]
-        }
-      ]
-    },
-    5.9604644775390625e-8
-  ]
+            ]
+          }
+        ]
+      },
+      5.960464477539063e-8
+    ]
+  }
 }

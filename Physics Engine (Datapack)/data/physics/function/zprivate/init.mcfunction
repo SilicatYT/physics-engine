@@ -42,6 +42,8 @@ summon minecraft:marker ~ ~ ~ {UUID:[I;1465875189,-790868948,-1853745261,4263733
   scoreboard objectives add Physics.Object.Orientation.a dummy
 
   # Object (Derived)
+  scoreboard objectives add Physics.Object.Id.Mod200 dummy
+
   scoreboard objectives add Physics.Object.RotationMatrix.xx dummy
   scoreboard objectives add Physics.Object.RotationMatrix.xy dummy
   scoreboard objectives add Physics.Object.RotationMatrix.xz dummy
@@ -122,6 +124,7 @@ summon minecraft:marker ~ ~ ~ {UUID:[I;1465875189,-790868948,-1853745261,4263733
 
 # Set initial scores
 scoreboard players set #Physics.Constant.-1 Physics -1
+scoreboard players set #Physics.Constant.200 Physics 200
 
 # Set data storages
 data modify storage physics:zprivate temp.orientation set value [0f, 0f , 0f, 1f]

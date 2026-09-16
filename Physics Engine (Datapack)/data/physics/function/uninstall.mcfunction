@@ -20,8 +20,10 @@ scoreboard players reset #Physics
     scoreboard players reset #Physics.PosChange.z
 
     scoreboard players reset #Physics.Gametime
+    scoreboard players reset #Physics.Gametime.Mod200
+
     scoreboard players reset #Physics.InteractionCount
-    scoreboard players reset #Physics.SuccessfulTeleportCount
+    scoreboard players reset #Physics.KillCount
     scoreboard players reset #Physics.GotRay
     scoreboard players reset #Physics.EntityInteractionRange
     scoreboard players reset #Physics.MinDistance
@@ -46,10 +48,6 @@ scoreboard players reset #Physics
     scoreboard players reset #Physics.Ray.Local.Direction.x
     scoreboard players reset #Physics.Ray.Local.Direction.y
     scoreboard players reset #Physics.Ray.Local.Direction.z
-    scoreboard players reset #Physics.Ray.IntersectionPoint.x
-    scoreboard players reset #Physics.Ray.IntersectionPoint.y
-    scoreboard players reset #Physics.Ray.IntersectionPoint.z
-    scoreboard players reset #Physics.HitboxKillSuccess
 
     scoreboard players reset #Physics.Math.PitchRad
     scoreboard players reset #Physics.Math.YawRad
@@ -70,6 +68,7 @@ kill 575f7af5-d0dc-4c2c-9182-17931969f0ba
 scoreboard objectives remove Physics
 
 scoreboard objectives remove Physics.Object.Id
+scoreboard objectives remove Physics.Object.Id.Mod200
 
 scoreboard objectives remove Physics.Object.BlockPos.x
 scoreboard objectives remove Physics.Object.BlockPos.y
@@ -175,6 +174,7 @@ scoreboard objectives remove Physics.Hitbox.Gametime
 # Delete data storages
 data remove storage physics:zprivate settings
 data remove storage physics:zprivate entity_data
+data remove storage physics:zprivate pos
 data remove storage physics:zprivate temp
 data remove storage physics:zprivate fallback_default
 data remove storage physics:zprivate constants

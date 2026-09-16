@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:round",
+  "input": {
+    "type": "minecraft:mul",
+    "inputs": [
+      {
+        "type": "minecraft:from_int",
+        "input": {
+          "type": "minecraft:score",
+          "target": "this",
+          "score": "Physics.Object.Orientation.a"
+        }
+      },
+      {
+        "type": "minecraft:storage",
+        "storage": "physics:zprivate",
+        "path": "temp.inverse_length"
+      }
+    ]
+  }
+}

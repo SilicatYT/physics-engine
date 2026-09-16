@@ -1,5 +1,8 @@
+execute store result score #Physics.Gametime Physics store result score #Physics.Gametime.Mod200 Physics run time query gametime
+scoreboard players operation #Physics.Gametime.Mod200 Physics %= #Physics.Constant.200 Physics
+
 # Integration (Phase 1)
-execute as @e[type=minecraft:item_display,tag=Physics.Object] at @s run function physics:zprivate/simulation/integration/phase_one
+execute as 575f7af5-d0dc-4c2c-9182-17931969f0ba at @s run function physics:zprivate/simulation/integration/phase_one/start
 
 # Collision Detection
 # (Note): Leads into Contact Generation
@@ -14,14 +17,12 @@ execute as @e[type=minecraft:item_display,tag=Physics.Object] at @s run function
 execute as @a unless score @s Physics.Player.Id matches 1.. run function physics:zprivate/new_player
 
 # Spawn object hitboxes
-    # Spawn or teleport hitboxes
-    execute store result score #Physics.Gametime Physics run time query gametime
-    scoreboard players set #Physics.SuccessfulTeleportCount Physics 0
-    execute as 575f7af5-d0dc-4c2c-9182-17931969f0ba at @s run function physics:zprivate/punchable_hitbox/start
+execute as 575f7af5-d0dc-4c2c-9182-17931969f0ba at @s run function physics:zprivate/punchable_hitbox/start
 
-    # Kill leftover hitboxes
-    # (Note): Because interaction entities can unload, players can leave etc.
-    execute if score #Physics.InteractionCount Physics > #Physics.SuccessfulTeleportCount Physics as @e[type=minecraft:interaction,tag=Physics.Hitbox] unless score @s Physics.Hitbox.Gametime = #Physics.Gametime Physics run function physics:zprivate/punchable_hitbox/kill/leftover
+    # Kill hitboxes
+    # (Note): InteractionCount is necessary because interaction entities can unload.
+    execute if score #Physics.InteractionCount Physics matches 1.. store result score #Physics.KillCount Physics run kill @e[type=minecraft:interaction,tag=Physics.Hitbox,predicate=physics:punchable_hitbox/non_matching_gametime]
+    execute if score #Physics.InteractionCount Physics matches 1.. run scoreboard players operation #Physics.InteractionCount Physics -= #Physics.KillCount Physics
 
 # Schedule next tick
 schedule function physics:zprivate/tick 1t

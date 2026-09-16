@@ -3,18 +3,18 @@
 # (Note): Entity Interaction Range is capped by the game at 64.
 # (Note): The dynamic distance is has 8 possible values, so the macro is always cached.
 # (TODO): Check if all these "dynamic distance" checks & function calls are actually worth it for performance, or if it's just overhead.
-scoreboard players set #Physics.GotRay Physics 0
+execute store result score #Physics Physics.Player.LookingAt.Id run scoreboard players set #Physics.GotRay Physics 0
 execute store result score #Physics.EntityInteractionRange Physics run attribute @s minecraft:entity_interaction_range get 1024
 execute if score #Physics.EntityInteractionRange Physics matches 1..3072 as @e[type=minecraft:item_display,tag=Physics.Punchable,distance=..11.6602540378,sort=nearest] run function physics:zprivate/punchable_hitbox/aabb_check
 execute if score #Physics.EntityInteractionRange Physics matches 3073..5120 as @e[type=minecraft:item_display,tag=Physics.Punchable,distance=..13.6602540378,sort=nearest] run function physics:zprivate/punchable_hitbox/aabb_check
 execute if score #Physics.EntityInteractionRange Physics matches 5121.. run data modify storage physics:zprivate temp.distance set compute default float physics:punchable_hitbox/max_entity_distance
 execute if score #Physics.EntityInteractionRange Physics matches 5121.. run function physics:zprivate/punchable_hitbox/use_dynamic_interaction_range with storage physics:zprivate temp
 
-# Kill the previous tick's hitbox
-execute if score @s Physics.Player.LookingAt.Id matches 1.. run function physics:zprivate/punchable_hitbox/kill/main
+# If stopped looking at entity
+execute if score @s Physics.Player.LookingAt.Id matches 1.. if score #Physics Physics.Player.LookingAt.Id matches 0 run scoreboard players set @s Physics.Player.LookingAt.Id 0
 
 # No intersection happened
-execute if score #Physics Physics.Player.LookingAt.Id matches -1 run return 0
+execute if score #Physics Physics.Player.LookingAt.Id matches 0 run return 0
 
 # An intersection happened
     # Store the Ray Direction for later when punching
