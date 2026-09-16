@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:entity_scores",
+  "entity": "this",
+  "scores": {
+    "Physics.Object.Id": {
+      "type": "minecraft:score",
+      "target": {
+        "type": "minecraft:fixed",
+        "name": "#Physics"
+      },
+      "score": "Physics.Object.Id"
+    }
+  }
+}

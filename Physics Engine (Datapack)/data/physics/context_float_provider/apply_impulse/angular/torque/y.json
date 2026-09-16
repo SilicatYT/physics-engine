@@ -1,0 +1,73 @@
+{
+  "type": "minecraft:mul",
+  "inputs": [
+    {
+      "type": "minecraft:sub",
+      "left": {
+        "type": "minecraft:mul",
+        "inputs": [
+          {
+            "type": "minecraft:from_int",
+            "input": {
+              "type": "minecraft:score",
+              "target": {
+                "type": "minecraft:fixed",
+                "name": "#Physics.ApplyImpulse.RelativePos.z"
+              },
+              "score": "Physics"
+            }
+          },
+          {
+            "type": "minecraft:from_int",
+            "input": {
+              "type": "minecraft:score",
+              "target": {
+                "type": "minecraft:fixed",
+                "name": "#Physics.ApplyImpulse.Direction.x"
+              },
+              "score": "Physics"
+            }
+          }
+        ]
+      },
+      "right": {
+        "type": "minecraft:mul",
+        "inputs": [
+          {
+            "type": "minecraft:from_int",
+            "input": {
+              "type": "minecraft:score",
+              "target": {
+                "type": "minecraft:fixed",
+                "name": "#Physics.ApplyImpulse.RelativePos.x"
+              },
+              "score": "Physics"
+            }
+          },
+          {
+            "type": "minecraft:from_int",
+            "input": {
+              "type": "minecraft:score",
+              "target": {
+                "type": "minecraft:fixed",
+                "name": "#Physics.ApplyImpulse.Direction.z"
+              },
+              "score": "Physics"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "type": "minecraft:from_int",
+      "input": {
+        "type": "minecraft:score",
+        "target": {
+          "type": "minecraft:fixed",
+          "name": "#Physics.ApplyImpulse.Strength"
+        },
+        "score": "Physics"
+      }
+    }
+  ]
+}

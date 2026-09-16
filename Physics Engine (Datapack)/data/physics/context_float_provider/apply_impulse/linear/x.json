@@ -1,0 +1,49 @@
+{
+  "type": "minecraft:add",
+  "inputs": [
+    {
+      "type": "minecraft:from_int",
+      "input": {
+        "type": "minecraft:score",
+        "target": "this",
+        "score": "Physics.Object.LinearVelocity.x"
+      }
+    },
+    {
+      "type": "minecraft:mul",
+      "inputs": [
+        {
+          "type": "minecraft:from_int",
+          "input": {
+            "type": "minecraft:score",
+            "target": {
+              "type": "minecraft:fixed",
+              "name": "#Physics.ApplyImpulse.Strength"
+            },
+            "score": "Physics"
+          }
+        },
+        {
+          "type": "minecraft:from_int",
+          "input": {
+            "type": "minecraft:score",
+            "target": {
+              "type": "minecraft:fixed",
+              "name": "#Physics.ApplyImpulse.Direction.x"
+            },
+            "score": "Physics"
+          }
+        },
+        {
+          "type": "minecraft:from_int",
+          "input": {
+            "type": "minecraft:score",
+            "target": "this",
+            "score": "Physics.Object.InverseMass"
+          }
+        },
+        2.98023223876953125e-8
+      ]
+    }
+  ]
+}

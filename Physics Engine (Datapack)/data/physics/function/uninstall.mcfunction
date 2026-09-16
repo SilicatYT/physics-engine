@@ -52,9 +52,21 @@ scoreboard players reset #Physics
     scoreboard players reset #Physics.Ray.Local.Direction.y
     scoreboard players reset #Physics.Ray.Local.Direction.z
 
+    scoreboard players reset #Physics.ApplyImpulse.Strength
+    scoreboard players reset #Physics.ApplyImpulse.RelativePos.x
+    scoreboard players reset #Physics.ApplyImpulse.RelativePos.y
+    scoreboard players reset #Physics.ApplyImpulse.RelativePos.z
+    scoreboard players reset #Physics.ApplyImpulse.Direction.x
+    scoreboard players reset #Physics.ApplyImpulse.Direction.y
+    scoreboard players reset #Physics.ApplyImpulse.Direction.z
+
     scoreboard players reset #Physics.Math.PitchRad
     scoreboard players reset #Physics.Math.YawRad
     scoreboard players reset #Physics.Math.t
+
+    scoreboard players reset #Physics.Math.Torque.x
+    scoreboard players reset #Physics.Math.Torque.y
+    scoreboard players reset #Physics.Math.Torque.z
 
     scoreboard players reset #Physics.Math.0
     scoreboard players reset #Physics.Math.1

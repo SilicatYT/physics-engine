@@ -1,0 +1,74 @@
+{
+  "type": "minecraft:add",
+  "inputs": [
+    {
+      "type": "minecraft:from_int",
+      "input": {
+        "type": "minecraft:score",
+        "target": "this",
+        "score": "Physics.Object.AngularVelocity.y"
+      }
+    },
+    {
+      "type": "minecraft:mul",
+      "inputs": [
+        {
+          "type": "minecraft:add",
+          "inputs": [
+            {
+              "type": "minecraft:mul",
+              "inputs": [
+                {
+                  "type": "minecraft:from_int",
+                  "input": {
+                    "type": "minecraft:score",
+                    "target": "this",
+                    "score": "Physics.Object.SpecificInverseInertiaWorld.yx"
+                  }
+                },
+                "physics:apply_impulse/angular/torque/x"
+              ]
+            },
+            {
+              "type": "minecraft:mul",
+              "inputs": [
+                {
+                  "type": "minecraft:from_int",
+                  "input": {
+                    "type": "minecraft:score",
+                    "target": "this",
+                    "score": "Physics.Object.SpecificInverseInertiaWorld.yy"
+                  }
+                },
+                "physics:apply_impulse/angular/torque/y"
+              ]
+            },
+            {
+              "type": "minecraft:mul",
+              "inputs": [
+                {
+                  "type": "minecraft:from_int",
+                  "input": {
+                    "type": "minecraft:score",
+                    "target": "this",
+                    "score": "Physics.Object.SpecificInverseInertiaWorld.yz"
+                  }
+                },
+                "physics:apply_impulse/angular/torque/z"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "minecraft:from_int",
+          "input": {
+            "type": "minecraft:score",
+            "target": "this",
+            "score": "Physics.Object.InverseMass"
+          }
+        },
+        3.469446951953614e-18
+      ]
+    }
+  ]
+}

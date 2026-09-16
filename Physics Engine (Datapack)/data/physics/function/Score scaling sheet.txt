@@ -26,6 +26,9 @@ Object:
 - AABB: 64x (2^6. World position, necessary for fast object-object AABB checks. If I need a more accurate one for terrain, that can be added later on.)
 - AABBRelative: 65536x (2^16. 2^6 should be sufficient, but having the same scaling as "Ray.RelativePos" makes it faster, and some extra precision can't hurt.)
 
+Player:
+- PunchStrength: 1x
+
 
 
 

@@ -179,7 +179,7 @@ data modify storage physics:zprivate settings.dialog set value \
           "label": "Default Punch Strength",\
           "label_format": "%1$s: %2$sNs",\
           "start": 0,\
-          "end": 100000,\
+          "end": 1000000,\
           "step": 1\
         }\
       ],\
