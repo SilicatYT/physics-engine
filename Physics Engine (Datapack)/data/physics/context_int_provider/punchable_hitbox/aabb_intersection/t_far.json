@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:min",
+  "inputs": [
+    {
+      "type": "minecraft:max",
+      "inputs": [
+        "physics:punchable_hitbox/aabb_intersection/x/neg_t",
+        "physics:punchable_hitbox/aabb_intersection/x/pos_t"
+      ]
+    },
+    {
+      "type": "minecraft:max",
+      "inputs": [
+        "physics:punchable_hitbox/aabb_intersection/y/neg_t",
+        "physics:punchable_hitbox/aabb_intersection/y/pos_t"
+      ]
+    },
+    {
+      "type": "minecraft:max",
+      "inputs": [
+        "physics:punchable_hitbox/aabb_intersection/z/neg_t",
+        "physics:punchable_hitbox/aabb_intersection/z/pos_t"
+      ]
+    }
+  ]
+}

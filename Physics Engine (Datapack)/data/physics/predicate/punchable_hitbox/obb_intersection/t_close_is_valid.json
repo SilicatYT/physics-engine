@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:int_value_check",
+  "value": {
+    "type": "minecraft:score",
+    "target": {
+      "type": "minecraft:fixed",
+      "name": "#Physics.Math.t"
+    },
+    "score": "Physics"
+  },
+  "test": {
+    "max": "physics:punchable_hitbox/obb_intersection/t_far"
+  }
+}

@@ -5,8 +5,8 @@
 # (TODO): Check if all these "dynamic distance" checks & function calls are actually worth it for performance, or if it's just overhead.
 scoreboard players set #Physics.GotRay Physics 0
 execute store result score #Physics.EntityInteractionRange Physics run attribute @s minecraft:entity_interaction_range get 1024
-execute if score #Physics.EntityInteractionRange Physics matches 1..3072 as @e[type=minecraft:item_display,tag=Physics.Punchable,distance=..11.6602540378,sort=nearest] run function physics:zprivate/punchable_hitbox/aabb_intersection/check
-execute if score #Physics.EntityInteractionRange Physics matches 3073..5120 as @e[type=minecraft:item_display,tag=Physics.Punchable,distance=..13.6602540378,sort=nearest] run function physics:zprivate/punchable_hitbox/aabb_intersection/check
+execute if score #Physics.EntityInteractionRange Physics matches 1..3072 as @e[type=minecraft:item_display,tag=Physics.Punchable,distance=..11.6602540378,sort=nearest] run function physics:zprivate/punchable_hitbox/aabb_check
+execute if score #Physics.EntityInteractionRange Physics matches 3073..5120 as @e[type=minecraft:item_display,tag=Physics.Punchable,distance=..13.6602540378,sort=nearest] run function physics:zprivate/punchable_hitbox/aabb_check
 execute if score #Physics.EntityInteractionRange Physics matches 5121.. run data modify storage physics:zprivate temp.distance set compute default float physics:punchable_hitbox/max_entity_distance
 execute if score #Physics.EntityInteractionRange Physics matches 5121.. run function physics:zprivate/punchable_hitbox/use_dynamic_interaction_range with storage physics:zprivate temp
 
