@@ -17,6 +17,7 @@ execute store result score #Physics.Ray.Local.Direction.z Physics run compute de
 # (TODO): Check if it would be worth it to utilize the fact that if it collides with one entering face and the distance checks fail, all other checks will automatically fail too. Right now, I use the slab method in a single number provider, which blindly calculates.
 execute store result score #Physics.Math.t Physics run compute default integer physics:punchable_hitbox/obb_intersection/t_close
 execute if score #Physics.Math.t Physics >= #Physics.MinDistance Physics run return 0
+execute if score #Physics.Math.t Physics > #Physics.EntityInteractionRange Physics run return 0
 execute unless predicate physics:punchable_hitbox/obb_intersection/t_close_is_valid run return 0
 
 # Valid intersection found
