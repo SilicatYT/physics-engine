@@ -172,6 +172,15 @@ data modify storage physics:zprivate settings.dialog set value \
           "label": "Show reload message",\
           "on_true": "1",\
           "on_false": "0"\
+        },\
+        {\
+          "type": "minecraft:number_range",\
+          "key": "default_punch_strength",\
+          "label": "Default Punch Strength",\
+          "label_format": "%1$s: %2$sNs",\
+          "start": 0,\
+          "end": 100000,\
+          "step": 1\
         }\
       ],\
       "columns": 3,\
@@ -182,7 +191,7 @@ data modify storage physics:zprivate settings.dialog set value \
           "width": 150,\
           "action": {\
             "type": "minecraft:dynamic/run_command",\
-            "template": "function physics:zprivate/settings/datapack/apply {show_reload_message:$(show_reload_message)b}"\
+            "template": "function physics:zprivate/settings/datapack/apply {show_reload_message:$(show_reload_message)b,default_punch_strength:$(default_punch_strength)}"\
           }\
         },\
         {\

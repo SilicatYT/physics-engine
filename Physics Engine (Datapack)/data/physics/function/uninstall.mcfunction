@@ -6,10 +6,11 @@ scoreboard players reset #Physics
 
     # Datapack Settings
     scoreboard players reset #Physics.Settings.ShowReloadMessage
-    scoreboard players reset #Physics.Settings.DeltaTimeDenominator
-    scoreboard players reset #Physics.Settings.Derived.ScaledGravityPerTick
+    scoreboard players reset #Physics.Settings.DefaultPunchStrength
 
     # Simulation settings
+    scoreboard players reset #Physics.Settings.DeltaTimeDenominator
+    scoreboard players reset #Physics.Settings.Derived.ScaledGravityPerTick
 
     # Helper scores
     scoreboard players reset #Physics.IsTrue

@@ -1,10 +1,15 @@
 $data modify storage physics:zprivate settings.new set value {\
-    show_reload_message:$(show_reload_message)b\
+    show_reload_message:$(show_reload_message)b,\
+    default_punch_strength:$(default_punch_strength)\
 }
 
 # Setting: Show Reload Message
 data modify storage physics:zprivate settings.value set from storage physics:zprivate settings.new.show_reload_message
 function physics:settings/datapack/set_show_reload_message with storage physics:zprivate settings
+
+# Setting: Default Punch Strength
+data modify storage physics:zprivate settings.value set from storage physics:zprivate settings.new.default_punch_strength
+function physics:settings/datapack/set_default_punch_strength with storage physics:zprivate settings
 
 # Tellraw
 tellraw @s ["",{text:"Physics Engine >> ",color:"#12D9D6"},{text:"Saved configuration!",color:"green"}]
