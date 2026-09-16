@@ -12,8 +12,7 @@ execute store result score #Physics.Ray.RelativePos.z Physics run compute defaul
 # (Note): If the ray hits the AABB (& the distance is less than the current MinDistance, in case another object is in front of that), it runs the OBB check.
 # (Note): Intersection is checked via the "Slab method" because it can be implemented without function calls and with minimal command count, making it very fast for failing checks.
 # (Note): I benchmarked it, and re-calculating the t values in the predicate check is much faster than scoring them individually first and re-using them in the predicate and t_close.
-# (TODO): Check if adding an early exit for "if RelativePos.lengthSquared > MinDistance + OBBRadius" would be worth it.
+# (Note): An early exit for "if RelativePos.lengthSquared > (MinDistance + OBBRadius)^2" is not worth it (I benchmarked).
 execute store result score #Physics.Math.t Physics run compute default integer physics:punchable_hitbox/aabb_intersection/t_close
 execute if score #Physics.Math.t Physics >= #Physics.MinDistance Physics run return 0
-execute if score #Physics.Math.t Physics > #Physics.EntityInteractionRange Physics run return 0
 execute if predicate physics:punchable_hitbox/aabb_intersection/t_close_is_valid run function physics:zprivate/punchable_hitbox/obb_check

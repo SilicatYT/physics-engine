@@ -10,9 +10,11 @@ execute if score #Physics.EntityInteractionRange Physics matches 3073..5120 as @
 execute if score #Physics.EntityInteractionRange Physics matches 5121.. run data modify storage physics:zprivate temp.distance set compute default float physics:punchable_hitbox/max_entity_distance
 execute if score #Physics.EntityInteractionRange Physics matches 5121.. run function physics:zprivate/punchable_hitbox/use_dynamic_interaction_range with storage physics:zprivate temp
 
-# No intersection happened
+# Kill the previous tick's hitbox
 execute if score @s Physics.Player.LookingAt.Id matches 1.. run function physics:zprivate/punchable_hitbox/kill/main
-execute if score #Physics.MinDistance Physics matches 2147483647 run return 0
+
+# No intersection happened
+execute if score #Physics Physics.Player.LookingAt.Id matches -1 run return 0
 
 # An intersection happened
     # Store the Ray Direction for later when punching
@@ -38,9 +40,6 @@ execute if score #Physics.MinDistance Physics matches 2147483647 run return 0
     # Summon a new interaction entity
     # (Note): I currently spawn and kill the entity every tick for more responsive movement. If interaction entities ever teleport more than 4x per second, restore the teleportation behaviour from 15.09.2026. I don't use a vehicle because it introduces teleportation delay, which makes people miss their punches.
     # (TODO): Could maybe be optimized by adding a check for "if the entity is already almost at the destination position, teleport it instead".
-    scoreboard players set #Physics.MinDistance Physics 2147483647
     scoreboard players operation #Physics Physics.Player.Id = @s Physics.Player.Id
     scoreboard players operation @s Physics.Player.LookingAt.Id = #Physics Physics.Player.LookingAt.Id
     execute positioned ~ ~-0.15 ~ run function physics:zprivate/punchable_hitbox/summon/main with storage physics:zprivate temp
-
-# (TODO): Maybe scale the interaction entity with the MinDistance.

@@ -123,8 +123,6 @@ summon minecraft:marker ~ ~ ~ {UUID:[I;1465875189,-790868948,-1853745261,4263733
 # Set initial scores
 scoreboard players set #Physics.Constant.-1 Physics -1
 
-scoreboard players set #Physics.MinDistance Physics 2147483647
-
 # Set data storages
 data modify storage physics:zprivate temp.orientation set value [0f, 0f , 0f, 1f]
 
