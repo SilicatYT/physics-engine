@@ -2,7 +2,7 @@ execute store result score #Physics.Gametime Physics store result score #Physics
 scoreboard players operation #Physics.Gametime.Mod200 Physics %= #Physics.Constant.200 Physics
 
 # Integration (Phase 1)
-execute as 575f7af5-d0dc-4c2c-9182-17931969f0ba at @s run function physics:zprivate/simulation/integration/phase_one/start
+execute as 575f7af5-d0dc-4c2c-9182-17931969f0ba run function physics:zprivate/simulation/integration/phase_one/start
 
 # Collision Detection
 # (Note): Leads into Contact Generation
@@ -17,7 +17,7 @@ execute as @e[type=minecraft:item_display,tag=Physics.Object] at @s run function
 execute as @a unless score @s Physics.Player.Id matches 1.. run function physics:zprivate/new_player
 
 # Spawn object hitboxes
-execute as 575f7af5-d0dc-4c2c-9182-17931969f0ba at @s run function physics:zprivate/punchable_hitbox/start
+execute as 575f7af5-d0dc-4c2c-9182-17931969f0ba run function physics:zprivate/punchable_hitbox/start
 
     # Kill hitboxes
     # (Note): InteractionCount is necessary because interaction entities can unload.

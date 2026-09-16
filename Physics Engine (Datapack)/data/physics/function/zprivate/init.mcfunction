@@ -8,6 +8,8 @@ gamerule max_command_sequence_length 2147483647
 
 # Summon entities
 # (Note): The marker is used for getting the position at any given command context. It's hexadecimal UUID is: "575f7af5-d0dc-4c2c-9182-17931969f0ba".
+# (Note): The forceload assumes that the world spawn does not move. If it does, the marker and the forceload have to be moved.
+forceload add ~ ~
 summon minecraft:marker ~ ~ ~ {UUID:[I;1465875189,-790868948,-1853745261,426373306]}
 
 # Add scoreboard objectives

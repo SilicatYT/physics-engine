@@ -1,3 +1,5 @@
+# (Note): The forceload at world spawn is not automatically removed for compatibility reasons.
+
 # Reset scores
 scoreboard players reset #Physics.Init
 scoreboard players reset #Physics
