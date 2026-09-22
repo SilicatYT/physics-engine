@@ -1,5 +1,3 @@
-# (Note): The forceload at world spawn is not automatically removed for compatibility reasons.
-
 # Reset scores
 scoreboard players reset #Physics.Init
 scoreboard players reset #Physics
@@ -79,11 +77,16 @@ scoreboard players reset #Physics
 # Kill entities
 kill 575f7af5-d0dc-4c2c-9182-17931969f0ba
 
+# Remove forceloads
+execute in physics:void run forceload remove 0 0
+
 # Remove scoreboard objectives
 scoreboard objectives remove Physics
 
 scoreboard objectives remove Physics.Object.Id
 scoreboard objectives remove Physics.Object.Id.Mod200
+
+scoreboard objectives remove Physics.Object.Gametime
 
 scoreboard objectives remove Physics.Object.BlockPos.x
 scoreboard objectives remove Physics.Object.BlockPos.y

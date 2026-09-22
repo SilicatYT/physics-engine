@@ -17,6 +17,8 @@ execute store result score #Physics.Math.3 Physics run compute default float phy
 # (Formula): orientation = rotation * orientation
 # (Note): I round here so I don't have to re-normalize as often.
 # (Note): I have to calculate the whole quaternion before I apply it, otherwise the remaining calculations already use some of the new values.
+# (Note): I dismount the entities riding the physics object so the NBT (de)serialization isn't as expensive.
+# (Note): The vertical offset is used so no other entities compete in the same subchunk, improving performance. Do note that the armor stand's position won't update after /ride until the end of the tick. This isn't important here, though.
 execute store result score #Physics Physics.Object.Orientation.x store result storage physics:zprivate temp.orientation[0] float 0.000000059604644775390625 run compute default float physics:integration/update_orientation/x
 execute store result score #Physics Physics.Object.Orientation.y store result storage physics:zprivate temp.orientation[1] float 0.000000059604644775390625 run compute default float physics:integration/update_orientation/y
 execute store result score #Physics Physics.Object.Orientation.z store result storage physics:zprivate temp.orientation[2] float 0.000000059604644775390625 run compute default float physics:integration/update_orientation/z
@@ -27,7 +29,11 @@ scoreboard players operation @s Physics.Object.Orientation.y = #Physics Physics.
 scoreboard players operation @s Physics.Object.Orientation.z = #Physics Physics.Object.Orientation.z
 scoreboard players operation @s Physics.Object.Orientation.a = #Physics Physics.Object.Orientation.a
 
+execute on passengers run tag @s add Physics.Temp
+execute on passengers run tp @s ~ ~512 ~
 data modify entity @s transformation.left_rotation set from storage physics:zprivate temp.orientation
+execute positioned ~ ~512 ~ run ride @e[type=minecraft:armor_stand,tag=Physics.Temp,distance=..0.001,limit=1] mount @s
+execute on passengers run tag @s remove Physics.Temp
 
 # Normalize
 # (Note): Only done once every 200 ticks, spread across all objects. Doing it more often wouldn't yield any visible benefit.

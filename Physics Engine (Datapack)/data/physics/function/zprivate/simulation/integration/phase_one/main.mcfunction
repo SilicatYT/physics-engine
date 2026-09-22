@@ -1,19 +1,11 @@
-# Get entity data
-tp 575f7af5-d0dc-4c2c-9182-17931969f0ba ~ ~ ~
-data modify storage physics:zprivate pos set from entity 575f7af5-d0dc-4c2c-9182-17931969f0ba Pos
-
-# Set internal pos to entity pos
-# (Explanation): If the entity gets teleported, it should automatically update the internal pos values rather than teleport back to its original position. That's why I update the pos scores every tick.
-execute store result score @s Physics.Object.BlockPos.x store result storage physics:zprivate temp.x int -1 run data get storage physics:zprivate pos[0]
-execute store result score @s Physics.Object.BlockPos.y store result storage physics:zprivate temp.y int -1 run data get storage physics:zprivate pos[1]
-execute store result score @s Physics.Object.BlockPos.z store result storage physics:zprivate temp.z int -1 run data get storage physics:zprivate pos[2]
-
-# (Note): I need the PosWithinBlock at high precision. Number providers use floats, so it would be much less precise to use one at large coordinates.
-execute as 575f7af5-d0dc-4c2c-9182-17931969f0ba run function physics:zprivate/macro/relative_tp with storage physics:zprivate temp
-data modify storage physics:zprivate pos set from entity 575f7af5-d0dc-4c2c-9182-17931969f0ba Pos
-execute store result score @s Physics.Object.PosWithinBlock.x run data get storage physics:zprivate pos[0] 16777216
-execute store result score @s Physics.Object.PosWithinBlock.y run data get storage physics:zprivate pos[1] 16777216
-execute store result score @s Physics.Object.PosWithinBlock.z run data get storage physics:zprivate pos[2] 16777216
+# Get BlockPos and PosWithinBlock
+execute as 575f7af5-d0dc-4c2c-9182-17931969f0ba in physics:void run function physics:zprivate/simulation/integration/phase_one/get_pos
+scoreboard players operation @s Physics.Object.BlockPos.x = #Physics Physics.Object.BlockPos.x
+scoreboard players operation @s Physics.Object.BlockPos.y = #Physics Physics.Object.BlockPos.y
+scoreboard players operation @s Physics.Object.BlockPos.z = #Physics Physics.Object.BlockPos.z
+scoreboard players operation @s Physics.Object.PosWithinBlock.x = #Physics Physics.Object.PosWithinBlock.x
+scoreboard players operation @s Physics.Object.PosWithinBlock.y = #Physics Physics.Object.PosWithinBlock.y
+scoreboard players operation @s Physics.Object.PosWithinBlock.z = #Physics Physics.Object.PosWithinBlock.z
 
 # Update linear velocity
     # Gravity

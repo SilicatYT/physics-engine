@@ -1,8 +1,8 @@
 # Check if the player's line-of-sight intersects with the object's AABB
 
 # Get the ray's origin relative to the object's origin & the ray's direction
-# (Note): Because it's relative to the block's origin, the max value for RelativePos is EntityInteractionRange + sqrt(3*MaxSize^2)/2, so it can be scaled up a lot. I chose 2^16. It has to be the same as the relative AABB scaling factor, so I can do comparisons faster.
-execute if score #Physics.GotRay Physics matches 0 run function physics:zprivate/punchable_hitbox/get_ray
+# (Note): Because it's relative to the block's origin, the max value for RelativePos is EntityInteractionRange + sqrt(3)*MaxSize/2, so it can be scaled up a lot. I chose 2^16. It has to be the same as the relative AABB scaling factor, so I can do comparisons faster.
+execute if score #Physics.GotRay Physics matches 0 as 575f7af5-d0dc-4c2c-9182-17931969f0ba in physics:void run function physics:zprivate/punchable_hitbox/get_ray
 
 execute store result score #Physics.Ray.RelativePos.x Physics run compute default float physics:punchable_hitbox/ray/relative_pos/x 65536
 execute store result score #Physics.Ray.RelativePos.y Physics run compute default float physics:punchable_hitbox/ray/relative_pos/y 65536

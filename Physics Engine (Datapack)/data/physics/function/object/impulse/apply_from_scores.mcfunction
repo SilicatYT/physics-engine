@@ -1,3 +1,8 @@
+# Required scaling:
+#    RelativePos: 2^16
+#    Direction: 2^14
+#    Strength: 1
+
 # Linear component
 # (Formula): LinearVelocity += Impulse * InverseMass
 # (Note): The impulse is Direction * Strength. I intentionally don't pre-calculate their product because it's faster, and it gives the user more control.

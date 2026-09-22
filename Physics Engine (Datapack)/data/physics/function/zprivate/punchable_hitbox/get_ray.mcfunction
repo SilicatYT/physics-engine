@@ -6,20 +6,25 @@ scoreboard players add #Physics.MinDistance Physics 1
 
 # Get ray origin
 # (Note): In world coordinates.
-# (Note): I use the same method as in integration phase one, for the same reason.
-tp 575f7af5-d0dc-4c2c-9182-17931969f0ba ~ ~ ~ ~ ~
-data modify storage physics:zprivate entity_data set from entity 575f7af5-d0dc-4c2c-9182-17931969f0ba
+# (Note): I use the same method for PosWithinBlock as in integration phase one, for the same reason.
+tp @s ~ ~ ~ ~ ~
+data modify storage physics:zprivate entity_data set from entity @s
 
 execute store result score #Physics.Ray.BlockPos.x Physics store result storage physics:zprivate temp.x int -1 run data get storage physics:zprivate entity_data.Pos[0]
 execute store result score #Physics.Ray.BlockPos.y Physics store result storage physics:zprivate temp.y int -1 run data get storage physics:zprivate entity_data.Pos[1]
 execute store result score #Physics.Ray.BlockPos.z Physics store result storage physics:zprivate temp.z int -1 run data get storage physics:zprivate entity_data.Pos[2]
 
-execute as 575f7af5-d0dc-4c2c-9182-17931969f0ba run function physics:zprivate/macro/relative_tp with storage physics:zprivate temp
-data modify storage physics:zprivate entity_data.Pos set from entity 575f7af5-d0dc-4c2c-9182-17931969f0ba Pos
+function physics:zprivate/macro/relative_tp with storage physics:zprivate temp
+data modify storage physics:zprivate entity_data.Pos set from entity @s Pos
 
 execute store result score #Physics.Ray.PosWithinBlock.x Physics run data get storage physics:zprivate entity_data.Pos[0] 16777216
 execute store result score #Physics.Ray.PosWithinBlock.y Physics run data get storage physics:zprivate entity_data.Pos[1] 16777216
 execute store result score #Physics.Ray.PosWithinBlock.z Physics run data get storage physics:zprivate entity_data.Pos[2] 16777216
+
+# Reset marker
+# (Note): The teleport back is necessary to avoid the entity from unloading, as it's a separate dimension with only a single loaded chunk.
+# (Note): Resetting the rotation is necessary because relative rotation changes (like the one in "get_ray") can cause unclamped overflow that messes with calculations.
+tp @s 8.0 8.0 8.0 0.0 0.0
 
 # Get ray direction
 # (TODO): Check whether "data get" and an additional teleport is faster for getting the normalized direction vector.
