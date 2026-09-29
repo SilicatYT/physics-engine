@@ -29,10 +29,15 @@ scoreboard players operation @s Physics.Object.Orientation.y = #Physics Physics.
 scoreboard players operation @s Physics.Object.Orientation.z = #Physics Physics.Object.Orientation.z
 scoreboard players operation @s Physics.Object.Orientation.a = #Physics Physics.Object.Orientation.a
 
+# (Note): For some reason, if I use relative teleport with a Y offset (so it's in an empty subchunk), the distance=..0.001 check fails if the entity is close to an unloaded chunk. I could use cross-dimensional teleportation, but /ride doesn't allow that. So I have to remove the distance check...
+#         The same problem happens if I use "ride @s dismount", even in fully loaded chunks. So it looks like under certain conditions, the position data doesn't update correctly?
+#         I've expanded the distance check to 10 blocks, which should be more than enough for even the worst case scenario and high speeds.
+#         Because the physics object is still loaded, the previous position (~ ~ ~) is guaranteed to be loaded, so the armor stand can't unload.
+# (TODO): Investigate!
 execute on passengers run tag @s add Physics.Temp
-execute on passengers run tp @s ~ ~512 ~
+execute on passengers run tp @s ~ 512 ~
 data modify entity @s transformation.left_rotation set from storage physics:zprivate temp.orientation
-execute positioned ~ ~512 ~ run ride @e[type=minecraft:armor_stand,tag=Physics.Temp,distance=..0.001,limit=1] mount @s
+ride @e[type=minecraft:armor_stand,y=512,tag=Physics.Temp,distance=..10,limit=1] mount @s
 execute on passengers run tag @s remove Physics.Temp
 
 # Normalize

@@ -8,13 +8,18 @@ gamerule max_command_sequence_length 2147483647
 
 # Summon entities
 # (Note): The marker is used for getting the position at any given command context. It's hexadecimal UUID is: "575f7af5-d0dc-4c2c-9182-17931969f0ba".
-# (Note): The forceload assumes that the world spawn does not move. If it does, the marker and the forceload have to be moved.
-forceload add ~ ~
-summon minecraft:marker ~ ~ ~ {UUID:[I;1465875189,-790868948,-1853745261,426373306]}
+# (Note): Reserved Y-levels:
+#            - 8.0: Root marker
+#            - 24.0: (3) according to stack information in "turn_into_physics_object"
+#            - 40.0: Temporary entities (should be teleported away instantly, so only at most 1 entity exists there)
+execute in physics:void run forceload add 0 0
+execute in physics:void run summon minecraft:marker 8.0 8.0 8.0 {UUID:[I;1465875189,-790868948,-1853745261,426373306]}
 
 # Add scoreboard objectives
   # Object
   scoreboard objectives add Physics.Object.Id dummy
+
+  scoreboard objectives add Physics.Object.Gametime dummy
 
   scoreboard objectives add Physics.Object.BlockPos.x dummy
   scoreboard objectives add Physics.Object.BlockPos.y dummy
@@ -129,6 +134,7 @@ scoreboard players set #Physics.Constant.-1 Physics -1
 scoreboard players set #Physics.Constant.200 Physics 200
 
 # Set data storages
+data modify storage physics:zprivate temp.aec_data set value {Radius:0f}
 data modify storage physics:zprivate temp.orientation set value [0f, 0f , 0f, 1f]
 
 data modify storage physics:object default set value {\
