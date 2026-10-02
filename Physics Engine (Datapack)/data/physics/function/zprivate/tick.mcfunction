@@ -22,7 +22,7 @@ execute as @e[type=minecraft:item_display,tag=Physics.Object] at @s run function
 scoreboard players set #Physics.IslandId Physics 0
 execute as @e[type=minecraft:item_display,tag=Physics.Object,scores={Physics.Object.InverseMass=0}] at @s run function physics:zprivate/simulation/collision_detection/main_static
 execute as @e[type=minecraft:item_display,tag=Physics.Object,tag=!Physics.Checked] at @s run function physics:zprivate/simulation/collision_detection/main
-execute in physics:void as @e[type=minecraft:area_effect_cloud,tag=Physics.BaseAEC,x=7.9,y=1031.9,z=7.9,dy=4096] run function physics:zprivate/entity_decay/main
+execute in physics:void as @e[type=minecraft:area_effect_cloud,x=7.9,y=1031.9,z=7.9,dy=0] run function physics:zprivate/entity_decay/main
 
 # Collision Resolution
 

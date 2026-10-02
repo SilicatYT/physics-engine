@@ -8,7 +8,10 @@
           "type": "minecraft:mod",
           "left": {
             "type": "minecraft:score",
-            "target": "this",
+            "target": {
+              "type": "minecraft:fixed",
+              "name": "#Physics"
+            },
             "score": "Physics.Object.Id"
           },
           "right": 256
@@ -16,6 +19,6 @@
         16
       ]
     },
-    1032
+    48
   ]
 }

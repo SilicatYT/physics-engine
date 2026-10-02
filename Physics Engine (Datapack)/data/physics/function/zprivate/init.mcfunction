@@ -10,10 +10,10 @@ gamerule max_command_sequence_length 2147483647
 # (Note): The marker is used for getting the position at any given command context. It's hexadecimal UUID is: "575f7af5-d0dc-4c2c-9182-17931969f0ba".
 # (Note): Reserved Y-levels (in increments of 16 blocks, offset by 8):
 #            - 8.0: Root marker
-#            - 24.0 - 40.0: Temporary entities (may only be there within a single function, so no leftovers exist. Necessary for fast @e calls that can make assumptions.)
+#            - 24.0 - 56.0: Temporary entities (may only be there within a single function, so no leftovers exist. Necessary for fast @e calls that can make assumptions.)
 #               - (Note): 24.0 is for entities that were newly spawned and are made to ride an entity. Due to the ride command, the entity's position won't update until the next tick, so tag checks are necessary.
-#            - 1032.0 - 2040.0 (64 subchunks): (3) according to stack information in "turn_into_physics_object"
-#               - (Note): They occupy such a large range so that armor stands don't co-exist with too many other entities (causes ticking overhead that scales quadratically).
+#            - 1032.0: (3) according to stack information in "turn_into_physics_object"
+#               - (Note): 1080.0 - 5160.0 are reserved for the armor stands.
 execute in physics:void run forceload add 0 0
 execute in physics:void run summon minecraft:marker 8.0 8.0 8.0 {UUID:[I;1465875189,-790868948,-1853745261,426373306]}
 
@@ -137,7 +137,6 @@ scoreboard players set #Physics.Constant.200 Physics 200
 
 # Set data storages
 data modify storage physics:zprivate temp.aec_data set value {Radius:0f}
-data modify storage physics:zprivate temp.aec_data_with_pos set value {Radius:0f,Pos:[8.0f, 0.0f, 8.0f]}
 data modify storage physics:zprivate temp.orientation set value [0f, 0f , 0f, 1f]
 
 data modify storage physics:object default set value {\
