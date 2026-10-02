@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:add",
+  "inputs": [
+    {
+      "type": "minecraft:mul",
+      "inputs": [
+        {
+          "type": "minecraft:mod",
+          "left": {
+            "type": "minecraft:score",
+            "target": "this",
+            "score": "Physics.Object.Id"
+          },
+          "right": 256
+        },
+        16
+      ]
+    },
+    1032
+  ]
+}

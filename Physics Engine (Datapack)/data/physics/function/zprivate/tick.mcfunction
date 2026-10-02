@@ -19,8 +19,10 @@ execute as @e[type=minecraft:item_display,tag=Physics.Object] at @s run function
 #                          But 2,048 AECs (that don't do anything) only cost ~1.5mspt on my machine, so it might still be worth it or at least break even, idk.
 #         But due to issues with how they work (dx only considering entities in intersected subchunks, or requiring too many AECs), I wasn't able to get them to work. That's why I went with the approach I went with.
 # (Note): I need to offset the x, y and z position of the AEC selector a bit, because for some (floating point) reason, using the exact values fails.
-execute as @e[type=minecraft:item_display,tag=Physics.Object] at @s run function physics:zprivate/simulation/collision_detection/main
-execute in physics:void as @e[type=minecraft:area_effect_cloud,x=7.9,y=23.9,z=7.9,dy=0,scores={Physics.Object.Id=1..},predicate=!physics:has_vehicle] run function physics:zprivate/simulation/collision_detection/island_building/main
+scoreboard players set #Physics.IslandId Physics 0
+execute as @e[type=minecraft:item_display,tag=Physics.Object,scores={Physics.Object.InverseMass=0}] at @s run function physics:zprivate/simulation/collision_detection/main_static
+execute as @e[type=minecraft:item_display,tag=Physics.Object,tag=!Physics.Checked] at @s run function physics:zprivate/simulation/collision_detection/main
+execute in physics:void as @e[type=minecraft:area_effect_cloud,tag=Physics.BaseAEC,x=7.9,y=1031.9,z=7.9,dy=4096] run function physics:zprivate/entity_decay/main
 
 # Collision Resolution
 
