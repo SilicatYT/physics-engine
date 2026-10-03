@@ -31,7 +31,7 @@ scoreboard players operation @s Physics.Object.Id.Mod200 %= #Physics.Constant.20
 #               - 9: 1-4 Markers for the contact points (if point-face), riding (8).
 # (Note): It's used for island creation, cheap manifold assignment, and to provide an efficient reference during resolution.
     # Summon (1)
-    execute at @s run summon minecraft:armor_stand ~ 504 ~ {Marker:1b,Invisible:1b,Tags:["Physics.Temp"]}
+    execute at @s run summon minecraft:armor_stand ~ 504 ~ {Marker:1b,Invisible:1b,Tags:["Physics.Temp","Physics.ObjectArmorStand"]}
     execute at @s run ride @e[type=minecraft:armor_stand,y=504,tag=Physics.Temp,distance=..0.001,limit=1] mount @s
     execute on passengers run tag @s remove Physics.Temp
 
@@ -39,7 +39,7 @@ scoreboard players operation @s Physics.Object.Id.Mod200 %= #Physics.Constant.20
     # (Note): The entities in physics:void are spawned later.
     # (Note): "Age" is necessary so the particles don't show.
     execute at @s run summon minecraft:area_effect_cloud ~ 504 ~ {Radius:0f,Age:20,Tags:["Physics.Temp"]}
-    execute at @s on passengers run ride @e[type=minecraft:area_effect_cloud,y=504,tag=Physics.Temp,distance=..0.001,limit=1] mount @s
+    execute at @s on passengers if entity @s[type=minecraft:armor_stand,tag=Physics.ObjectArmorStand] run ride @e[type=minecraft:area_effect_cloud,y=504,tag=Physics.Temp,distance=..0.001,limit=1] mount @s
     execute on passengers on passengers run tag @s remove Physics.Temp
 
 # Default values

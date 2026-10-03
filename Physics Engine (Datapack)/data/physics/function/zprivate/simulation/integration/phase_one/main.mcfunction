@@ -1,3 +1,6 @@
+# (TODO): Benchmark whether this is faster or slower than a single ticking "tag @e[...] remove Physics.Checked" command. Because command count also matters.
+tag @s remove Physics.Checked
+
 # Get BlockPos and PosWithinBlock
 execute as 575f7af5-d0dc-4c2c-9182-17931969f0ba in physics:void run function physics:zprivate/simulation/integration/phase_one/get_pos
 scoreboard players operation @s Physics.Object.BlockPos.x = #Physics Physics.Object.BlockPos.x

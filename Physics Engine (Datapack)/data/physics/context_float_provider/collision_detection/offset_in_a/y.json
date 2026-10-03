@@ -1,0 +1,92 @@
+{
+  "type": "minecraft:mul",
+  "inputs": [
+    {
+      "type": "minecraft:add",
+      "inputs": [
+        {
+          "type": "minecraft:mul",
+          "inputs": [
+            {
+              "type": "minecraft:from_int",
+              "input": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.ObjectA"
+                },
+                "score": "Physics.Object.RotationMatrix.xy"
+              }
+            },
+            {
+              "type": "minecraft:from_int",
+              "input": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.Offset.x"
+                },
+                "score": "Physics"
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:mul",
+          "inputs": [
+            {
+              "type": "minecraft:from_int",
+              "input": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.ObjectA"
+                },
+                "score": "Physics.Object.RotationMatrix.yy"
+              }
+            },
+            {
+              "type": "minecraft:from_int",
+              "input": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.Offset.y"
+                },
+                "score": "Physics"
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:mul",
+          "inputs": [
+            {
+              "type": "minecraft:from_int",
+              "input": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.ObjectA"
+                },
+                "score": "Physics.Object.RotationMatrix.zy"
+              }
+            },
+            {
+              "type": "minecraft:from_int",
+              "input": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.Offset.z"
+                },
+                "score": "Physics"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    5.9604644775390625e-8
+  ]
+}

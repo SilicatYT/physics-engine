@@ -1,5 +1,11 @@
 # TODO: Add split velocities from resolution
 
+# Apply velocity to orientation
+# (Note): Check if I should add a small epsilon for the squared length as the guard, instead of an exact "is not zero" guard.
+# (Note): This needs to run before "apply velocity to position" so the "make previous passengers ride the object again" in update_orientation can use "distance=..".
+data modify storage physics:zprivate temp.length set compute default float physics:integration/update_orientation/velocity_length
+execute if predicate physics:integration/update_orientation/length_is_enough run function physics:zprivate/simulation/integration/phase_two/update_orientation
+
 # Apply velocity to position
 # (Note): I update BlockPos and PosWithinBlock here because they're used in the ray intersection checks for "punchable_hitbox", as well as the global AABB calculation (which I COULD move to phase_one, but it doesn't change anything here). The Pos updates automatically in phase_one again.
 # (Note): PosChange is scaled by 2^24.
@@ -17,11 +23,6 @@ execute store result score @s Physics.Object.BlockPos.z run compute default inte
 execute store result score @s Physics.Object.PosWithinBlock.x run compute default integer physics:integration/pos_change/new_pos_within_block/x
 execute store result score @s Physics.Object.PosWithinBlock.y run compute default integer physics:integration/pos_change/new_pos_within_block/y
 execute store result score @s Physics.Object.PosWithinBlock.z run compute default integer physics:integration/pos_change/new_pos_within_block/z
-
-# Apply velocity to orientation
-# (Note): Check if I should add a small epsilon for the squared length as the guard, instead of an exact "is not zero" guard.
-data modify storage physics:zprivate temp.length set compute default float physics:integration/update_orientation/velocity_length
-execute if predicate physics:integration/update_orientation/length_is_enough run function physics:zprivate/simulation/integration/phase_two/update_orientation
 
 # Clear accumulators
 execute \

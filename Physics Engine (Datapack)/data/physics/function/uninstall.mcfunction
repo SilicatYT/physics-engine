@@ -58,6 +58,8 @@ scoreboard players reset #Physics
     scoreboard players reset #Physics.ApplyImpulse.Direction.y
     scoreboard players reset #Physics.ApplyImpulse.Direction.z
 
+    scoreboard players reset #Physics.ObjectA
+
     scoreboard players reset #Physics.Math.PitchRad
     scoreboard players reset #Physics.Math.YawRad
     scoreboard players reset #Physics.Math.t
@@ -70,6 +72,58 @@ scoreboard players reset #Physics
     scoreboard players reset #Physics.Math.1
     scoreboard players reset #Physics.Math.2
     scoreboard players reset #Physics.Math.3
+
+    scoreboard players reset #Physics.Offset.x
+    scoreboard players reset #Physics.Offset.y
+    scoreboard players reset #Physics.Offset.z
+    scoreboard players reset #Physics.OffsetInA.x
+    scoreboard players reset #Physics.OffsetInA.y
+    scoreboard players reset #Physics.OffsetInA.z
+    scoreboard players reset #Physics.OffsetInB.x
+    scoreboard players reset #Physics.OffsetInB.y
+    scoreboard players reset #Physics.OffsetInB.z
+    scoreboard players reset #Physics.AxisDot.xx
+    scoreboard players reset #Physics.AxisDot.xy
+    scoreboard players reset #Physics.AxisDot.xz
+    scoreboard players reset #Physics.AxisDot.yx
+    scoreboard players reset #Physics.AxisDot.yy
+    scoreboard players reset #Physics.AxisDot.yz
+    scoreboard players reset #Physics.AxisDot.zx
+    scoreboard players reset #Physics.AxisDot.zy
+    scoreboard players reset #Physics.AxisDot.zz
+    scoreboard players reset #Physics.Overlap.A.x
+    scoreboard players reset #Physics.Overlap.A.y
+    scoreboard players reset #Physics.Overlap.A.z
+    scoreboard players reset #Physics.Overlap.B.x
+    scoreboard players reset #Physics.Overlap.B.y
+    scoreboard players reset #Physics.Overlap.B.z
+    scoreboard players reset #Physics.Overlap.Unnormalized.xx
+    scoreboard players reset #Physics.Overlap.Unnormalized.xy
+    scoreboard players reset #Physics.Overlap.Unnormalized.xz
+    scoreboard players reset #Physics.Overlap.Unnormalized.yx
+    scoreboard players reset #Physics.Overlap.Unnormalized.yy
+    scoreboard players reset #Physics.Overlap.Unnormalized.yz
+    scoreboard players reset #Physics.Overlap.Unnormalized.zx
+    scoreboard players reset #Physics.Overlap.Unnormalized.zy
+    scoreboard players reset #Physics.Overlap.Unnormalized.zz
+    scoreboard players reset #Physics.Overlap.Squared.xx
+    scoreboard players reset #Physics.Overlap.Squared.xy
+    scoreboard players reset #Physics.Overlap.Squared.xz
+    scoreboard players reset #Physics.Overlap.Squared.yx
+    scoreboard players reset #Physics.Overlap.Squared.yy
+    scoreboard players reset #Physics.Overlap.Squared.yz
+    scoreboard players reset #Physics.Overlap.Squared.zx
+    scoreboard players reset #Physics.Overlap.Squared.zy
+    scoreboard players reset #Physics.Overlap.Squared.zz
+    scoreboard players reset #Physics.AxisLengthSquared.xx
+    scoreboard players reset #Physics.AxisLengthSquared.xy
+    scoreboard players reset #Physics.AxisLengthSquared.xz
+    scoreboard players reset #Physics.AxisLengthSquared.yx
+    scoreboard players reset #Physics.AxisLengthSquared.yy
+    scoreboard players reset #Physics.AxisLengthSquared.yz
+    scoreboard players reset #Physics.AxisLengthSquared.zx
+    scoreboard players reset #Physics.AxisLengthSquared.zy
+    scoreboard players reset #Physics.AxisLengthSquared.zz
 
     # Constants
     scoreboard players reset #Physics.Constant.-1
@@ -168,6 +222,8 @@ scoreboard objectives remove Physics.Object.AabbRelative.Max.z
 scoreboard objectives remove Physics.Object.AabbRelative.Min.x
 scoreboard objectives remove Physics.Object.AabbRelative.Min.y
 scoreboard objectives remove Physics.Object.AabbRelative.Min.z
+
+scoreboard objectives remove Physics.Object.ObbRadius
 
 scoreboard objectives remove Physics.Object.LinearVelocityFromAcceleration.x
 scoreboard objectives remove Physics.Object.LinearVelocityFromAcceleration.y

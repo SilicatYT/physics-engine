@@ -1,0 +1,58 @@
+{
+  "type": "minecraft:mul",
+  "inputs": [
+    {
+      "type": "minecraft:add",
+      "inputs": [
+        {
+          "type": "minecraft:from_int",
+          "input": {
+            "type": "minecraft:sub",
+            "left": {
+              "type": "minecraft:score",
+              "target": {
+                "type": "minecraft:fixed",
+                "name": "#Physics.ObjectA"
+              },
+              "score": "Physics.Object.BlockPos.z"
+            },
+            "right": {
+              "type": "minecraft:score",
+              "target": "this",
+              "score": "Physics.Object.BlockPos.z"
+            }
+          }
+        },
+        {
+          "type": "minecraft:mul",
+          "inputs": [
+            {
+              "type": "minecraft:sub",
+              "left": {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.ObjectA"
+                  },
+                  "score": "Physics.Object.PosWithinBlock.z"
+                }
+              },
+              "right": {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": "this",
+                  "score": "Physics.Object.PosWithinBlock.z"
+                }
+              }
+            },
+            5.960464477539063e-8
+          ]
+        }
+      ]
+    },
+    65536
+  ]
+}

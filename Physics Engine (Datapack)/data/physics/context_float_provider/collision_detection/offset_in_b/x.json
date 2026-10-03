@@ -1,0 +1,92 @@
+{
+  "type": "minecraft:mul",
+  "inputs": [
+    {
+      "type": "minecraft:add",
+      "inputs": [
+        {
+          "type": "minecraft:mul",
+          "inputs": [
+            {
+              "type": "minecraft:from_int",
+              "input": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.AxisDot.xx"
+                },
+                "score": "Physics"
+              }
+            },
+            {
+              "type": "minecraft:from_int",
+              "input": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.OffsetInA.x"
+                },
+                "score": "Physics"
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:mul",
+          "inputs": [
+            {
+              "type": "minecraft:from_int",
+              "input": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.AxisDot.yx"
+                },
+                "score": "Physics"
+              }
+            },
+            {
+              "type": "minecraft:from_int",
+              "input": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.OffsetInA.y"
+                },
+                "score": "Physics"
+              }
+            }
+          ]
+        },
+        {
+          "type": "minecraft:mul",
+          "inputs": [
+            {
+              "type": "minecraft:from_int",
+              "input": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.AxisDot.zx"
+                },
+                "score": "Physics"
+              }
+            },
+            {
+              "type": "minecraft:from_int",
+              "input": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.OffsetInA.z"
+                },
+                "score": "Physics"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    5.9604644775390625e-8
+  ]
+}

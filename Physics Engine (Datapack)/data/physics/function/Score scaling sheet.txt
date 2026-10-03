@@ -12,6 +12,7 @@ Object:
 - LinearVelocity: 131,072x (2^17, so 7 bits for whole-block velocity, meaning a max velocity of 128 blocks, over 5 blocks per tick. Far more than I can handle anyway)
 - AngularVelocity: 262,144x (2^18, so 6 bits for radians. Max 64 radians, or ~10 rotations per second. Supporting any more would be useless)
 - Scale: 65,536x (2^16, so 8 bits for full blocks. Leaves opportunity for (static) objects spanning 256 blocks across. Inertia breaks way before that currently (2^14), but it's good to support for static objects)
+- OBBRadius: 65,536x (2^16, same as scale)
 - InverseMass: 268,435,456x (2^28)
    - Right now, it has small increments, and 268,000 tonnes is the largest possible mass before it becomes infinite. A lower scale would preserve more floating point accuracy when applying impulses.
 - Orientation: 16,777,216x (2^24. Max value of 1.0, so a scale of 2^24 works)

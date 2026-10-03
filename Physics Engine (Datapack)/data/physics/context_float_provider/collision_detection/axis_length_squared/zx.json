@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:sub",
+  "left": 16777216,
+  "right": {
+    "type": "minecraft:mul",
+    "inputs": [
+      {
+        "type": "minecraft:pow",
+        "base": {
+          "type": "minecraft:from_int",
+          "input": {
+            "type": "minecraft:score",
+            "target": {
+              "type": "minecraft:fixed",
+              "name": "#Physics.AxisDot.zx"
+            },
+            "score": "Physics"
+          }
+        },
+        "exponent": 2
+      },
+      5.9604644775390625e-8
+    ]
+  }
+}

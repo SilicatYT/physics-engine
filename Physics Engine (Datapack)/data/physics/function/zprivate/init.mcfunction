@@ -107,6 +107,8 @@ execute in physics:void run summon minecraft:marker 8.0 8.0 8.0 {UUID:[I;1465875
   scoreboard objectives add Physics.Object.AabbRelative.Min.y dummy
   scoreboard objectives add Physics.Object.AabbRelative.Min.z dummy
 
+  scoreboard objectives add Physics.Object.ObbRadius dummy
+
   # Object (Other, transient)
   scoreboard objectives add Physics.Object.LinearVelocityFromAcceleration.x dummy
   scoreboard objectives add Physics.Object.LinearVelocityFromAcceleration.y dummy

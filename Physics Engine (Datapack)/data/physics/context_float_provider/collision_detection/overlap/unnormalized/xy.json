@@ -1,0 +1,194 @@
+{
+  "type": "minecraft:mul",
+  "inputs": [
+    {
+      "type": "minecraft:sub",
+      "left": {
+        "type": "minecraft:mul",
+        "inputs": [
+          {
+            "type": "minecraft:add",
+            "inputs": [
+              {
+                "type": "minecraft:mul",
+                "inputs": [
+                  {
+                    "type": "minecraft:from_int",
+                    "input": {
+                      "type": "minecraft:score",
+                      "target": {
+                        "type": "minecraft:fixed",
+                        "name": "#Physics.ObjectA"
+                      },
+                      "score": "Physics.Object.Scale.y"
+                    }
+                  },
+                  {
+                    "type": "minecraft:abs",
+                    "input": {
+                      "type": "minecraft:from_int",
+                      "input": {
+                        "type": "minecraft:score",
+                        "target": {
+                          "type": "minecraft:fixed",
+                          "name": "#Physics.AxisDot.zy"
+                        },
+                        "score": "Physics"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "minecraft:mul",
+                "inputs": [
+                  {
+                    "type": "minecraft:from_int",
+                    "input": {
+                      "type": "minecraft:score",
+                      "target": {
+                        "type": "minecraft:fixed",
+                        "name": "#Physics.ObjectA"
+                      },
+                      "score": "Physics.Object.Scale.z"
+                    }
+                  },
+                  {
+                    "type": "minecraft:abs",
+                    "input": {
+                      "type": "minecraft:from_int",
+                      "input": {
+                        "type": "minecraft:score",
+                        "target": {
+                          "type": "minecraft:fixed",
+                          "name": "#Physics.AxisDot.yy"
+                        },
+                        "score": "Physics"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "minecraft:mul",
+                "inputs": [
+                  {
+                    "type": "minecraft:from_int",
+                    "input": {
+                      "type": "minecraft:score",
+                      "target": "this",
+                      "score": "Physics.Object.Scale.z"
+                    }
+                  },
+                  {
+                    "type": "minecraft:abs",
+                    "input": {
+                      "type": "minecraft:from_int",
+                      "input": {
+                        "type": "minecraft:score",
+                        "target": {
+                          "type": "minecraft:fixed",
+                          "name": "#Physics.AxisDot.xx"
+                        },
+                        "score": "Physics"
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "type": "minecraft:mul",
+                "inputs": [
+                  {
+                    "type": "minecraft:from_int",
+                    "input": {
+                      "type": "minecraft:score",
+                      "target": "this",
+                      "score": "Physics.Object.Scale.x"
+                    }
+                  },
+                  {
+                    "type": "minecraft:abs",
+                    "input": {
+                      "type": "minecraft:from_int",
+                      "input": {
+                        "type": "minecraft:score",
+                        "target": {
+                          "type": "minecraft:fixed",
+                          "name": "#Physics.AxisDot.xz"
+                        },
+                        "score": "Physics"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          0.5
+        ]
+      },
+      "right": {
+        "type": "minecraft:abs",
+        "input": {
+          "type": "minecraft:sub",
+          "left": {
+            "type": "minecraft:mul",
+            "inputs": [
+              {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.OffsetInA.y"
+                  },
+                  "score": "Physics"
+                }
+              },
+              {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.AxisDot.zy"
+                  },
+                  "score": "Physics"
+                }
+              }
+            ]
+          },
+          "right": {
+            "type": "minecraft:mul",
+            "inputs": [
+              {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.OffsetInA.z"
+                  },
+                  "score": "Physics"
+                }
+              },
+              {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.AxisDot.yy"
+                  },
+                  "score": "Physics"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    5.9604644775390625e-08
+  ]
+}

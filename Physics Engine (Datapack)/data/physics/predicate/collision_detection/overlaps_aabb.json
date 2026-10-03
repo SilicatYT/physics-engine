@@ -1,0 +1,101 @@
+{
+  "type": "minecraft:all_of",
+  "terms": [
+    {
+      "type": "minecraft:entity_scores",
+      "entity": "this",
+      "scores": {
+        "Physics.Object.Aabb.Min.x": {
+          "max": {
+            "type": "minecraft:score",
+            "target": {
+              "type": "minecraft:fixed",
+              "name": "#Physics.ObjectA"
+            },
+            "score": "Physics.Object.Aabb.Max.x"
+          }
+        }
+      }
+    },
+    {
+      "type": "minecraft:entity_scores",
+      "entity": "this",
+      "scores": {
+        "Physics.Object.Aabb.Max.x": {
+          "min": {
+            "type": "minecraft:score",
+            "target": {
+              "type": "minecraft:fixed",
+              "name": "#Physics.ObjectA"
+            },
+            "score": "Physics.Object.Aabb.Min.x"
+          }
+        }
+      }
+    },
+    {
+      "type": "minecraft:entity_scores",
+      "entity": "this",
+      "scores": {
+        "Physics.Object.Aabb.Min.y": {
+          "max": {
+            "type": "minecraft:score",
+            "target": {
+              "type": "minecraft:fixed",
+              "name": "#Physics.ObjectA"
+            },
+            "score": "Physics.Object.Aabb.Max.y"
+          }
+        }
+      }
+    },
+    {
+      "type": "minecraft:entity_scores",
+      "entity": "this",
+      "scores": {
+        "Physics.Object.Aabb.Max.y": {
+          "min": {
+            "type": "minecraft:score",
+            "target": {
+              "type": "minecraft:fixed",
+              "name": "#Physics.ObjectA"
+            },
+            "score": "Physics.Object.Aabb.Min.y"
+          }
+        }
+      }
+    },
+    {
+      "type": "minecraft:entity_scores",
+      "entity": "this",
+      "scores": {
+        "Physics.Object.Aabb.Min.z": {
+          "max": {
+            "type": "minecraft:score",
+            "target": {
+              "type": "minecraft:fixed",
+              "name": "#Physics.ObjectA"
+            },
+            "score": "Physics.Object.Aabb.Max.z"
+          }
+        }
+      }
+    },
+    {
+      "type": "minecraft:entity_scores",
+      "entity": "this",
+      "scores": {
+        "Physics.Object.Aabb.Max.z": {
+          "min": {
+            "type": "minecraft:score",
+            "target": {
+              "type": "minecraft:fixed",
+              "name": "#Physics.ObjectA"
+            },
+            "score": "Physics.Object.Aabb.Min.z"
+          }
+        }
+      }
+    }
+  ]
+}

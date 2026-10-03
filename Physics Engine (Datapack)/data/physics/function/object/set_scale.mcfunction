@@ -1,3 +1,5 @@
+# (TODO): Allow a scale of up to 128x128x128, but only if it's static. If an object becomes dynamic, shrink it accordingly.
+
 # Set scale
 $data modify storage physics:zprivate temp.scale set value $(scale)
 execute store result score #Physics.IsTrue Physics run compute default integer physics:other/set_scale/is_valid
@@ -7,6 +9,9 @@ execute store result score @s Physics.Object.Scale.x run data get storage physic
 execute store result score @s Physics.Object.Scale.y run data get storage physics:zprivate temp.scale[1] 65536
 execute store result score @s Physics.Object.Scale.z run data get storage physics:zprivate temp.scale[2] 65536
 data modify entity @s transformation.scale set from storage physics:zprivate temp.scale
+
+# Update OBB radius
+execute store result score @s Physics.Object.ObbRadius run compute default float physics:other/obb_radius
 
 # Update specific inverse inertia (local)
 # (Note): Due to the strong scaling necessary for inverse inertia & inverse mass and only being able to store them as integers, I decided to store the inertia without the mass component. I still have to be careful about overflows and precision loss.

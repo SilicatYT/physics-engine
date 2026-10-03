@@ -5,10 +5,6 @@ scoreboard players operation #Physics.Gametime.Mod200 Physics %= #Physics.Consta
 execute as @e[type=minecraft:item_display,tag=Physics.Object] at @s run function physics:zprivate/simulation/integration/phase_one/main
 
 # Collision Detection
-# (Note): There are several possible approaches:
-#            - Perform collision detection and instantly lead into contact generation for that pair. Then, once everything's done, build the islands.
-#               - This has the disadvantage of needing to store the generated contacts in a non-per-island storage, and grouping them retroactively (necessary for resolution) takes at least 1 macro call per island merge from what I can tell.
-#            - Perform collision detection (incl. the SAT), then build islands, then perform contact generation. This should get rid of the macro calls from the previous method, but I can't re-use the calculated values (AxisDot, OffsetInA & OffsetInB) from the SAT anymore during contact generation. So single objects will get more expensive (only slightly, thanks to compute), but islands should become noticeably cheaper, so I went with this method for now.
 # (Note): Because static objects can become huge (128x128x128), I first perform collision detection as all static objects (with a dynamic "distance=.." check), then I perform collision detection for the dynamic objects (they're much smaller, so a distance of at most ~17 is enough).
 #         There were several ideas to optimize this further:
 #            - Make a tall interaction ride the object (to offset everything to a subchunk with no other entities), then put an OBB-radius-sized interaction ontop of that. Use "dx,dy,dz" and abuse the fact that it accounts for the other entities' hitbox sizes.

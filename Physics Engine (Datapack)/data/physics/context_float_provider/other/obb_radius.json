@@ -1,0 +1,32 @@
+{
+  "type": "minecraft:ceil",
+  "input": {
+    "type": "minecraft:length",
+    "inputs": [
+      {
+        "type": "minecraft:from_int",
+        "input": {
+          "type": "minecraft:score",
+          "target": "this",
+          "score": "Physics.Object.Scale.x"
+        }
+      },
+      {
+        "type": "minecraft:from_int",
+        "input": {
+          "type": "minecraft:score",
+          "target": "this",
+          "score": "Physics.Object.Scale.y"
+        }
+      },
+      {
+        "type": "minecraft:from_int",
+        "input": {
+          "type": "minecraft:score",
+          "target": "this",
+          "score": "Physics.Object.Scale.z"
+        }
+      }
+    ]
+  }
+}

@@ -33,12 +33,15 @@ scoreboard players operation @s Physics.Object.Orientation.a = #Physics Physics.
 #         The same problem happens if I use "ride @s dismount", even in fully loaded chunks. So it looks like under certain conditions, the position data doesn't update correctly?
 #         I've expanded the distance check to 10 blocks, which should be more than enough for even the worst case scenario and high speeds.
 #         Because the physics object is still loaded, the previous position (~ ~ ~) is guaranteed to be loaded, so the armor stand can't unload.
+# (Note): This needs to support other passengers (from other datapacks) as well.
 # (TODO): Investigate!
+tag @s add Physics.This
 execute on passengers run tag @s add Physics.Temp
-execute on passengers run tp @s ~ 512 ~
+execute on passengers run tp @s ~ 1032 ~
 data modify entity @s transformation.left_rotation set from storage physics:zprivate temp.orientation
-ride @e[type=minecraft:armor_stand,y=512,tag=Physics.Temp,distance=..10,limit=1] mount @s
+execute as @e[y=1032,tag=Physics.Temp,distance=..10] run ride @s mount @e[type=minecraft:item_display,tag=Physics.This,distance=..0.0001,limit=1]
 execute on passengers run tag @s remove Physics.Temp
+tag @s remove Physics.This
 
 # Normalize
 # (Note): Only done once every 200 ticks, spread across all objects. Doing it more often wouldn't yield any visible benefit.
