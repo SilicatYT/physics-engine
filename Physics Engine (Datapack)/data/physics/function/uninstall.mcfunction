@@ -135,7 +135,7 @@ scoreboard players reset #Physics
     scoreboard players reset #Physics.PersistedAxis.OverlapSquared
     scoreboard players reset #Physics.ChosenAxis.Index
     scoreboard players reset #Physics.ChosenAxis.OverlapSquared
-    scoreboard players reset #Physics.ChosenAxis.SignedDistanceAlongAxis
+    scoreboard players reset #Physics.ChosenAxis.SignedDistance
     scoreboard players reset #Physics.ChosenAxis.AxisLengthSquared
 
     # Constants

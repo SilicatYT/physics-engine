@@ -14,7 +14,7 @@
         },
         "test": 0
       },
-      "value": "physics:collision_detection/signed_distance_along_axis/axis_a/x"
+      "value": "physics:collision_detection/signed_distance/axis_a/x"
     },
     {
       "condition": {
@@ -29,7 +29,7 @@
         },
         "test": 1
       },
-      "value": "physics:collision_detection/signed_distance_along_axis/axis_a/y"
+      "value": "physics:collision_detection/signed_distance/axis_a/y"
     },
     {
       "condition": {
@@ -44,7 +44,7 @@
         },
         "test": 2
       },
-      "value": "physics:collision_detection/signed_distance_along_axis/axis_a/z"
+      "value": "physics:collision_detection/signed_distance/axis_a/z"
     },
     {
       "condition": {
@@ -59,7 +59,7 @@
         },
         "test": 3
       },
-      "value": "physics:collision_detection/signed_distance_along_axis/axis_b/x"
+      "value": "physics:collision_detection/signed_distance/axis_b/x"
     },
     {
       "condition": {
@@ -74,7 +74,7 @@
         },
         "test": 4
       },
-      "value": "physics:collision_detection/signed_distance_along_axis/axis_b/y"
+      "value": "physics:collision_detection/signed_distance/axis_b/y"
     },
     {
       "condition": {
@@ -89,7 +89,7 @@
         },
         "test": 5
       },
-      "value": "physics:collision_detection/signed_distance_along_axis/axis_b/z"
+      "value": "physics:collision_detection/signed_distance/axis_b/z"
     }
   ],
   "default": {
@@ -113,7 +113,7 @@
                 },
                 "test": 6
               },
-              "value": "physics:collision_detection/signed_distance_along_axis/edge_edge/xx"
+              "value": "physics:collision_detection/signed_distance/edge_edge/xx"
             },
             {
               "condition": {
@@ -128,7 +128,7 @@
                 },
                 "test": 7
               },
-              "value": "physics:collision_detection/signed_distance_along_axis/edge_edge/xy"
+              "value": "physics:collision_detection/signed_distance/edge_edge/xy"
             },
             {
               "condition": {
@@ -143,7 +143,7 @@
                 },
                 "test": 8
               },
-              "value": "physics:collision_detection/signed_distance_along_axis/edge_edge/xz"
+              "value": "physics:collision_detection/signed_distance/edge_edge/xz"
             },
             {
               "condition": {
@@ -158,7 +158,7 @@
                 },
                 "test": 9
               },
-              "value": "physics:collision_detection/signed_distance_along_axis/edge_edge/yx"
+              "value": "physics:collision_detection/signed_distance/edge_edge/yx"
             },
             {
               "condition": {
@@ -173,7 +173,7 @@
                 },
                 "test": 10
               },
-              "value": "physics:collision_detection/signed_distance_along_axis/edge_edge/yy"
+              "value": "physics:collision_detection/signed_distance/edge_edge/yy"
             },
             {
               "condition": {
@@ -188,7 +188,7 @@
                 },
                 "test": 11
               },
-              "value": "physics:collision_detection/signed_distance_along_axis/edge_edge/yz"
+              "value": "physics:collision_detection/signed_distance/edge_edge/yz"
             },
             {
               "condition": {
@@ -203,7 +203,7 @@
                 },
                 "test": 12
               },
-              "value": "physics:collision_detection/signed_distance_along_axis/edge_edge/zx"
+              "value": "physics:collision_detection/signed_distance/edge_edge/zx"
             },
             {
               "condition": {
@@ -218,10 +218,10 @@
                 },
                 "test": 13
               },
-              "value": "physics:collision_detection/signed_distance_along_axis/edge_edge/zy"
+              "value": "physics:collision_detection/signed_distance/edge_edge/zy"
             }
           ],
-          "default": "physics:collision_detection/signed_distance_along_axis/edge_edge/zz"
+          "default": "physics:collision_detection/signed_distance/edge_edge/zz"
         },
         5.9604644775390625e-8
       ]

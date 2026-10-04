@@ -118,7 +118,7 @@
     "type": "minecraft:from_int",
     "input": {
       "type": "minecraft:abs",
-      "input": "physics:collision_detection/signed_distance_along_axis/axis_a/y"
+      "input": "physics:collision_detection/signed_distance/axis_a/y"
     }
   }
 }

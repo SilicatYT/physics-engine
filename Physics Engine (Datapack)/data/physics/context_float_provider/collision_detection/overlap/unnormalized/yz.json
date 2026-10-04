@@ -130,7 +130,7 @@
       },
       "right": {
         "type": "minecraft:abs",
-        "input": "physics:collision_detection/signed_distance_along_axis/edge_edge/yz"
+        "input": "physics:collision_detection/signed_distance/edge_edge/yz"
       }
     },
     5.9604644775390625e-08

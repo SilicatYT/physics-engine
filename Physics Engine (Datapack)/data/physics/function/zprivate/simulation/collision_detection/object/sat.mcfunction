@@ -153,7 +153,7 @@ execute if score #Physics.ObjectA Physics.Object.Id > @s Physics.Object.Id in ph
 # (Note): I choose the axis of the minimum overlap, but I apply a bias toward pointFace axes, as those are more stable. I also perform hysteresis by comparing the overlap with the previously chosen axis (from the old manifold), with a bias toward the persisted axis, again for stability reasons.
 # (TODO): I hardcoded the bias in favor of pointFace contacts (axis indices 0-5) in the candidate_axis/index number provider. Could maybe be turned into a score (setting?). Its current value is 1.0 / 0.7.
 # (TODO): Check if it's faster to inline the index extraction from physics:collision_detection/axis_data/min_overlap_squared_index/edge_edge and remove the command that stores the score. 1 less command, but up to 8 floor_mod more... hmm... BUT: It would only need to run in case an edge-edge collision occurs, which is rare.
-# (TODO): In general, see if this can be optimized by getting a better balance of command count and duplicate calculations in number providers.
+# (TODO): In general, see if this can be optimized by getting a better balance of command count and duplicate calculations in number providers. Or maybe a cached macro could be used that, given an axis index, performs the necessary calculations (for candidate axis, persisted axis and chosen axis).
     # Candidate axis
     # (Note): To avoid having to run the "overlapSquared" calculation twice for every cross product axis (one pass to get MinOverlapSquared, one pass to get the index), I pack the index directly into the overlapSquared's bottom 4 bits, then recalculate it for one axis in case it's an edge-edge collision (in physics:collision_detection/axis_data/candidate_axis/overlap_squared).
     # (Note): The packing process scales up MinOverlapSquared.EdgeEdge by an additional factor of 2x, so I multiply it by 0.5 in physics:collision_detection/axis_data/candidate_axis/index. This is currently merged with the bias of (1.0 / 0.7)^2.
@@ -168,6 +168,7 @@ execute if score #Physics.ObjectA Physics.Object.Id > @s Physics.Object.Id in ph
     # (Note): As an optimization, I check if both indices are equal. If yes, simply copy over CandidateAxis.OverlapSquared.
     # (TODO): Maybe add an additional "conditional" layer to check between "is point face" vs "is edge edge", so that in case an edge-edge contact occurs, it doesn't have to check the 6 faces first? At the cost of an additional score access if it's pointFace, though, so maybe it's not worth it.
     # (TODO): Maybe use binary or ternary search to find the respective face or edge axis faster?
+    # (TODO): Currently, because of the "all_of", it checks all 15 axes if the one matching its index is degenerate. Maybe fix that.
     execute unless score #Physics.PersistedAxis.Index Physics matches -1 store result score #Physics.PersistedAxis.OverlapSquared Physics run compute default float physics:collision_detection/axis_data/persisted_axis/overlap_squared
 
     # Choose between candidate and persisted
@@ -178,5 +179,5 @@ execute if score #Physics.ObjectA Physics.Object.Id > @s Physics.Object.Id in ph
 
     # Chosen axis
     execute store result score #Physics.ChosenAxis.OverlapSquared Physics run compute default integer physics:collision_detection/axis_data/chosen_axis/overlap_squared
-    execute store result score #Physics.ChosenAxis.SignedDistanceAlongAxis Physics run compute default integer physics:collision_detection/axis_data/chosen_axis/signed_distance_along_axis
+    execute store result score #Physics.ChosenAxis.SignedDistance Physics run compute default integer physics:collision_detection/axis_data/chosen_axis/signed_distance
 
