@@ -59,6 +59,7 @@ scoreboard players reset #Physics
     scoreboard players reset #Physics.ApplyImpulse.Direction.z
 
     scoreboard players reset #Physics.ObjectA
+    scoreboard players reset #Physics.ObjectB
 
     scoreboard players reset #Physics.Math.PitchRad
     scoreboard players reset #Physics.Math.YawRad
@@ -124,6 +125,18 @@ scoreboard players reset #Physics
     scoreboard players reset #Physics.AxisLengthSquared.zx
     scoreboard players reset #Physics.AxisLengthSquared.zy
     scoreboard players reset #Physics.AxisLengthSquared.zz
+
+    scoreboard players reset #Physics.MinOverlap.PointFace
+    scoreboard players reset #Physics.MinOverlapSquared.EdgeEdge
+    scoreboard players reset #Physics.MinOverlapIndex.EdgeEdge
+    scoreboard players reset #Physics.CandidateAxis.Index
+    scoreboard players reset #Physics.CandidateAxis.OverlapSquared
+    scoreboard players reset #Physics.PersistedAxis.Index
+    scoreboard players reset #Physics.PersistedAxis.OverlapSquared
+    scoreboard players reset #Physics.ChosenAxis.Index
+    scoreboard players reset #Physics.ChosenAxis.OverlapSquared
+    scoreboard players reset #Physics.ChosenAxis.SignedDistanceAlongAxis
+    scoreboard players reset #Physics.ChosenAxis.AxisLengthSquared
 
     # Constants
     scoreboard players reset #Physics.Constant.-1
@@ -232,6 +245,11 @@ scoreboard objectives remove Physics.Object.LinearVelocityFromAcceleration.z
 scoreboard objectives remove Physics.Object.AngularVelocityFromTorque.x
 scoreboard objectives remove Physics.Object.AngularVelocityFromTorque.y
 scoreboard objectives remove Physics.Object.AngularVelocityFromTorque.z
+
+scoreboard objectives remove Physics.Manifold.ObjectA.Id
+scoreboard objectives remove Physics.Manifold.ObjectB.Id
+
+scoreboard objectives remove Physics.Manifold.PersistedAxis.Index
 
 scoreboard objectives remove Physics.Player.Id
 scoreboard objectives remove Physics.Player.LookingAt.Id

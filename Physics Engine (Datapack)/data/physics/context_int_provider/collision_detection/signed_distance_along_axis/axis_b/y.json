@@ -1,0 +1,8 @@
+{
+  "type": "minecraft:score",
+  "target": {
+    "type": "minecraft:fixed",
+    "name": "#Physics.OffsetInB.y"
+  },
+  "score": "Physics"
+}

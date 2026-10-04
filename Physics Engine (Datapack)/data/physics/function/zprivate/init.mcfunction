@@ -118,6 +118,12 @@ execute in physics:void run summon minecraft:marker 8.0 8.0 8.0 {UUID:[I;1465875
   scoreboard objectives add Physics.Object.AngularVelocityFromTorque.y dummy
   scoreboard objectives add Physics.Object.AngularVelocityFromTorque.z dummy
 
+  # Manifold
+  scoreboard objectives add Physics.Manifold.ObjectA.Id dummy
+  scoreboard objectives add Physics.Manifold.ObjectB.Id dummy
+
+  scoreboard objectives add Physics.Manifold.PersistedAxis.Index dummy
+
   # Player
   scoreboard objectives add Physics.Player.Id dummy
   scoreboard objectives add Physics.Player.LookingAt.Id dummy

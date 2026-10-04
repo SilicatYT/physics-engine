@@ -5,6 +5,8 @@ execute unless score @s Physics.Object.Gametime = #Physics.Gametime Physics run 
 
 # Object-object collisions
     # Setup scores
+    scoreboard players operation #Physics.ObjectA Physics.Object.Id = @s Physics.Object.Id
+
     scoreboard players operation #Physics.ObjectA Physics.Object.BlockPos.x = @s Physics.Object.BlockPos.x
     scoreboard players operation #Physics.ObjectA Physics.Object.BlockPos.y = @s Physics.Object.BlockPos.y
     scoreboard players operation #Physics.ObjectA Physics.Object.BlockPos.z = @s Physics.Object.BlockPos.z
@@ -33,6 +35,12 @@ execute unless score @s Physics.Object.Gametime = #Physics.Gametime Physics run 
     scoreboard players operation #Physics.ObjectA Physics.Object.Scale.x = @s Physics.Object.Scale.x
     scoreboard players operation #Physics.ObjectA Physics.Object.Scale.y = @s Physics.Object.Scale.y
     scoreboard players operation #Physics.ObjectA Physics.Object.Scale.z = @s Physics.Object.Scale.z
+
+    # Setup cheap manifold and AEC access
+    # (Note): This is necessary so I can efficiently access the previous manifold for that object pair during the SAT, as well as cheaply access the AEC for making the manifold or objectB's AEC ride it.
+        # Teleport AEC
+        # (Note): The previous tick's manifolds are automatically teleported to y=56, and the current tick's manifolds are at y=72.
+        #execute on passengers on passengers on origin on vehicle in physics:void run tp @s 8.0 40.0 8.0
 
     # AABB & OBB check
     # (Note): I chose a tag check because it's very fast if it's outside the predicate (faster than a gametime check in the predicate).

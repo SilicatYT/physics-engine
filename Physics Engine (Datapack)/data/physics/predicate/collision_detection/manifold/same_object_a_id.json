@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:entity_scores",
+  "entity": "this",
+  "scores": {
+    "Physics.Manifold.ObjectA.Id": {
+      "type": "minecraft:score",
+      "target": {
+        "type": "minecraft:fixed",
+        "name": "#Physics.ObjectA"
+      },
+      "score": "Physics.Object.Id"
+    }
+  }
+}

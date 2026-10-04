@@ -1,0 +1,230 @@
+{
+  "type": "minecraft:number_dispatcher",
+  "cases": [
+    {
+      "condition": {
+        "type": "minecraft:int_value_check",
+        "value": {
+          "type": "minecraft:score",
+          "target": {
+            "type": "minecraft:fixed",
+            "name": "#Physics.ChosenAxis.Index"
+          },
+          "score": "Physics"
+        },
+        "test": 0
+      },
+      "value": "physics:collision_detection/signed_distance_along_axis/axis_a/x"
+    },
+    {
+      "condition": {
+        "type": "minecraft:int_value_check",
+        "value": {
+          "type": "minecraft:score",
+          "target": {
+            "type": "minecraft:fixed",
+            "name": "#Physics.ChosenAxis.Index"
+          },
+          "score": "Physics"
+        },
+        "test": 1
+      },
+      "value": "physics:collision_detection/signed_distance_along_axis/axis_a/y"
+    },
+    {
+      "condition": {
+        "type": "minecraft:int_value_check",
+        "value": {
+          "type": "minecraft:score",
+          "target": {
+            "type": "minecraft:fixed",
+            "name": "#Physics.ChosenAxis.Index"
+          },
+          "score": "Physics"
+        },
+        "test": 2
+      },
+      "value": "physics:collision_detection/signed_distance_along_axis/axis_a/z"
+    },
+    {
+      "condition": {
+        "type": "minecraft:int_value_check",
+        "value": {
+          "type": "minecraft:score",
+          "target": {
+            "type": "minecraft:fixed",
+            "name": "#Physics.ChosenAxis.Index"
+          },
+          "score": "Physics"
+        },
+        "test": 3
+      },
+      "value": "physics:collision_detection/signed_distance_along_axis/axis_b/x"
+    },
+    {
+      "condition": {
+        "type": "minecraft:int_value_check",
+        "value": {
+          "type": "minecraft:score",
+          "target": {
+            "type": "minecraft:fixed",
+            "name": "#Physics.ChosenAxis.Index"
+          },
+          "score": "Physics"
+        },
+        "test": 4
+      },
+      "value": "physics:collision_detection/signed_distance_along_axis/axis_b/y"
+    },
+    {
+      "condition": {
+        "type": "minecraft:int_value_check",
+        "value": {
+          "type": "minecraft:score",
+          "target": {
+            "type": "minecraft:fixed",
+            "name": "#Physics.ChosenAxis.Index"
+          },
+          "score": "Physics"
+        },
+        "test": 5
+      },
+      "value": "physics:collision_detection/signed_distance_along_axis/axis_b/z"
+    }
+  ],
+  "default": {
+    "type": "minecraft:from_float",
+    "input": {
+      "type": "minecraft:mul",
+      "inputs": [
+        {
+          "type": "minecraft:number_dispatcher",
+          "cases": [
+            {
+              "condition": {
+                "type": "minecraft:int_value_check",
+                "value": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.ChosenAxis.Index"
+                  },
+                  "score": "Physics"
+                },
+                "test": 6
+              },
+              "value": "physics:collision_detection/signed_distance_along_axis/edge_edge/xx"
+            },
+            {
+              "condition": {
+                "type": "minecraft:int_value_check",
+                "value": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.ChosenAxis.Index"
+                  },
+                  "score": "Physics"
+                },
+                "test": 7
+              },
+              "value": "physics:collision_detection/signed_distance_along_axis/edge_edge/xy"
+            },
+            {
+              "condition": {
+                "type": "minecraft:int_value_check",
+                "value": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.ChosenAxis.Index"
+                  },
+                  "score": "Physics"
+                },
+                "test": 8
+              },
+              "value": "physics:collision_detection/signed_distance_along_axis/edge_edge/xz"
+            },
+            {
+              "condition": {
+                "type": "minecraft:int_value_check",
+                "value": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.ChosenAxis.Index"
+                  },
+                  "score": "Physics"
+                },
+                "test": 9
+              },
+              "value": "physics:collision_detection/signed_distance_along_axis/edge_edge/yx"
+            },
+            {
+              "condition": {
+                "type": "minecraft:int_value_check",
+                "value": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.ChosenAxis.Index"
+                  },
+                  "score": "Physics"
+                },
+                "test": 10
+              },
+              "value": "physics:collision_detection/signed_distance_along_axis/edge_edge/yy"
+            },
+            {
+              "condition": {
+                "type": "minecraft:int_value_check",
+                "value": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.ChosenAxis.Index"
+                  },
+                  "score": "Physics"
+                },
+                "test": 11
+              },
+              "value": "physics:collision_detection/signed_distance_along_axis/edge_edge/yz"
+            },
+            {
+              "condition": {
+                "type": "minecraft:int_value_check",
+                "value": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.ChosenAxis.Index"
+                  },
+                  "score": "Physics"
+                },
+                "test": 12
+              },
+              "value": "physics:collision_detection/signed_distance_along_axis/edge_edge/zx"
+            },
+            {
+              "condition": {
+                "type": "minecraft:int_value_check",
+                "value": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.ChosenAxis.Index"
+                  },
+                  "score": "Physics"
+                },
+                "test": 13
+              },
+              "value": "physics:collision_detection/signed_distance_along_axis/edge_edge/zy"
+            }
+          ],
+          "default": "physics:collision_detection/signed_distance_along_axis/edge_edge/zz"
+        },
+        5.9604644775390625e-8
+      ]
+    }
+  }
+}

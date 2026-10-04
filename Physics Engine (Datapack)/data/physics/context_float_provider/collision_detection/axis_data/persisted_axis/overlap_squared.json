@@ -1,0 +1,609 @@
+{
+  "type": "minecraft:conditional",
+  "condition": {
+    "type": "minecraft:int_value_check",
+    "value": {
+      "type": "minecraft:score",
+      "target": {
+        "type": "minecraft:fixed",
+        "name": "#Physics.CandidateAxis.Index"
+      },
+      "score": "Physics"
+    },
+    "test": {
+      "type": "minecraft:score",
+      "target": {
+        "type": "minecraft:fixed",
+        "name": "#Physics.PersistedAxis.Index"
+      },
+      "score": "Physics"
+    }
+  },
+  "on_true": {
+    "type": "minecraft:from_int",
+    "input": {
+      "type": "minecraft:score",
+      "target": {
+        "type": "minecraft:fixed",
+        "name": "#Physics.CandidateAxis.OverlapSquared"
+      },
+      "score": "Physics"
+    }
+  },
+  "on_false": {
+    "type": "minecraft:number_dispatcher",
+    "cases": [
+      {
+        "condition": {
+          "type": "minecraft:int_value_check",
+          "value": {
+            "type": "minecraft:score",
+            "target": {
+              "type": "minecraft:fixed",
+              "name": "#Physics.PersistedAxis.Index"
+            },
+            "score": "Physics"
+          },
+          "test": 0
+        },
+        "value": {
+          "type": "minecraft:mul",
+          "inputs": [
+            {
+              "type": "minecraft:pow",
+              "base": {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.Overlap.A.x"
+                  },
+                  "score": "Physics"
+                }
+              },
+              "exponent": 2
+            },
+            0.0000152587890625
+          ]
+        }
+      },
+      {
+        "condition": {
+          "type": "minecraft:int_value_check",
+          "value": {
+            "type": "minecraft:score",
+            "target": {
+              "type": "minecraft:fixed",
+              "name": "#Physics.PersistedAxis.Index"
+            },
+            "score": "Physics"
+          },
+          "test": 1
+        },
+        "value": {
+          "type": "minecraft:mul",
+          "inputs": [
+            {
+              "type": "minecraft:pow",
+              "base": {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.Overlap.A.y"
+                  },
+                  "score": "Physics"
+                }
+              },
+              "exponent": 2
+            },
+            0.0000152587890625
+          ]
+        }
+      },
+      {
+        "condition": {
+          "type": "minecraft:int_value_check",
+          "value": {
+            "type": "minecraft:score",
+            "target": {
+              "type": "minecraft:fixed",
+              "name": "#Physics.PersistedAxis.Index"
+            },
+            "score": "Physics"
+          },
+          "test": 2
+        },
+        "value": {
+          "type": "minecraft:mul",
+          "inputs": [
+            {
+              "type": "minecraft:pow",
+              "base": {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.Overlap.A.z"
+                  },
+                  "score": "Physics"
+                }
+              },
+              "exponent": 2
+            },
+            0.0000152587890625
+          ]
+        }
+      },
+      {
+        "condition": {
+          "type": "minecraft:int_value_check",
+          "value": {
+            "type": "minecraft:score",
+            "target": {
+              "type": "minecraft:fixed",
+              "name": "#Physics.PersistedAxis.Index"
+            },
+            "score": "Physics"
+          },
+          "test": 3
+        },
+        "value": {
+          "type": "minecraft:mul",
+          "inputs": [
+            {
+              "type": "minecraft:pow",
+              "base": {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.Overlap.B.x"
+                  },
+                  "score": "Physics"
+                }
+              },
+              "exponent": 2
+            },
+            0.0000152587890625
+          ]
+        }
+      },
+      {
+        "condition": {
+          "type": "minecraft:int_value_check",
+          "value": {
+            "type": "minecraft:score",
+            "target": {
+              "type": "minecraft:fixed",
+              "name": "#Physics.PersistedAxis.Index"
+            },
+            "score": "Physics"
+          },
+          "test": 4
+        },
+        "value": {
+          "type": "minecraft:mul",
+          "inputs": [
+            {
+              "type": "minecraft:pow",
+              "base": {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.Overlap.B.y"
+                  },
+                  "score": "Physics"
+                }
+              },
+              "exponent": 2
+            },
+            0.0000152587890625
+          ]
+        }
+      },
+      {
+        "condition": {
+          "type": "minecraft:int_value_check",
+          "value": {
+            "type": "minecraft:score",
+            "target": {
+              "type": "minecraft:fixed",
+              "name": "#Physics.PersistedAxis.Index"
+            },
+            "score": "Physics"
+          },
+          "test": 5
+        },
+        "value": {
+          "type": "minecraft:mul",
+          "inputs": [
+            {
+              "type": "minecraft:pow",
+              "base": {
+                "type": "minecraft:from_int",
+                "input": {
+                  "type": "minecraft:score",
+                  "target": {
+                    "type": "minecraft:fixed",
+                    "name": "#Physics.Overlap.B.z"
+                  },
+                  "score": "Physics"
+                }
+              },
+              "exponent": 2
+            },
+            0.0000152587890625
+          ]
+        }
+      },
+      {
+        "condition": {
+          "type": "minecraft:all_of",
+          "terms": [
+            {
+              "type": "minecraft:int_value_check",
+              "value": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.PersistedAxis.Index"
+                },
+                "score": "Physics"
+              },
+              "test": 6
+            },
+            {
+              "type": "minecraft:int_value_check",
+              "value": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.AxisLengthSquared.xx"
+                },
+                "score": "Physics"
+              },
+              "test": {
+                "min": 1024
+              }
+            }
+          ]
+        },
+        "value": {
+          "type": "minecraft:mul",
+          "inputs": [
+            "physics:collision_detection/axis_data/overlap_squared/xx",
+            256
+          ]
+        }
+      },
+      {
+        "condition": {
+          "type": "minecraft:all_of",
+          "terms": [
+            {
+              "type": "minecraft:int_value_check",
+              "value": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.PersistedAxis.Index"
+                },
+                "score": "Physics"
+              },
+              "test": 7
+            },
+            {
+              "type": "minecraft:int_value_check",
+              "value": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.AxisLengthSquared.xy"
+                },
+                "score": "Physics"
+              },
+              "test": {
+                "min": 1024
+              }
+            }
+          ]
+        },
+        "value": {
+          "type": "minecraft:mul",
+          "inputs": [
+            "physics:collision_detection/axis_data/overlap_squared/xy",
+            256
+          ]
+        }
+      },
+      {
+        "condition": {
+          "type": "minecraft:all_of",
+          "terms": [
+            {
+              "type": "minecraft:int_value_check",
+              "value": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.PersistedAxis.Index"
+                },
+                "score": "Physics"
+              },
+              "test": 8
+            },
+            {
+              "type": "minecraft:int_value_check",
+              "value": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.AxisLengthSquared.xz"
+                },
+                "score": "Physics"
+              },
+              "test": {
+                "min": 1024
+              }
+            }
+          ]
+        },
+        "value": {
+          "type": "minecraft:mul",
+          "inputs": [
+            "physics:collision_detection/axis_data/overlap_squared/xz",
+            256
+          ]
+        }
+      },
+      {
+        "condition": {
+          "type": "minecraft:all_of",
+          "terms": [
+            {
+              "type": "minecraft:int_value_check",
+              "value": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.PersistedAxis.Index"
+                },
+                "score": "Physics"
+              },
+              "test": 9
+            },
+            {
+              "type": "minecraft:int_value_check",
+              "value": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.AxisLengthSquared.yx"
+                },
+                "score": "Physics"
+              },
+              "test": {
+                "min": 1024
+              }
+            }
+          ]
+        },
+        "value": {
+          "type": "minecraft:mul",
+          "inputs": [
+            "physics:collision_detection/axis_data/overlap_squared/yx",
+            256
+          ]
+        }
+      },
+      {
+        "condition": {
+          "type": "minecraft:all_of",
+          "terms": [
+            {
+              "type": "minecraft:int_value_check",
+              "value": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.PersistedAxis.Index"
+                },
+                "score": "Physics"
+              },
+              "test": 10
+            },
+            {
+              "type": "minecraft:int_value_check",
+              "value": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.AxisLengthSquared.yy"
+                },
+                "score": "Physics"
+              },
+              "test": {
+                "min": 1024
+              }
+            }
+          ]
+        },
+        "value": {
+          "type": "minecraft:mul",
+          "inputs": [
+            "physics:collision_detection/axis_data/overlap_squared/yy",
+            256
+          ]
+        }
+      },
+      {
+        "condition": {
+          "type": "minecraft:all_of",
+          "terms": [
+            {
+              "type": "minecraft:int_value_check",
+              "value": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.PersistedAxis.Index"
+                },
+                "score": "Physics"
+              },
+              "test": 11
+            },
+            {
+              "type": "minecraft:int_value_check",
+              "value": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.AxisLengthSquared.yz"
+                },
+                "score": "Physics"
+              },
+              "test": {
+                "min": 1024
+              }
+            }
+          ]
+        },
+        "value": {
+          "type": "minecraft:mul",
+          "inputs": [
+            "physics:collision_detection/axis_data/overlap_squared/yz",
+            256
+          ]
+        }
+      },
+      {
+        "condition": {
+          "type": "minecraft:all_of",
+          "terms": [
+            {
+              "type": "minecraft:int_value_check",
+              "value": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.PersistedAxis.Index"
+                },
+                "score": "Physics"
+              },
+              "test": 12
+            },
+            {
+              "type": "minecraft:int_value_check",
+              "value": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.AxisLengthSquared.zx"
+                },
+                "score": "Physics"
+              },
+              "test": {
+                "min": 1024
+              }
+            }
+          ]
+        },
+        "value": {
+          "type": "minecraft:mul",
+          "inputs": [
+            "physics:collision_detection/axis_data/overlap_squared/zx",
+            256
+          ]
+        }
+      },
+      {
+        "condition": {
+          "type": "minecraft:all_of",
+          "terms": [
+            {
+              "type": "minecraft:int_value_check",
+              "value": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.PersistedAxis.Index"
+                },
+                "score": "Physics"
+              },
+              "test": 13
+            },
+            {
+              "type": "minecraft:int_value_check",
+              "value": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.AxisLengthSquared.zy"
+                },
+                "score": "Physics"
+              },
+              "test": {
+                "min": 1024
+              }
+            }
+          ]
+        },
+        "value": {
+          "type": "minecraft:mul",
+          "inputs": [
+            "physics:collision_detection/axis_data/overlap_squared/zy",
+            256
+          ]
+        }
+      },
+      {
+        "condition": {
+          "type": "minecraft:all_of",
+          "terms": [
+            {
+              "type": "minecraft:int_value_check",
+              "value": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.PersistedAxis.Index"
+                },
+                "score": "Physics"
+              },
+              "test": 14
+            },
+            {
+              "type": "minecraft:int_value_check",
+              "value": {
+                "type": "minecraft:score",
+                "target": {
+                  "type": "minecraft:fixed",
+                  "name": "#Physics.AxisLengthSquared.zz"
+                },
+                "score": "Physics"
+              },
+              "test": {
+                "min": 1024
+              }
+            }
+          ]
+        },
+        "value": {
+          "type": "minecraft:mul",
+          "inputs": [
+            "physics:collision_detection/axis_data/overlap_squared/zz",
+            256
+          ]
+        }
+      }
+    ],
+    "default": 2147483647
+  }
+}

@@ -14,7 +14,7 @@
 # (Note): AxisDot is scaled up by 2^24.
 # (Note): OffsetInA/B is scaled up by 2^16 (Same as RelativePos).
 # (TODO): Check whether it's faster to run the entire SAT as a single predicate check with a large number provider, and to re-compute the values if it succeeds. Currently, (almost) all values that can be re-used later are stored, which increases the command count.
-# (TODO): In general, check whether it's worth it to run certain calculations twice (like axisDot, offsetIn, ...), so I could bundle more into a single number provider to reduce the command count.
+# (TODO): In general, check whether it's worth it to run certain calculations twice (like axisDot, offsetIn, signedDistanceAlongAxis for edge-edge, ...), so I could bundle more into a single number provider to reduce the command count.
     # ObjectA's axes
         # A: x
             # Setup
@@ -137,4 +137,46 @@
         execute store result score #Physics.AxisLengthSquared.zz Physics run compute default float physics:collision_detection/axis_length_squared/zz
         execute if score #Physics.AxisLengthSquared.zz Physics matches 1024.. store result score #Physics.Overlap.Unnormalized.zz Physics run compute default float physics:collision_detection/overlap/unnormalized/zz
         execute if score #Physics.AxisLengthSquared.zz Physics matches 1024.. if score #Physics.Overlap.Unnormalized.zz Physics matches ..0 run return 0
+
+# Passed: OBBs are intersecting
+
+# Get previous tick's manifold for this object pair for carrying over the warm-start impulse
+# (Note): See the stack information from "turn_into_physics_object".
+# (Note): Due to the recursion in collision detection, objectA and objectB can swap. Therefore, I need a stable identity for storing the manifold data. The manifold entity rides the object with the smaller ObjectId, and has the larger Id as its Owner.
+scoreboard players set #Physics.PersistedAxis.Index Physics -1
+
+scoreboard players operation #Physics.ObjectB Physics.Object.Id = @s Physics.Object.Id
+execute if score #Physics.ObjectA Physics.Object.Id < @s Physics.Object.Id in physics:void as @e[type=minecraft:area_effect_cloud,tag=Physics.Manifold,x=7.9,y=55.9,z=7.9,predicate=physics:collision_detection/manifold/same_object_b_id,dy=0,limit=1] run function physics:zprivate/simulation/collision_detection/get_previous_manifold_data
+execute if score #Physics.ObjectA Physics.Object.Id > @s Physics.Object.Id in physics:void on passengers if entity @s[type=minecraft:armor_stand,tag=Physics.ObjectArmorStand] on passengers on origin on vehicle on vehicle on passengers if entity @s[tag=Physics.OldManifolds] on passengers if predicate physics:collision_detection/manifold/same_object_a_id run function physics:zprivate/simulation/collision_detection/get_previous_manifold_data
+
+# Choose an axis and collect its data
+# (Note): I choose the axis of the minimum overlap, but I apply a bias toward pointFace axes, as those are more stable. I also perform hysteresis by comparing the overlap with the previously chosen axis (from the old manifold), with a bias toward the persisted axis, again for stability reasons.
+# (TODO): I hardcoded the bias in favor of pointFace contacts (axis indices 0-5) in the candidate_axis/index number provider. Could maybe be turned into a score (setting?). Its current value is 1.0 / 0.7.
+# (TODO): Check if it's faster to inline the index extraction from physics:collision_detection/axis_data/min_overlap_squared_index/edge_edge and remove the command that stores the score. 1 less command, but up to 8 floor_mod more... hmm... BUT: It would only need to run in case an edge-edge collision occurs, which is rare.
+# (TODO): In general, see if this can be optimized by getting a better balance of command count and duplicate calculations in number providers.
+    # Candidate axis
+    # (Note): To avoid having to run the "overlapSquared" calculation twice for every cross product axis (one pass to get MinOverlapSquared, one pass to get the index), I pack the index directly into the overlapSquared's bottom 4 bits, then recalculate it for one axis in case it's an edge-edge collision (in physics:collision_detection/axis_data/candidate_axis/overlap_squared).
+    # (Note): The packing process scales up MinOverlapSquared.EdgeEdge by an additional factor of 2x, so I multiply it by 0.5 in physics:collision_detection/axis_data/candidate_axis/index. This is currently merged with the bias of (1.0 / 0.7)^2.
+    execute store result score #Physics.MinOverlap.PointFace Physics run compute default integer physics:collision_detection/axis_data/min_overlap/point_face
+    execute store result score #Physics.MinOverlapSquared.EdgeEdge Physics run compute default integer physics:collision_detection/axis_data/min_overlap_squared/edge_edge
+    execute store result score #Physics.MinOverlapIndex.EdgeEdge Physics run compute default integer physics:collision_detection/axis_data/min_overlap_index/edge_edge
+
+    execute store result score #Physics.CandidateAxis.Index Physics run compute default integer physics:collision_detection/axis_data/candidate_axis/index
+    execute store result score #Physics.CandidateAxis.OverlapSquared Physics run compute default integer physics:collision_detection/axis_data/candidate_axis/overlap_squared
+
+    # Persisted axis
+    # (Note): As an optimization, I check if both indices are equal. If yes, simply copy over CandidateAxis.OverlapSquared.
+    # (TODO): Maybe add an additional "conditional" layer to check between "is point face" vs "is edge edge", so that in case an edge-edge contact occurs, it doesn't have to check the 6 faces first? At the cost of an additional score access if it's pointFace, though, so maybe it's not worth it.
+    # (TODO): Maybe use binary or ternary search to find the respective face or edge axis faster?
+    execute unless score #Physics.PersistedAxis.Index Physics matches -1 store result score #Physics.PersistedAxis.OverlapSquared Physics run compute default float physics:collision_detection/axis_data/persisted_axis/overlap_squared
+
+    # Choose between candidate and persisted
+    # (Note): If PersistedAxis.Index is -1, it chooses the CandidateAxis.
+    # (TODO): Maybe unhardcode the bias. Currently it's 0.9^2 (squared because it's applied to overlapSquared), so 0.81.
+    # (TODO): Is it faster if I additionally add an early exit for "both indices are equal"?
+    execute store result score #Physics.ChosenAxis.Index Physics run compute default integer physics:collision_detection/axis_data/chosen_axis/index
+
+    # Chosen axis
+    execute store result score #Physics.ChosenAxis.OverlapSquared Physics run compute default integer physics:collision_detection/axis_data/chosen_axis/overlap_squared
+    execute store result score #Physics.ChosenAxis.SignedDistanceAlongAxis Physics run compute default integer physics:collision_detection/axis_data/chosen_axis/signed_distance_along_axis
 

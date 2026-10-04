@@ -1,0 +1,48 @@
+{
+  "type": "minecraft:conditional",
+  "condition": {
+    "type": "minecraft:float_value_check",
+    "value": {
+      "type": "minecraft:mul",
+      "inputs": [
+        {
+          "type": "minecraft:pow",
+          "base": {
+            "type": "minecraft:from_int",
+            "input": {
+              "type": "minecraft:score",
+              "target": {
+                "type": "minecraft:fixed",
+                "name": "#Physics.MinOverlap.PointFace"
+              },
+              "score": "Physics"
+            }
+          },
+          "exponent": 2
+        },
+        0.0000152587890625
+      ]
+    },
+    "test": {
+      "max": {
+        "type": "minecraft:mul",
+        "inputs": [
+          {
+            "type": "minecraft:from_int",
+            "input": {
+              "type": "minecraft:score",
+              "target": {
+                "type": "minecraft:fixed",
+                "name": "#Physics.MinOverlapSquared.EdgeEdge"
+              },
+              "score": "Physics"
+            }
+          },
+          1.0204081535
+        ]
+      }
+    }
+  },
+  "on_true": "physics:collision_detection/axis_data/min_overlap_index/point_face",
+  "on_false": "physics:collision_detection/axis_data/min_overlap_index/edge_edge"
+}

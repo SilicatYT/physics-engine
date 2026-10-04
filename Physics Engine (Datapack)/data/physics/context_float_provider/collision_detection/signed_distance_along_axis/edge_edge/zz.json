@@ -1,0 +1,57 @@
+{
+  "type": "minecraft:sub",
+  "left": {
+    "type": "minecraft:mul",
+    "inputs": [
+      {
+        "type": "minecraft:from_int",
+        "input": {
+          "type": "minecraft:score",
+          "target": {
+            "type": "minecraft:fixed",
+            "name": "#Physics.OffsetInA.x"
+          },
+          "score": "Physics"
+        }
+      },
+      {
+        "type": "minecraft:from_int",
+        "input": {
+          "type": "minecraft:score",
+          "target": {
+            "type": "minecraft:fixed",
+            "name": "#Physics.AxisDot.yz"
+          },
+          "score": "Physics"
+        }
+      }
+    ]
+  },
+  "right": {
+    "type": "minecraft:mul",
+    "inputs": [
+      {
+        "type": "minecraft:from_int",
+        "input": {
+          "type": "minecraft:score",
+          "target": {
+            "type": "minecraft:fixed",
+            "name": "#Physics.OffsetInA.y"
+          },
+          "score": "Physics"
+        }
+      },
+      {
+        "type": "minecraft:from_int",
+        "input": {
+          "type": "minecraft:score",
+          "target": {
+            "type": "minecraft:fixed",
+            "name": "#Physics.AxisDot.xz"
+          },
+          "score": "Physics"
+        }
+      }
+    ]
+  }
+}

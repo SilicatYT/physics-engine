@@ -1,0 +1,224 @@
+{
+  "type": "minecraft:conditional",
+  "condition": {
+    "type": "minecraft:int_value_check",
+    "value": {
+      "type": "minecraft:score",
+      "target": {
+        "type": "minecraft:fixed",
+        "name": "#Physics.CandidateAxis.Index"
+      },
+      "score": "Physics"
+    },
+    "test": {
+      "max": 5
+    }
+  },
+  "on_true": {
+    "type": "minecraft:from_float",
+    "input": {
+      "type": "minecraft:mul",
+      "inputs": [
+        {
+          "type": "minecraft:pow",
+          "base": {
+            "type": "minecraft:from_int",
+            "input": {
+              "type": "minecraft:score",
+              "target": {
+                "type": "minecraft:fixed",
+                "name": "#Physics.MinOverlap.PointFace"
+              },
+              "score": "Physics"
+            }
+          },
+          "exponent": 2
+        },
+        1.52587890625e-5
+      ]
+    }
+  },
+  "on_false": {
+    "type": "minecraft:from_float",
+    "input": {
+      "type": "minecraft:number_dispatcher",
+      "cases": [
+        {
+          "condition": {
+            "type": "minecraft:int_value_check",
+            "value": {
+              "type": "minecraft:score",
+              "target": {
+                "type": "minecraft:fixed",
+                "name": "#Physics.MinOverlapIndex.EdgeEdge"
+              },
+              "score": "Physics"
+            },
+            "test": 6
+          },
+          "value": {
+            "type": "minecraft:mul",
+            "inputs": [
+              "physics:collision_detection/axis_data/overlap_squared/xx",
+              256
+            ]
+          }
+        },
+        {
+          "condition": {
+            "type": "minecraft:int_value_check",
+            "value": {
+              "type": "minecraft:score",
+              "target": {
+                "type": "minecraft:fixed",
+                "name": "#Physics.MinOverlapIndex.EdgeEdge"
+              },
+              "score": "Physics"
+            },
+            "test": 7
+          },
+          "value": {
+            "type": "minecraft:mul",
+            "inputs": [
+              "physics:collision_detection/axis_data/overlap_squared/xy",
+              256
+            ]
+          }
+        },
+        {
+          "condition": {
+            "type": "minecraft:int_value_check",
+            "value": {
+              "type": "minecraft:score",
+              "target": {
+                "type": "minecraft:fixed",
+                "name": "#Physics.MinOverlapIndex.EdgeEdge"
+              },
+              "score": "Physics"
+            },
+            "test": 8
+          },
+          "value": {
+            "type": "minecraft:mul",
+            "inputs": [
+              "physics:collision_detection/axis_data/overlap_squared/xz",
+              256
+            ]
+          }
+        },
+        {
+          "condition": {
+            "type": "minecraft:int_value_check",
+            "value": {
+              "type": "minecraft:score",
+              "target": {
+                "type": "minecraft:fixed",
+                "name": "#Physics.MinOverlapIndex.EdgeEdge"
+              },
+              "score": "Physics"
+            },
+            "test": 9
+          },
+          "value": {
+            "type": "minecraft:mul",
+            "inputs": [
+              "physics:collision_detection/axis_data/overlap_squared/yx",
+              256
+            ]
+          }
+        },
+        {
+          "condition": {
+            "type": "minecraft:int_value_check",
+            "value": {
+              "type": "minecraft:score",
+              "target": {
+                "type": "minecraft:fixed",
+                "name": "#Physics.MinOverlapIndex.EdgeEdge"
+              },
+              "score": "Physics"
+            },
+            "test": 10
+          },
+          "value": {
+            "type": "minecraft:mul",
+            "inputs": [
+              "physics:collision_detection/axis_data/overlap_squared/yy",
+              256
+            ]
+          }
+        },
+        {
+          "condition": {
+            "type": "minecraft:int_value_check",
+            "value": {
+              "type": "minecraft:score",
+              "target": {
+                "type": "minecraft:fixed",
+                "name": "#Physics.MinOverlapIndex.EdgeEdge"
+              },
+              "score": "Physics"
+            },
+            "test": 11
+          },
+          "value": {
+            "type": "minecraft:mul",
+            "inputs": [
+              "physics:collision_detection/axis_data/overlap_squared/yz",
+              256
+            ]
+          }
+        },
+        {
+          "condition": {
+            "type": "minecraft:int_value_check",
+            "value": {
+              "type": "minecraft:score",
+              "target": {
+                "type": "minecraft:fixed",
+                "name": "#Physics.MinOverlapIndex.EdgeEdge"
+              },
+              "score": "Physics"
+            },
+            "test": 12
+          },
+          "value": {
+            "type": "minecraft:mul",
+            "inputs": [
+              "physics:collision_detection/axis_data/overlap_squared/zx",
+              256
+            ]
+          }
+        },
+        {
+          "condition": {
+            "type": "minecraft:int_value_check",
+            "value": {
+              "type": "minecraft:score",
+              "target": {
+                "type": "minecraft:fixed",
+                "name": "#Physics.MinOverlapIndex.EdgeEdge"
+              },
+              "score": "Physics"
+            },
+            "test": 13
+          },
+          "value": {
+            "type": "minecraft:mul",
+            "inputs": [
+              "physics:collision_detection/axis_data/overlap_squared/zy",
+              256
+            ]
+          }
+        }
+      ],
+      "default": {
+        "type": "minecraft:mul",
+        "inputs": [
+          "physics:collision_detection/axis_data/overlap_squared/zz",
+          256
+        ]
+      }
+    }
+  }
+}

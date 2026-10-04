@@ -130,63 +130,7 @@
       },
       "right": {
         "type": "minecraft:abs",
-        "input": {
-          "type": "minecraft:sub",
-          "left": {
-            "type": "minecraft:mul",
-            "inputs": [
-              {
-                "type": "minecraft:from_int",
-                "input": {
-                  "type": "minecraft:score",
-                  "target": {
-                    "type": "minecraft:fixed",
-                    "name": "#Physics.OffsetInA.y"
-                  },
-                  "score": "Physics"
-                }
-              },
-              {
-                "type": "minecraft:from_int",
-                "input": {
-                  "type": "minecraft:score",
-                  "target": {
-                    "type": "minecraft:fixed",
-                    "name": "#Physics.AxisDot.zy"
-                  },
-                  "score": "Physics"
-                }
-              }
-            ]
-          },
-          "right": {
-            "type": "minecraft:mul",
-            "inputs": [
-              {
-                "type": "minecraft:from_int",
-                "input": {
-                  "type": "minecraft:score",
-                  "target": {
-                    "type": "minecraft:fixed",
-                    "name": "#Physics.OffsetInA.z"
-                  },
-                  "score": "Physics"
-                }
-              },
-              {
-                "type": "minecraft:from_int",
-                "input": {
-                  "type": "minecraft:score",
-                  "target": {
-                    "type": "minecraft:fixed",
-                    "name": "#Physics.AxisDot.yy"
-                  },
-                  "score": "Physics"
-                }
-              }
-            ]
-          }
-        }
+        "input": "physics:collision_detection/signed_distance_along_axis/edge_edge/xy"
       }
     },
     5.9604644775390625e-08

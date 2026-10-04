@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:div",
+  "left": {
+    "type": "minecraft:pow",
+    "base": {
+      "type": "minecraft:from_int",
+      "input": {
+        "type": "minecraft:score",
+        "target": {
+          "type": "minecraft:fixed",
+          "name": "#Physics.Overlap.Unnormalized.xx"
+        },
+        "score": "Physics"
+      }
+    },
+    "exponent": 2
+  },
+  "right": {
+    "type": "minecraft:from_int",
+    "input": {
+      "type": "minecraft:score",
+      "target": {
+        "type": "minecraft:fixed",
+        "name": "#Physics.AxisLengthSquared.xx"
+      },
+      "score": "Physics"
+    }
+  }
+}

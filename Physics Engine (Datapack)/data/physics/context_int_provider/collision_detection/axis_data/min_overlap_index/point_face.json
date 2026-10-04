@@ -1,0 +1,116 @@
+{
+  "type": "minecraft:number_dispatcher",
+  "cases": [
+    {
+      "condition": {
+        "type": "minecraft:int_value_check",
+        "value": {
+          "type": "minecraft:score",
+          "target": {
+            "type": "minecraft:fixed",
+            "name": "#Physics.MinOverlap.PointFace"
+          },
+          "score": "Physics"
+        },
+        "test": {
+          "type": "minecraft:score",
+          "target": {
+            "type": "minecraft:fixed",
+            "name": "#Physics.Overlap.A.x"
+          },
+          "score": "Physics"
+        }
+      },
+      "value": 0
+    },
+    {
+      "condition": {
+        "type": "minecraft:int_value_check",
+        "value": {
+          "type": "minecraft:score",
+          "target": {
+            "type": "minecraft:fixed",
+            "name": "#Physics.MinOverlap.PointFace"
+          },
+          "score": "Physics"
+        },
+        "test": {
+          "type": "minecraft:score",
+          "target": {
+            "type": "minecraft:fixed",
+            "name": "#Physics.Overlap.A.y"
+          },
+          "score": "Physics"
+        }
+      },
+      "value": 1
+    },
+    {
+      "condition": {
+        "type": "minecraft:int_value_check",
+        "value": {
+          "type": "minecraft:score",
+          "target": {
+            "type": "minecraft:fixed",
+            "name": "#Physics.MinOverlap.PointFace"
+          },
+          "score": "Physics"
+        },
+        "test": {
+          "type": "minecraft:score",
+          "target": {
+            "type": "minecraft:fixed",
+            "name": "#Physics.Overlap.A.z"
+          },
+          "score": "Physics"
+        }
+      },
+      "value": 2
+    },
+    {
+      "condition": {
+        "type": "minecraft:int_value_check",
+        "value": {
+          "type": "minecraft:score",
+          "target": {
+            "type": "minecraft:fixed",
+            "name": "#Physics.MinOverlap.PointFace"
+          },
+          "score": "Physics"
+        },
+        "test": {
+          "type": "minecraft:score",
+          "target": {
+            "type": "minecraft:fixed",
+            "name": "#Physics.Overlap.B.x"
+          },
+          "score": "Physics"
+        }
+      },
+      "value": 3
+    },
+    {
+      "condition": {
+        "type": "minecraft:int_value_check",
+        "value": {
+          "type": "minecraft:score",
+          "target": {
+            "type": "minecraft:fixed",
+            "name": "#Physics.MinOverlap.PointFace"
+          },
+          "score": "Physics"
+        },
+        "test": {
+          "type": "minecraft:score",
+          "target": {
+            "type": "minecraft:fixed",
+            "name": "#Physics.Overlap.B.y"
+          },
+          "score": "Physics"
+        }
+      },
+      "value": 4
+    }
+  ],
+  "default": 5
+}

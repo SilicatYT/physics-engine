@@ -1,0 +1,12 @@
+{
+  "type": "minecraft:floor_mod",
+  "left": {
+    "type": "minecraft:score",
+    "target": {
+      "type": "minecraft:fixed",
+      "name": "#Physics.MinOverlapSquared.EdgeEdge"
+    },
+    "score": "Physics"
+  },
+  "right": 16
+}

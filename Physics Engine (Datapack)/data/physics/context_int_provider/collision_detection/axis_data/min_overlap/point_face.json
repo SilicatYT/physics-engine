@@ -1,0 +1,53 @@
+{
+  "type": "minecraft:min",
+  "inputs": [
+    {
+      "type": "minecraft:score",
+      "target": {
+        "type": "minecraft:fixed",
+        "name": "#Physics.Overlap.A.x"
+      },
+      "score": "Physics"
+    },
+    {
+      "type": "minecraft:score",
+      "target": {
+        "type": "minecraft:fixed",
+        "name": "#Physics.Overlap.A.y"
+      },
+      "score": "Physics"
+    },
+    {
+      "type": "minecraft:score",
+      "target": {
+        "type": "minecraft:fixed",
+        "name": "#Physics.Overlap.A.z"
+      },
+      "score": "Physics"
+    },
+    {
+      "type": "minecraft:score",
+      "target": {
+        "type": "minecraft:fixed",
+        "name": "#Physics.Overlap.B.x"
+      },
+      "score": "Physics"
+    },
+    {
+      "type": "minecraft:score",
+      "target": {
+        "type": "minecraft:fixed",
+        "name": "#Physics.Overlap.B.y"
+      },
+      "score": "Physics"
+    },
+    {
+      "type": "minecraft:score",
+      "target": {
+        "type": "minecraft:fixed",
+        "name": "#Physics.Overlap.B.z"
+      },
+      "score": "Physics"
+    }
+  ]
+}

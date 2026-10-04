@@ -124,14 +124,7 @@
     "type": "minecraft:from_int",
     "input": {
       "type": "minecraft:abs",
-      "input": {
-        "type": "minecraft:score",
-        "target": {
-          "type": "minecraft:fixed",
-          "name": "#Physics.OffsetInB.x"
-        },
-        "score": "Physics"
-      }
+      "input": "physics:collision_detection/signed_distance_along_axis/axis_b/x"
     }
   }
 }
