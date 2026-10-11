@@ -3,6 +3,7 @@
 # (Note): Entity Interaction Range is capped by the game at 64.
 # (Note): The dynamic distance is has 8 possible values, so the macro is always cached.
 # (TODO): Check if all these "dynamic distance" checks & function calls are actually worth it for performance, or if it's just overhead.
+# (TODO): Fix the bug where the punch advancement would sometimes (if the MSPT are high, but still below 50?) not trigger, probably because of networking and ping related issues when summoning and killing the interaction every tick.
 execute store result score #Physics Physics.Player.LookingAt.Id run scoreboard players set #Physics.GotRay Physics 0
 execute store result score #Physics.EntityInteractionRange Physics run attribute @s minecraft:entity_interaction_range get 1024
 execute if score #Physics.EntityInteractionRange Physics matches 1..3072 as @e[type=minecraft:item_display,tag=Physics.Punchable,distance=..11.6602540378,sort=nearest] run function physics:zprivate/punchable_hitbox/aabb_check
