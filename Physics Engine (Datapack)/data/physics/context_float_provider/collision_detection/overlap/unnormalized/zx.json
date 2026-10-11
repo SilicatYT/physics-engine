@@ -125,7 +125,7 @@
               }
             ]
           },
-          0.5
+          64
         ]
       },
       "right": {
@@ -133,6 +133,6 @@
         "input": "physics:collision_detection/signed_distance/edge_edge/zx"
       }
     },
-    5.9604644775390625e-08
+    5.960464477539063e-8
   ]
 }

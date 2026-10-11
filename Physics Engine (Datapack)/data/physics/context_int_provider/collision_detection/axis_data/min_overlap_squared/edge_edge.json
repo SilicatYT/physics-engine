@@ -29,7 +29,7 @@
                   "type": "minecraft:mul",
                   "inputs": [
                     "physics:collision_detection/axis_data/overlap_squared/xx",
-                    32
+                    0.001953125
                   ]
                 }
               },
@@ -69,7 +69,7 @@
                   "type": "minecraft:mul",
                   "inputs": [
                     "physics:collision_detection/axis_data/overlap_squared/xy",
-                    32
+                    0.001953125
                   ]
                 }
               },
@@ -109,7 +109,7 @@
                   "type": "minecraft:mul",
                   "inputs": [
                     "physics:collision_detection/axis_data/overlap_squared/xz",
-                    32
+                    0.001953125
                   ]
                 }
               },
@@ -149,7 +149,7 @@
                   "type": "minecraft:mul",
                   "inputs": [
                     "physics:collision_detection/axis_data/overlap_squared/yx",
-                    32
+                    0.001953125
                   ]
                 }
               },
@@ -189,7 +189,7 @@
                   "type": "minecraft:mul",
                   "inputs": [
                     "physics:collision_detection/axis_data/overlap_squared/yy",
-                    32
+                    0.001953125
                   ]
                 }
               },
@@ -229,7 +229,7 @@
                   "type": "minecraft:mul",
                   "inputs": [
                     "physics:collision_detection/axis_data/overlap_squared/yz",
-                    32
+                    0.001953125
                   ]
                 }
               },
@@ -269,7 +269,7 @@
                   "type": "minecraft:mul",
                   "inputs": [
                     "physics:collision_detection/axis_data/overlap_squared/zx",
-                    32
+                    0.001953125
                   ]
                 }
               },
@@ -309,7 +309,7 @@
                   "type": "minecraft:mul",
                   "inputs": [
                     "physics:collision_detection/axis_data/overlap_squared/zy",
-                    32
+                    0.001953125
                   ]
                 }
               },
@@ -349,7 +349,7 @@
                   "type": "minecraft:mul",
                   "inputs": [
                     "physics:collision_detection/axis_data/overlap_squared/zz",
-                    32
+                    0.001953125
                   ]
                 }
               },

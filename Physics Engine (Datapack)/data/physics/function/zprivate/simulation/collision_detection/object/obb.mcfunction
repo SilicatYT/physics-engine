@@ -4,7 +4,7 @@
 execute if score #Physics.IsSetupComplete Physics matches 0 run function physics:zprivate/simulation/collision_detection/object/setup
 
     # Calculate relative pos (A-B)
-    # (Note): Scaled up by 2^16.
+    # (Note): Scaled up by 2^23. The AABB check bounds it to ±119.6 per axis (max sizes 10 & 128), and 2^31 / 2^23 = 256.
     execute store result score #Physics.Offset.x Physics run compute default float physics:collision_detection/relative_pos/x
     execute store result score #Physics.Offset.y Physics run compute default float physics:collision_detection/relative_pos/y
     execute store result score #Physics.Offset.z Physics run compute default float physics:collision_detection/relative_pos/z
@@ -14,7 +14,7 @@ execute if score #Physics.IsSetupComplete Physics matches 0 run function physics
 #            OffsetInB.x = OffsetInA * AxisDot.?x
 # (Note): I always calculate abs(axisDot) inline in the number providers, because the 9 scoreboard and compute commands would likely be more overhead than what it's worth to store and re-use it.
 # (Note): AxisDot is scaled up by 2^24.
-# (Note): OffsetInA/B is scaled up by 2^16 (Same as RelativePos).
+# (Note): OffsetInA/B is scaled up by 2^23 (Same as RelativePos). 2^24 would overflow: they're calculated before the SAT passes, so only the AABB check bounds them (up to ±207 for max sizes 10 & 128).
 # (TODO): Check whether it's faster to run the entire SAT as a single predicate check with a large number provider, and to re-compute the values if it succeeds. Currently, (almost) all values that can be re-used later are stored, which increases the command count.
 # (TODO): In general, check whether it's worth it to run certain calculations twice (like axisDot, offsetIn, signedDistanceAlongAxis for edge-edge, ...), so I could bundle more into a single number provider to reduce the command count.
     # ObjectA's axes
@@ -30,7 +30,7 @@ execute if score #Physics.IsSetupComplete Physics matches 0 run function physics
             #            radiusA = halfExtentA.x
             #            radiusB = halfExtentB.x * abs(axisDot.xx) + halfExtentB.y * abs(axisDot.xy) + halfExtentB.z * abs(axisDot.xz)
             #            distanceAlongAxis = abs(offsetInA.x)
-            # (Note): Overlap is scaled up by 2^16.
+            # (Note): Overlap is scaled up by 2^23 (halfExtent = Scale * 64). It's bounded to -207..+116 (max sizes 10 & 128), and 2^31 / 2^23 = 256.
             execute store result score #Physics.Overlap.A.x Physics run compute default float physics:collision_detection/overlap/axis_a/x
             execute if score #Physics.Overlap.A.x Physics matches ..0 run return 0
 
@@ -94,6 +94,7 @@ execute if score #Physics.IsSetupComplete Physics matches 0 run function physics
         #            radiusB.ij = halfExtentB.<j_tangent_1> * abs(axisDot.<i><j_tangent_2>) + halfExtentB.<j_tangent_2> * abs(axisDot.<i><j_tangent_1>)
         #            distanceAlongAxis.ij = abs(signedDistanceAlongAxis.ij)
         #            signedDistanceAlongAxis.ij = offsetInA.<i_tangent_1> * axisDot.<i_tangent_2><j> - offsetInA<i_tangent_2> * axisDot<i_tangent_1><j>
+        # (Note): signedDistanceAlongAxis is scaled up by 2^47 (OffsetInA * AxisDot), so the radii use Scale * 64 and the result is multiplied by 2^-24. Overlap.Unnormalized is scaled up by 2^23.
         # (Note): In the number providers, I inverted signedDistanceAlongAxis so I can add the terms together instead of needing an additional "sub" operation.
 
         execute store result score #Physics.AxisLengthSquared.xx Physics run compute default float physics:collision_detection/axis_length_squared/xx
@@ -172,9 +173,10 @@ execute if score #Physics.ObjectA Physics.Object.Id > @s Physics.Object.Id in ph
     #         Essentially, there's an absolute bias toward the persisted axis for stability reasons (& so warm-starting doesn't reset as often).
     #         As a predicate: PersistedAxisIndex ≥ 0  ∧  (PersistedAxisIndex = CandidateAxisIndex  ∨  CandidateAxisOverlapSquared ≥ max(√PersistedAxisOverlapSquared - PersistedAxisPreferenceMargin, 0)²)
     #            - PERSISTED_AXIS_PREFERENCE_MARGIN = 0.1 * PENETRATION_SLOP (hardcoded in the persisted_axis_preference_margin float provider, because it doesn't make sense to expose this as a setting)
+    #               - The 0.1 is merged with the scaling factor multiplication for performance reasons.
     #            - The max(..., 0) replaces a separate "switchThreshold ≤ 0" check: squaring loses the sign, and with the clamp, "≥ 0²" is always true.
-    #         The first two terms are cheap score checks in the execute command, so the overlaps (and the sqrt) are only calculated if the persisted axis exists and differs from the candidate.
-    # (Note): The overlaps squared are floats scaled up by 2^32 (so the face overlaps, which are scaled up by 2^16, only need to be squared). Their sqrt is scaled up by 2^16, same as the margin.
+    #         The first two terms are checked in the execute command, so the overlaps (& sqrt) are only calculated if the persisted axis exists and differs from the candidate.
+    # (Note): The overlaps squared are floats scaled up by 2^46 (so the face overlaps, which are scaled up by 2^23, only need to be squared). Their sqrt is scaled up by 2^23, same as the margin (0.1 * 2^7 = 12.8 times PenetrationSlop, which is scaled up by 2^16).
     #         They're never stored as scores, so they don't lose precision to integer rounding.
     # (Note): A degenerate persisted edge-edge axis gets an overlap squared of 1e30, so it always switches to the candidate.
     # (TODO): Maybe add an additional "conditional" layer to check between "is point face" vs "is edge edge", so that in case an edge-edge contact occurs, it doesn't have to check the 6 faces first? At the cost of an additional score access if it's pointFace, though, so maybe it's not worth it.

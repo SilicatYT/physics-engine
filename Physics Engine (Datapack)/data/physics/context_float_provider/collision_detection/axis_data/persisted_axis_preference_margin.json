@@ -1,7 +1,7 @@
 {
   "type": "minecraft:mul",
   "inputs": [
-    0.1,
+    12.8,
     {
       "type": "minecraft:from_int",
       "input": {
