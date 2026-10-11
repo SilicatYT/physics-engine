@@ -14,5 +14,5 @@
       }
     }
   },
-  "right": 0.256
+  "right": "physics:collision_detection/axis_data/persisted_axis_preference_margin"
 }

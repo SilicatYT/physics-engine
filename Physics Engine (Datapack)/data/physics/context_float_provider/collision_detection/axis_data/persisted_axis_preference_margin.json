@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:mul",
+  "inputs": [
+    0.000390625,
+    {
+      "type": "minecraft:from_int",
+      "input": {
+        "type": "minecraft:score",
+        "target": {
+          "type": "minecraft:fixed",
+          "name": "#Physics.Settings.Derived.PenetrationSlop"
+        },
+        "score": "Physics"
+      }
+    }
+  ]
+}

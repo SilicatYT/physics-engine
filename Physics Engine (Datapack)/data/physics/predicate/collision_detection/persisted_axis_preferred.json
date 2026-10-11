@@ -32,7 +32,7 @@
             "type": "minecraft:score",
             "target": {
               "type": "minecraft:fixed",
-              "name": "Physics.CandidateAxis.Index"
+              "name": "#Physics.CandidateAxis.Index"
             },
             "score": "Physics"
           }
@@ -51,7 +51,11 @@
             }
           },
           "test": {
-            "max": 0.065536
+            "max": {
+              "type": "minecraft:pow",
+              "base": "physics:collision_detection/axis_data/persisted_axis_preference_margin",
+              "exponent": 2
+            }
           }
         },
         {

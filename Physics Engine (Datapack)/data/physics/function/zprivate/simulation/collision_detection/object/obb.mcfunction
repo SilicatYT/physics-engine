@@ -179,18 +179,17 @@ execute if score #Physics.ObjectA Physics.Object.Id > @s Physics.Object.Id in ph
     # (Note): isPersistedAxisPreferred works like this:
     #            - if persistedAxisIndex == -1: false (Because then it doesn't exist)
     #            - if persistedAxisIndex == candidateAxisIndex: true or false (Could also be true, doesn't matter. It's just an early exit that skips the subsequent logic.)
-    #            - switchThreshold = persistedAxis.overlap - PREVIOUS_AXIS_PREFERENCE_MARGIN <- The candidate axis overlap has to be below this for it to be preferred
-    #               - PREVIOUS_AXIS_PREFERENCE_MARGIN = PREVIOUS_AXIS_PREFERENCE_MARGIN_MULTIPLIER * PENETRATION_SLOP
+    #            - switchThreshold = persistedAxis.overlap - PERSISTED_AXIS_PREFERENCE_MARGIN <- The candidate axis overlap has to be below this for it to be preferred
+    #               - PERSISTED_AXIS_PREFERENCE_MARGIN = PERSISTED_AXIS_PREFERENCE_MARGIN_MULTIPLIER * PENETRATION_SLOP
     #               - For pointFace, I already have the unsquared overlap, so I can avoid the sqrt.
     #            - if switchThreshold ≤ 0.0 OR candidateAxis.overlapSquared() ≥ switchThreshold^2: true (The "switchThreshold ≤ 0.0" check can be ignored if the other check uses the signed overlap instead of overlapSquared. I don't store the signed overlap for edgeEdge, and different logic for pointFace or edgeEdge would need a score check, so it's faster to just have the check and work with squared values.)
     #         Essentially, there's an absolute bias toward the persisted axis for stability reasons (& so warm-starting doesn't reset as often).
     #         As a predicate: PersistedAxisIndex ≥ 0  ∧  (PersistedAxisIndex = CandidateAxisIndex  ∨  SwitchThreshold ≤ 0.0  ∨  CandidateAxisOverlapSquared ≥ SwitchThreshold²)
-    #         But I don't want to waste a command to store the SwitchThreshold (so I can use it twice), so instead of "SwitchThreshold ≤ 0.0" I check "PersistedAxisOverlapSquared ≤ PreviousAxisPreferenceMargin²"
-    #         So: PersistedAxisIndex ≥ 0  ∧  (PersistedAxisIndex = CandidateAxisIndex  ∨  PersistedAxisOverlapSquared ≤ PreviousAxisPreferenceMargin²  ∨  CandidateAxisOverlapSquared ≥ SwitchThreshold²)
+    #         But I don't want to waste a command to store the SwitchThreshold (so I can use it twice), so instead of "SwitchThreshold ≤ 0.0" I check "PersistedAxisOverlapSquared ≤ PersistedAxisPreferenceMargin²"
+    #         So: PersistedAxisIndex ≥ 0  ∧  (PersistedAxisIndex = CandidateAxisIndex  ∨  PersistedAxisOverlapSquared ≤ PersistedAxisPreferenceMargin²  ∨  CandidateAxisOverlapSquared ≥ SwitchThreshold²)
+    # (Note): PERSISTED_AXIS_PREFERENCE_MARGIN_MULTIPLIER is hardcoded as 0.1 inside the persisted_axis_preference_margin float provider (that's scaled up by 2^8), because it doesn't make sense to expose this as a setting (& it wouldn't be clear what it does anyway).
+    #         Instead of 0.1, I combined 0.1 * 2^-8 directly, so the scaling is correct.
     # (Note): FacingB = signedDistance < 0
-    # (TODO): Currently, in the persisted_axis_preferred predicate and its switch_threshold float provider, PreviousAxisPreferenceMargin is hardcoded at 0.1 * 0.01 = 0.001, and PreviousAxisPreferenceMarginSquared is hardcoded at 0.00001. Because OverlapSquared is scaled by 2^16, these values are scaled by 2^16 as well, so 65.536 and 0.065536. Add a setting and make it into a score.
-    #         In switch_threshold, I use 0.256 as PreviousAxisPreferenceMargin, because sqrt(OverlapSquared) is only scaled by 2^8.
-    #         Turn these values into settings (PREVIOUS_AXIS_PREFERENCE_MARGIN_MULTIPLIER: default 0.1, PENETRATION_SLOP: default 0.01), scaled up by a power of two, and add a derived setting score for PREVIOUS_AXIS_PREFERENCE_MARGIN.
     execute store result score #Physics.ChosenAxis.Index Physics run compute default integer physics:collision_detection/axis_data/chosen_axis/index
     execute store success score #Physics.ChosenAxis.FacingB Physics if predicate physics:collision_detection/axis_facing_b
 
