@@ -23,40 +23,42 @@ scoreboard players reset #Physics
     scoreboard players reset #Physics.Gametime
     scoreboard players reset #Physics.Gametime.Mod200
 
-    scoreboard players reset #Physics.InteractionCount
-    scoreboard players reset #Physics.KillCount
-    scoreboard players reset #Physics.GotRay
-    scoreboard players reset #Physics.EntityInteractionRange
-    scoreboard players reset #Physics.MinDistance
-    scoreboard players reset #Physics.Ray.BlockPos.x
-    scoreboard players reset #Physics.Ray.BlockPos.y
-    scoreboard players reset #Physics.Ray.BlockPos.z
-    scoreboard players reset #Physics.Ray.PosWithinBlock.x
-    scoreboard players reset #Physics.Ray.PosWithinBlock.y
-    scoreboard players reset #Physics.Ray.PosWithinBlock.z
-    scoreboard players reset #Physics.Ray.Direction.x
-    scoreboard players reset #Physics.Ray.Direction.y
-    scoreboard players reset #Physics.Ray.Direction.z
-    scoreboard players reset #Physics.Ray.RelativePos.x
-    scoreboard players reset #Physics.Ray.RelativePos.y
-    scoreboard players reset #Physics.Ray.RelativePos.z
-    scoreboard players reset #Physics.Ray.WinnerRelativePos.x
-    scoreboard players reset #Physics.Ray.WinnerRelativePos.y
-    scoreboard players reset #Physics.Ray.WinnerRelativePos.z
-    scoreboard players reset #Physics.Ray.Local.RelativePos.x
-    scoreboard players reset #Physics.Ray.Local.RelativePos.y
-    scoreboard players reset #Physics.Ray.Local.RelativePos.z
-    scoreboard players reset #Physics.Ray.Local.Direction.x
-    scoreboard players reset #Physics.Ray.Local.Direction.y
-    scoreboard players reset #Physics.Ray.Local.Direction.z
+        # Punchable hitbox
+        scoreboard players reset #Physics.InteractionCount
+        scoreboard players reset #Physics.KillCount
+        scoreboard players reset #Physics.GotRay
+        scoreboard players reset #Physics.EntityInteractionRange
+        scoreboard players reset #Physics.MinDistance
+        scoreboard players reset #Physics.Ray.BlockPos.x
+        scoreboard players reset #Physics.Ray.BlockPos.y
+        scoreboard players reset #Physics.Ray.BlockPos.z
+        scoreboard players reset #Physics.Ray.PosWithinBlock.x
+        scoreboard players reset #Physics.Ray.PosWithinBlock.y
+        scoreboard players reset #Physics.Ray.PosWithinBlock.z
+        scoreboard players reset #Physics.Ray.Direction.x
+        scoreboard players reset #Physics.Ray.Direction.y
+        scoreboard players reset #Physics.Ray.Direction.z
+        scoreboard players reset #Physics.Ray.RelativePos.x
+        scoreboard players reset #Physics.Ray.RelativePos.y
+        scoreboard players reset #Physics.Ray.RelativePos.z
+        scoreboard players reset #Physics.Ray.WinnerRelativePos.x
+        scoreboard players reset #Physics.Ray.WinnerRelativePos.y
+        scoreboard players reset #Physics.Ray.WinnerRelativePos.z
+        scoreboard players reset #Physics.Ray.Local.RelativePos.x
+        scoreboard players reset #Physics.Ray.Local.RelativePos.y
+        scoreboard players reset #Physics.Ray.Local.RelativePos.z
+        scoreboard players reset #Physics.Ray.Local.Direction.x
+        scoreboard players reset #Physics.Ray.Local.Direction.y
+        scoreboard players reset #Physics.Ray.Local.Direction.z
 
-    scoreboard players reset #Physics.ApplyImpulse.Strength
-    scoreboard players reset #Physics.ApplyImpulse.RelativePos.x
-    scoreboard players reset #Physics.ApplyImpulse.RelativePos.y
-    scoreboard players reset #Physics.ApplyImpulse.RelativePos.z
-    scoreboard players reset #Physics.ApplyImpulse.Direction.x
-    scoreboard players reset #Physics.ApplyImpulse.Direction.y
-    scoreboard players reset #Physics.ApplyImpulse.Direction.z
+        # Apply impulse
+        scoreboard players reset #Physics.ApplyImpulse.Strength
+        scoreboard players reset #Physics.ApplyImpulse.RelativePos.x
+        scoreboard players reset #Physics.ApplyImpulse.RelativePos.y
+        scoreboard players reset #Physics.ApplyImpulse.RelativePos.z
+        scoreboard players reset #Physics.ApplyImpulse.Direction.x
+        scoreboard players reset #Physics.ApplyImpulse.Direction.y
+        scoreboard players reset #Physics.ApplyImpulse.Direction.z
 
     scoreboard players reset #Physics.ObjectA
     scoreboard players reset #Physics.ObjectB
@@ -74,69 +76,71 @@ scoreboard players reset #Physics
     scoreboard players reset #Physics.Math.2
     scoreboard players reset #Physics.Math.3
 
-    scoreboard players reset #Physics.Offset.x
-    scoreboard players reset #Physics.Offset.y
-    scoreboard players reset #Physics.Offset.z
-    scoreboard players reset #Physics.OffsetInA.x
-    scoreboard players reset #Physics.OffsetInA.y
-    scoreboard players reset #Physics.OffsetInA.z
-    scoreboard players reset #Physics.OffsetInB.x
-    scoreboard players reset #Physics.OffsetInB.y
-    scoreboard players reset #Physics.OffsetInB.z
-    scoreboard players reset #Physics.AxisDot.xx
-    scoreboard players reset #Physics.AxisDot.xy
-    scoreboard players reset #Physics.AxisDot.xz
-    scoreboard players reset #Physics.AxisDot.yx
-    scoreboard players reset #Physics.AxisDot.yy
-    scoreboard players reset #Physics.AxisDot.yz
-    scoreboard players reset #Physics.AxisDot.zx
-    scoreboard players reset #Physics.AxisDot.zy
-    scoreboard players reset #Physics.AxisDot.zz
-    scoreboard players reset #Physics.Overlap.A.x
-    scoreboard players reset #Physics.Overlap.A.y
-    scoreboard players reset #Physics.Overlap.A.z
-    scoreboard players reset #Physics.Overlap.B.x
-    scoreboard players reset #Physics.Overlap.B.y
-    scoreboard players reset #Physics.Overlap.B.z
-    scoreboard players reset #Physics.Overlap.Unnormalized.xx
-    scoreboard players reset #Physics.Overlap.Unnormalized.xy
-    scoreboard players reset #Physics.Overlap.Unnormalized.xz
-    scoreboard players reset #Physics.Overlap.Unnormalized.yx
-    scoreboard players reset #Physics.Overlap.Unnormalized.yy
-    scoreboard players reset #Physics.Overlap.Unnormalized.yz
-    scoreboard players reset #Physics.Overlap.Unnormalized.zx
-    scoreboard players reset #Physics.Overlap.Unnormalized.zy
-    scoreboard players reset #Physics.Overlap.Unnormalized.zz
-    scoreboard players reset #Physics.Overlap.Squared.xx
-    scoreboard players reset #Physics.Overlap.Squared.xy
-    scoreboard players reset #Physics.Overlap.Squared.xz
-    scoreboard players reset #Physics.Overlap.Squared.yx
-    scoreboard players reset #Physics.Overlap.Squared.yy
-    scoreboard players reset #Physics.Overlap.Squared.yz
-    scoreboard players reset #Physics.Overlap.Squared.zx
-    scoreboard players reset #Physics.Overlap.Squared.zy
-    scoreboard players reset #Physics.Overlap.Squared.zz
-    scoreboard players reset #Physics.AxisLengthSquared.xx
-    scoreboard players reset #Physics.AxisLengthSquared.xy
-    scoreboard players reset #Physics.AxisLengthSquared.xz
-    scoreboard players reset #Physics.AxisLengthSquared.yx
-    scoreboard players reset #Physics.AxisLengthSquared.yy
-    scoreboard players reset #Physics.AxisLengthSquared.yz
-    scoreboard players reset #Physics.AxisLengthSquared.zx
-    scoreboard players reset #Physics.AxisLengthSquared.zy
-    scoreboard players reset #Physics.AxisLengthSquared.zz
+        # Collision detection
+        scoreboard players reset #Physics.IsSetupComplete
 
-    scoreboard players reset #Physics.MinOverlap.PointFace
-    scoreboard players reset #Physics.MinOverlapSquared.EdgeEdge
-    scoreboard players reset #Physics.MinOverlapIndex.EdgeEdge
-    scoreboard players reset #Physics.CandidateAxis.Index
-    scoreboard players reset #Physics.CandidateAxis.OverlapSquared
-    scoreboard players reset #Physics.PersistedAxis.Index
-    scoreboard players reset #Physics.PersistedAxis.OverlapSquared
-    scoreboard players reset #Physics.ChosenAxis.Index
-    scoreboard players reset #Physics.ChosenAxis.OverlapSquared
-    scoreboard players reset #Physics.ChosenAxis.SignedDistance
-    scoreboard players reset #Physics.ChosenAxis.AxisLengthSquared
+        scoreboard players reset #Physics.Offset.x
+        scoreboard players reset #Physics.Offset.y
+        scoreboard players reset #Physics.Offset.z
+        scoreboard players reset #Physics.OffsetInA.x
+        scoreboard players reset #Physics.OffsetInA.y
+        scoreboard players reset #Physics.OffsetInA.z
+        scoreboard players reset #Physics.OffsetInB.x
+        scoreboard players reset #Physics.OffsetInB.y
+        scoreboard players reset #Physics.OffsetInB.z
+        scoreboard players reset #Physics.AxisDot.xx
+        scoreboard players reset #Physics.AxisDot.xy
+        scoreboard players reset #Physics.AxisDot.xz
+        scoreboard players reset #Physics.AxisDot.yx
+        scoreboard players reset #Physics.AxisDot.yy
+        scoreboard players reset #Physics.AxisDot.yz
+        scoreboard players reset #Physics.AxisDot.zx
+        scoreboard players reset #Physics.AxisDot.zy
+        scoreboard players reset #Physics.AxisDot.zz
+        scoreboard players reset #Physics.Overlap.A.x
+        scoreboard players reset #Physics.Overlap.A.y
+        scoreboard players reset #Physics.Overlap.A.z
+        scoreboard players reset #Physics.Overlap.B.x
+        scoreboard players reset #Physics.Overlap.B.y
+        scoreboard players reset #Physics.Overlap.B.z
+        scoreboard players reset #Physics.Overlap.Unnormalized.xx
+        scoreboard players reset #Physics.Overlap.Unnormalized.xy
+        scoreboard players reset #Physics.Overlap.Unnormalized.xz
+        scoreboard players reset #Physics.Overlap.Unnormalized.yx
+        scoreboard players reset #Physics.Overlap.Unnormalized.yy
+        scoreboard players reset #Physics.Overlap.Unnormalized.yz
+        scoreboard players reset #Physics.Overlap.Unnormalized.zx
+        scoreboard players reset #Physics.Overlap.Unnormalized.zy
+        scoreboard players reset #Physics.Overlap.Unnormalized.zz
+        scoreboard players reset #Physics.Overlap.Squared.xx
+        scoreboard players reset #Physics.Overlap.Squared.xy
+        scoreboard players reset #Physics.Overlap.Squared.xz
+        scoreboard players reset #Physics.Overlap.Squared.yx
+        scoreboard players reset #Physics.Overlap.Squared.yy
+        scoreboard players reset #Physics.Overlap.Squared.yz
+        scoreboard players reset #Physics.Overlap.Squared.zx
+        scoreboard players reset #Physics.Overlap.Squared.zy
+        scoreboard players reset #Physics.Overlap.Squared.zz
+        scoreboard players reset #Physics.AxisLengthSquared.xx
+        scoreboard players reset #Physics.AxisLengthSquared.xy
+        scoreboard players reset #Physics.AxisLengthSquared.xz
+        scoreboard players reset #Physics.AxisLengthSquared.yx
+        scoreboard players reset #Physics.AxisLengthSquared.yy
+        scoreboard players reset #Physics.AxisLengthSquared.yz
+        scoreboard players reset #Physics.AxisLengthSquared.zx
+        scoreboard players reset #Physics.AxisLengthSquared.zy
+        scoreboard players reset #Physics.AxisLengthSquared.zz
+
+        scoreboard players reset #Physics.MinOverlap.PointFace
+        scoreboard players reset #Physics.MinOverlapSquared.EdgeEdge
+        scoreboard players reset #Physics.MinOverlapIndex.EdgeEdge
+        scoreboard players reset #Physics.CandidateAxis.Index
+        scoreboard players reset #Physics.CandidateAxis.OverlapSquared
+        scoreboard players reset #Physics.PersistedAxis.Index
+        scoreboard players reset #Physics.PersistedAxis.OverlapSquared
+        scoreboard players reset #Physics.ChosenAxis.Index
+        scoreboard players reset #Physics.ChosenAxis.FacingB
+        scoreboard players reset #Physics.ChosenAxis.AxisLengthSquared
 
     # Constants
     scoreboard players reset #Physics.Constant.-1
@@ -150,118 +154,125 @@ execute in physics:void run forceload remove 0 0
 # Remove scoreboard objectives
 scoreboard objectives remove Physics
 
-scoreboard objectives remove Physics.Object.Id
-scoreboard objectives remove Physics.Object.Id.Mod200
+    # Object
+    scoreboard objectives remove Physics.Object.Id
 
-scoreboard objectives remove Physics.Object.Gametime
+    scoreboard objectives remove Physics.Object.Gametime
 
-scoreboard objectives remove Physics.Object.BlockPos.x
-scoreboard objectives remove Physics.Object.BlockPos.y
-scoreboard objectives remove Physics.Object.BlockPos.z
+    scoreboard objectives remove Physics.Object.BlockPos.x
+    scoreboard objectives remove Physics.Object.BlockPos.y
+    scoreboard objectives remove Physics.Object.BlockPos.z
 
-scoreboard objectives remove Physics.Object.PosWithinBlock.x
-scoreboard objectives remove Physics.Object.PosWithinBlock.y
-scoreboard objectives remove Physics.Object.PosWithinBlock.z
+    scoreboard objectives remove Physics.Object.PosWithinBlock.x
+    scoreboard objectives remove Physics.Object.PosWithinBlock.y
+    scoreboard objectives remove Physics.Object.PosWithinBlock.z
 
-scoreboard objectives remove Physics.Object.LinearVelocity.x
-scoreboard objectives remove Physics.Object.LinearVelocity.y
-scoreboard objectives remove Physics.Object.LinearVelocity.z
+    scoreboard objectives remove Physics.Object.LinearVelocity.x
+    scoreboard objectives remove Physics.Object.LinearVelocity.y
+    scoreboard objectives remove Physics.Object.LinearVelocity.z
 
-scoreboard objectives remove Physics.Object.AngularVelocity.x
-scoreboard objectives remove Physics.Object.AngularVelocity.y
-scoreboard objectives remove Physics.Object.AngularVelocity.z
+    scoreboard objectives remove Physics.Object.AngularVelocity.x
+    scoreboard objectives remove Physics.Object.AngularVelocity.y
+    scoreboard objectives remove Physics.Object.AngularVelocity.z
 
-scoreboard objectives remove Physics.Object.Scale.x
-scoreboard objectives remove Physics.Object.Scale.y
-scoreboard objectives remove Physics.Object.Scale.z
+    scoreboard objectives remove Physics.Object.Scale.x
+    scoreboard objectives remove Physics.Object.Scale.y
+    scoreboard objectives remove Physics.Object.Scale.z
 
-scoreboard objectives remove Physics.Object.InverseMass
+    scoreboard objectives remove Physics.Object.InverseMass
 
-scoreboard objectives remove Physics.Object.Orientation.x
-scoreboard objectives remove Physics.Object.Orientation.y
-scoreboard objectives remove Physics.Object.Orientation.z
-scoreboard objectives remove Physics.Object.Orientation.a
+    scoreboard objectives remove Physics.Object.Orientation.x
+    scoreboard objectives remove Physics.Object.Orientation.y
+    scoreboard objectives remove Physics.Object.Orientation.z
+    scoreboard objectives remove Physics.Object.Orientation.a
 
-scoreboard objectives remove Physics.Object.RotationMatrix.xx
-scoreboard objectives remove Physics.Object.RotationMatrix.xy
-scoreboard objectives remove Physics.Object.RotationMatrix.xz
-scoreboard objectives remove Physics.Object.RotationMatrix.yx
-scoreboard objectives remove Physics.Object.RotationMatrix.yy
-scoreboard objectives remove Physics.Object.RotationMatrix.yz
-scoreboard objectives remove Physics.Object.RotationMatrix.zx
-scoreboard objectives remove Physics.Object.RotationMatrix.zy
-scoreboard objectives remove Physics.Object.RotationMatrix.zz
+    # Object (Derived)
+    scoreboard objectives remove Physics.Object.Id.Mod200
 
-scoreboard objectives remove Physics.Object.SpecificInverseInertiaLocal.x
-scoreboard objectives remove Physics.Object.SpecificInverseInertiaLocal.y
-scoreboard objectives remove Physics.Object.SpecificInverseInertiaLocal.z
+    scoreboard objectives remove Physics.Object.RotationMatrix.xx
+    scoreboard objectives remove Physics.Object.RotationMatrix.xy
+    scoreboard objectives remove Physics.Object.RotationMatrix.xz
+    scoreboard objectives remove Physics.Object.RotationMatrix.yx
+    scoreboard objectives remove Physics.Object.RotationMatrix.yy
+    scoreboard objectives remove Physics.Object.RotationMatrix.yz
+    scoreboard objectives remove Physics.Object.RotationMatrix.zx
+    scoreboard objectives remove Physics.Object.RotationMatrix.zy
+    scoreboard objectives remove Physics.Object.RotationMatrix.zz
 
-scoreboard objectives remove Physics.Object.SpecificInverseInertiaLocal.ReferenceAxis.Index
-scoreboard objectives remove Physics.Object.SpecificInverseInertiaLocal.ReferenceAxis.Value
-scoreboard objectives remove Physics.Object.SpecificInverseInertiaLocal.TangentDifference.x
-scoreboard objectives remove Physics.Object.SpecificInverseInertiaLocal.TangentDifference.y
-scoreboard objectives remove Physics.Object.SpecificInverseInertiaLocal.TangentDifference.z
+    scoreboard objectives remove Physics.Object.SpecificInverseInertiaLocal.x
+    scoreboard objectives remove Physics.Object.SpecificInverseInertiaLocal.y
+    scoreboard objectives remove Physics.Object.SpecificInverseInertiaLocal.z
 
-scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.xx
-scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.xy
-scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.xz
-scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.yx
-scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.yy
-scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.yz
-scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.zx
-scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.zy
-scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.zz
+    scoreboard objectives remove Physics.Object.SpecificInverseInertiaLocal.ReferenceAxis.Index
+    scoreboard objectives remove Physics.Object.SpecificInverseInertiaLocal.ReferenceAxis.Value
+    scoreboard objectives remove Physics.Object.SpecificInverseInertiaLocal.TangentDifference.x
+    scoreboard objectives remove Physics.Object.SpecificInverseInertiaLocal.TangentDifference.y
+    scoreboard objectives remove Physics.Object.SpecificInverseInertiaLocal.TangentDifference.z
 
-scoreboard objectives remove Physics.Object.HalfExtentAxisProjection.xx
-scoreboard objectives remove Physics.Object.HalfExtentAxisProjection.xy
-scoreboard objectives remove Physics.Object.HalfExtentAxisProjection.xz
-scoreboard objectives remove Physics.Object.HalfExtentAxisProjection.yx
-scoreboard objectives remove Physics.Object.HalfExtentAxisProjection.yy
-scoreboard objectives remove Physics.Object.HalfExtentAxisProjection.yz
-scoreboard objectives remove Physics.Object.HalfExtentAxisProjection.zx
-scoreboard objectives remove Physics.Object.HalfExtentAxisProjection.zy
-scoreboard objectives remove Physics.Object.HalfExtentAxisProjection.zz
+    scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.xx
+    scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.xy
+    scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.xz
+    scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.yx
+    scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.yy
+    scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.yz
+    scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.zx
+    scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.zy
+    scoreboard objectives remove Physics.Object.SpecificInverseInertiaWorld.zz
 
-scoreboard objectives remove Physics.Object.Aabb.Max.x
-scoreboard objectives remove Physics.Object.Aabb.Max.y
-scoreboard objectives remove Physics.Object.Aabb.Max.z
-scoreboard objectives remove Physics.Object.Aabb.Min.x
-scoreboard objectives remove Physics.Object.Aabb.Min.y
-scoreboard objectives remove Physics.Object.Aabb.Min.z
+    scoreboard objectives remove Physics.Object.HalfExtentAxisProjection.xx
+    scoreboard objectives remove Physics.Object.HalfExtentAxisProjection.xy
+    scoreboard objectives remove Physics.Object.HalfExtentAxisProjection.xz
+    scoreboard objectives remove Physics.Object.HalfExtentAxisProjection.yx
+    scoreboard objectives remove Physics.Object.HalfExtentAxisProjection.yy
+    scoreboard objectives remove Physics.Object.HalfExtentAxisProjection.yz
+    scoreboard objectives remove Physics.Object.HalfExtentAxisProjection.zx
+    scoreboard objectives remove Physics.Object.HalfExtentAxisProjection.zy
+    scoreboard objectives remove Physics.Object.HalfExtentAxisProjection.zz
 
-scoreboard objectives remove Physics.Object.AabbRelative.Max.x
-scoreboard objectives remove Physics.Object.AabbRelative.Max.y
-scoreboard objectives remove Physics.Object.AabbRelative.Max.z
-scoreboard objectives remove Physics.Object.AabbRelative.Min.x
-scoreboard objectives remove Physics.Object.AabbRelative.Min.y
-scoreboard objectives remove Physics.Object.AabbRelative.Min.z
+    scoreboard objectives remove Physics.Object.Aabb.Max.x
+    scoreboard objectives remove Physics.Object.Aabb.Max.y
+    scoreboard objectives remove Physics.Object.Aabb.Max.z
+    scoreboard objectives remove Physics.Object.Aabb.Min.x
+    scoreboard objectives remove Physics.Object.Aabb.Min.y
+    scoreboard objectives remove Physics.Object.Aabb.Min.z
 
-scoreboard objectives remove Physics.Object.ObbRadius
+    scoreboard objectives remove Physics.Object.AabbRelative.Max.x
+    scoreboard objectives remove Physics.Object.AabbRelative.Max.y
+    scoreboard objectives remove Physics.Object.AabbRelative.Max.z
+    scoreboard objectives remove Physics.Object.AabbRelative.Min.x
+    scoreboard objectives remove Physics.Object.AabbRelative.Min.y
+    scoreboard objectives remove Physics.Object.AabbRelative.Min.z
 
-scoreboard objectives remove Physics.Object.LinearVelocityFromAcceleration.x
-scoreboard objectives remove Physics.Object.LinearVelocityFromAcceleration.y
-scoreboard objectives remove Physics.Object.LinearVelocityFromAcceleration.z
+    scoreboard objectives remove Physics.Object.ObbRadius
 
-scoreboard objectives remove Physics.Object.AngularVelocityFromTorque.x
-scoreboard objectives remove Physics.Object.AngularVelocityFromTorque.y
-scoreboard objectives remove Physics.Object.AngularVelocityFromTorque.z
+    # Object (Other, transient)
+    scoreboard objectives remove Physics.Object.LinearVelocityFromAcceleration.x
+    scoreboard objectives remove Physics.Object.LinearVelocityFromAcceleration.y
+    scoreboard objectives remove Physics.Object.LinearVelocityFromAcceleration.z
 
-scoreboard objectives remove Physics.Manifold.ObjectA.Id
-scoreboard objectives remove Physics.Manifold.ObjectB.Id
+    scoreboard objectives remove Physics.Object.AngularVelocityFromTorque.x
+    scoreboard objectives remove Physics.Object.AngularVelocityFromTorque.y
+    scoreboard objectives remove Physics.Object.AngularVelocityFromTorque.z
 
-scoreboard objectives remove Physics.Manifold.PersistedAxis.Index
+    # Manifold
+    scoreboard objectives remove Physics.Manifold.ObjectA.Id
+    scoreboard objectives remove Physics.Manifold.ObjectB.Id
 
-scoreboard objectives remove Physics.Player.Id
-scoreboard objectives remove Physics.Player.LookingAt.Id
-scoreboard objectives remove Physics.Player.LookingAt.Direction.x
-scoreboard objectives remove Physics.Player.LookingAt.Direction.y
-scoreboard objectives remove Physics.Player.LookingAt.Direction.z
-scoreboard objectives remove Physics.Player.LookingAt.RelativePos.x
-scoreboard objectives remove Physics.Player.LookingAt.RelativePos.y
-scoreboard objectives remove Physics.Player.LookingAt.RelativePos.z
-scoreboard objectives remove Physics.Player.PunchStrength
+    scoreboard objectives remove Physics.Manifold.PersistedAxis.Index
 
-scoreboard objectives remove Physics.Hitbox.Gametime
+    # Player
+    scoreboard objectives remove Physics.Player.Id
+    scoreboard objectives remove Physics.Player.LookingAt.Id
+    scoreboard objectives remove Physics.Player.LookingAt.Direction.x
+    scoreboard objectives remove Physics.Player.LookingAt.Direction.y
+    scoreboard objectives remove Physics.Player.LookingAt.Direction.z
+    scoreboard objectives remove Physics.Player.LookingAt.RelativePos.x
+    scoreboard objectives remove Physics.Player.LookingAt.RelativePos.y
+    scoreboard objectives remove Physics.Player.LookingAt.RelativePos.z
+    scoreboard objectives remove Physics.Player.PunchStrength
+
+    # Punchable hitbox
+    scoreboard objectives remove Physics.Hitbox.Gametime
 
 # Delete data storages
 data remove storage physics:zprivate settings
