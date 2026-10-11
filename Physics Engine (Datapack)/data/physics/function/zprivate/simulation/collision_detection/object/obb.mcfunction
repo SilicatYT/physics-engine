@@ -1,10 +1,10 @@
 # (Note): The initial object is A, whereas @s is B.
 
 # Setup
-execute if score #Physics.IsSetupComplete Physics matches 0 run function physics:zprivate/simulation/collision_detection/object/setup
+execute if score #Physics.IsSetupComplete Physics matches 0 in physics:void as @e[x=7.9,y=8199.9,z=7.9,type=minecraft:area_effect_cloud,limit=1] on origin on vehicle run function physics:zprivate/simulation/collision_detection/object/setup
 
     # Calculate relative pos (A-B)
-    # (Note): Scaled up by 2^23. The AABB check bounds it to ±119.6 per axis (max sizes 10 & 128), and 2^31 / 2^23 = 256.
+    # (Note): Scaled up by 2^23. The AABB check bounds it to ±119.6 per axis (max sizes 10 for dynamic & 128 for static), and 2^31 / 2^23 = 256. So this doesn't overflow.
     execute store result score #Physics.Offset.x Physics run compute default float physics:collision_detection/relative_pos/x
     execute store result score #Physics.Offset.y Physics run compute default float physics:collision_detection/relative_pos/y
     execute store result score #Physics.Offset.z Physics run compute default float physics:collision_detection/relative_pos/z

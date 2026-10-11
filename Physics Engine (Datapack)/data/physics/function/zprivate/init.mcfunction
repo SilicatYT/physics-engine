@@ -14,6 +14,7 @@ gamerule max_command_sequence_length 2147483647
 #               - (Note): 24.0 is for entities that were newly spawned and are made to ride an entity. Due to the ride command, the entity's position won't update until the next tick, so tag checks are necessary.
 #            - 1032.0: (3) according to stack information in "turn_into_physics_object"
 #               - (Note): 1080.0 - 5160.0 are reserved for the armor stands.
+#            - 8200.0: Temporary location for (3) according to stack information in "turn_into_physics_object", so its passengers don't collide with any used chunks.
 execute in physics:void run forceload add 0 0
 execute in physics:void run summon minecraft:marker 8.0 8.0 8.0 {UUID:[I;1465875189,-790868948,-1853745261,426373306]}
 

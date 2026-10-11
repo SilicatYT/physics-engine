@@ -34,5 +34,9 @@ execute unless score @s Physics.Object.Gametime = #Physics.Gametime Physics run 
     execute if score @s Physics.Object.ObbRadius matches 454049..794584 as @e[type=minecraft:item_display,tag=!Physics.Checked,distance=..14.72244930267333984375,predicate=physics:collision_detection/overlaps_aabb] run function physics:zprivate/simulation/collision_detection/object/obb
     execute if score @s Physics.Object.ObbRadius matches 794585.. as @e[type=minecraft:item_display,tag=!Physics.Checked,distance=..17.32050895690917968755,predicate=physics:collision_detection/overlaps_aabb] run function physics:zprivate/simulation/collision_detection/object/obb
 
+    # Teleport AEC back
+    execute if score #Physics.IsSetupComplete Physics matches 1 on passengers if entity @s[tag=Physics.ObjectArmorStand] on passengers on origin on vehicle in physics:void run tp @s 8.0 1032.0 8.0
+
+
 # Terrain collisions
 

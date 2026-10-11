@@ -26,5 +26,5 @@ scoreboard players operation #Physics.ObjectA Physics.Object.Scale.z = @s Physic
 
 # Setup cheap manifold and AEC access
 # (Note): This is necessary so I can efficiently access the previous manifold for that object pair during the SAT, as well as cheaply access the AEC for making the manifold or objectB's AEC ride it.
-# (Note): The previous tick's manifolds are automatically teleported to y=56, and the current tick's manifolds are at y=72.
-#execute on passengers if entity @s[tag=Physics.ObjectArmorStand] on passengers on origin on vehicle in physics:void run tp @s 8.0 40.0 8.0
+# (Note): The previous tick's manifolds are automatically teleported to y=8216, and the current tick's manifolds are at y=8232.
+execute on passengers if entity @s[tag=Physics.ObjectArmorStand] on passengers on origin on vehicle in physics:void run tp @s 8.0 8200.0 8.0
