@@ -1,6 +1,8 @@
 # (Note): The initial object is A, whereas @s is B.
 
 # Setup
+execute if score #Physics.IsSetupComplete Physics matches 0 run function physics:zprivate/simulation/collision_detection/object/setup
+
     # Calculate relative pos (A-B)
     # (Note): Scaled up by 2^16.
     execute store result score #Physics.Offset.x Physics run compute default float physics:collision_detection/relative_pos/x
