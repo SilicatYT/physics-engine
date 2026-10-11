@@ -134,10 +134,7 @@ scoreboard players reset #Physics
         scoreboard players reset #Physics.MinOverlap.PointFace
         scoreboard players reset #Physics.MinOverlapSquared.EdgeEdge
         scoreboard players reset #Physics.MinOverlapIndex.EdgeEdge
-        scoreboard players reset #Physics.CandidateAxis.Index
-        scoreboard players reset #Physics.CandidateAxis.OverlapSquared
         scoreboard players reset #Physics.PersistedAxis.Index
-        scoreboard players reset #Physics.PersistedAxis.OverlapSquared
         scoreboard players reset #Physics.ChosenAxis.Index
         scoreboard players reset #Physics.ChosenAxis.FacingB
         scoreboard players reset #Physics.ChosenAxis.AxisLengthSquared

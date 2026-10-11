@@ -1,18 +1,14 @@
 {
-  "type": "minecraft:sub",
-  "left": {
-    "type": "minecraft:sqrt",
-    "input": {
-      "type": "minecraft:from_int",
-      "input": {
-        "type": "minecraft:score",
-        "target": {
-          "type": "minecraft:fixed",
-          "name": "#Physics.PersistedAxis.OverlapSquared"
-        },
-        "score": "Physics"
-      }
-    }
-  },
-  "right": "physics:collision_detection/axis_data/persisted_axis_preference_margin"
+  "type": "minecraft:max",
+  "inputs": [
+    {
+      "type": "minecraft:sub",
+      "left": {
+        "type": "minecraft:sqrt",
+        "input": "physics:collision_detection/axis_data/persisted_axis/overlap_squared"
+      },
+      "right": "physics:collision_detection/axis_data/persisted_axis_preference_margin"
+    },
+    0
+  ]
 }
