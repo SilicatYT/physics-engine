@@ -157,6 +157,7 @@ execute if score #Physics.ObjectA Physics.Object.Id > @s Physics.Object.Id in ph
     # Candidate axis
     # (Note): To avoid having to run the "overlapSquared" calculation twice for every cross product axis (one pass to get MinOverlapSquared, one pass to get the index), I pack the index directly into the overlapSquared's bottom 4 bits, then recalculate it for one axis in case it's an edge-edge collision (in physics:collision_detection/axis_data/candidate_axis/overlap_squared).
     # (Note): The packing process scales up MinOverlapSquared.EdgeEdge by an additional factor of 2x, so I multiply it by 0.5 in physics:collision_detection/axis_data/candidate_axis/index. This is currently merged with the bias of (1.0 / 0.7)^2.
+    # (TODO): Maybe store Overlap instead of OverlapSquared for precision reasons, or store it in a data storage? Would cause extra overhead, but currently the overlapSquared is 2^16, so overlap is 2^8, which is only 256x. At the same time, I only need it to select the axis, so it doesn't have to be that precise.
     execute store result score #Physics.MinOverlap.PointFace Physics run compute default integer physics:collision_detection/axis_data/min_overlap/point_face
     execute store result score #Physics.MinOverlapSquared.EdgeEdge Physics run compute default integer physics:collision_detection/axis_data/min_overlap_squared/edge_edge
     execute store result score #Physics.MinOverlapIndex.EdgeEdge Physics run compute default integer physics:collision_detection/axis_data/min_overlap_index/edge_edge
@@ -166,18 +167,28 @@ execute if score #Physics.ObjectA Physics.Object.Id > @s Physics.Object.Id in ph
 
     # Persisted axis
     # (Note): As an optimization, I check if both indices are equal. If yes, simply copy over CandidateAxis.OverlapSquared.
+    # (Note): OverlapSquared is set to -1 if PersistedAxis.Index is -1. This value is never used, but it probably doesn't make a difference. Most of the times, there will be a persistedAxis, and I'll skip the "execute if score" check.
     # (TODO): Maybe add an additional "conditional" layer to check between "is point face" vs "is edge edge", so that in case an edge-edge contact occurs, it doesn't have to check the 6 faces first? At the cost of an additional score access if it's pointFace, though, so maybe it's not worth it.
     # (TODO): Maybe use binary or ternary search to find the respective face or edge axis faster?
     # (TODO): Currently, because of the "all_of", it checks all 15 axes if the one matching its index is degenerate. Maybe fix that.
-    execute unless score #Physics.PersistedAxis.Index Physics matches -1 store result score #Physics.PersistedAxis.OverlapSquared Physics run compute default float physics:collision_detection/axis_data/persisted_axis/overlap_squared
+    execute store result score #Physics.PersistedAxis.OverlapSquared Physics run compute default float physics:collision_detection/axis_data/persisted_axis/overlap_squared
 
     # Choose between candidate and persisted
-    # (Note): If PersistedAxis.Index is -1, it chooses the CandidateAxis.
-    # (TODO): Maybe unhardcode the bias. Currently it's 0.9^2 (squared because it's applied to overlapSquared), so 0.81.
-    # (TODO): Is it faster if I additionally add an early exit for "both indices are equal"?
+    # (Note): isPersistedAxisPreferred works like this:
+    #            - if persistedAxisIndex == -1: false (Because then it doesn't exist)
+    #            - if persistedAxisIndex == candidateAxisIndex: true or false (Could also be true, doesn't matter. It's just an early exit that skips the subsequent logic.)
+    #            - switchThreshold = persistedAxis.overlap - PREVIOUS_AXIS_PREFERENCE_MARGIN <- The candidate axis overlap has to be below this for it to be preferred
+    #               - PREVIOUS_AXIS_PREFERENCE_MARGIN = PREVIOUS_AXIS_PREFERENCE_MARGIN_MULTIPLIER * PENETRATION_SLOP
+    #               - For pointFace, I already have the unsquared overlap, so I can avoid the sqrt.
+    #            - if switchThreshold ≤ 0.0 OR candidateAxis.overlapSquared() ≥ switchThreshold^2: true (The "switchThreshold ≤ 0.0" check can be ignored if the other check uses the signed overlap instead of overlapSquared. I don't store the signed overlap for edgeEdge, and different logic for pointFace or edgeEdge would need a score check, so it's faster to just have the check and work with squared values.)
+    #         Essentially, there's an absolute bias toward the persisted axis for stability reasons (& so warm-starting doesn't reset as often).
+    #         As a predicate: PersistedAxisIndex ≥ 0  ∧  (PersistedAxisIndex = CandidateAxisIndex  ∨  SwitchThreshold ≤ 0.0  ∨  CandidateAxisOverlapSquared ≥ SwitchThreshold²)
+    #         But I don't want to waste a command to store the SwitchThreshold (so I can use it twice), so instead of "SwitchThreshold ≤ 0.0" I check "PersistedAxisOverlapSquared ≤ PreviousAxisPreferenceMargin²"
+    #         So: PersistedAxisIndex ≥ 0  ∧  (PersistedAxisIndex = CandidateAxisIndex  ∨  PersistedAxisOverlapSquared ≤ PreviousAxisPreferenceMargin²  ∨  CandidateAxisOverlapSquared ≥ SwitchThreshold²)
+    # (Note): FacingB = signedDistance < 0
+    # (TODO): Currently, in the persisted_axis_preferred predicate and its switch_threshold float provider, PreviousAxisPreferenceMargin is hardcoded at 0.1 * 0.01 = 0.001, and PreviousAxisPreferenceMarginSquared is hardcoded at 0.00001. Because OverlapSquared is scaled by 2^16, these values are scaled by 2^16 as well, so 65.536 and 0.065536. Add a setting and make it into a score.
+    #         In switch_threshold, I use 0.256 as PreviousAxisPreferenceMargin, because sqrt(OverlapSquared) is only scaled by 2^8.
+    #         Turn these values into settings (PREVIOUS_AXIS_PREFERENCE_MARGIN_MULTIPLIER: default 0.1, PENETRATION_SLOP: default 0.01), scaled up by a power of two, and add a derived setting score for PREVIOUS_AXIS_PREFERENCE_MARGIN.
     execute store result score #Physics.ChosenAxis.Index Physics run compute default integer physics:collision_detection/axis_data/chosen_axis/index
-
-    # Chosen axis
-    execute store result score #Physics.ChosenAxis.OverlapSquared Physics run compute default integer physics:collision_detection/axis_data/chosen_axis/overlap_squared
-    execute store result score #Physics.ChosenAxis.SignedDistance Physics run compute default integer physics:collision_detection/axis_data/chosen_axis/signed_distance
+    execute store success score #Physics.ChosenAxis.FacingB Physics if predicate physics:collision_detection/axis_facing_b
 

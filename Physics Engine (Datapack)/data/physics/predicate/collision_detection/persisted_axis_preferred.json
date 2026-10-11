@@ -1,0 +1,81 @@
+{
+  "type": "minecraft:all_of",
+  "terms": [
+    {
+      "type": "minecraft:int_value_check",
+      "value": {
+        "type": "minecraft:score",
+        "target": {
+          "type": "minecraft:fixed",
+          "name": "#Physics.PersistedAxis.Index"
+        },
+        "score": "Physics"
+      },
+      "test": {
+        "min": 0
+      }
+    },
+    {
+      "type": "minecraft:any_of",
+      "terms": [
+        {
+          "type": "minecraft:int_value_check",
+          "value": {
+            "type": "minecraft:score",
+            "target": {
+              "type": "minecraft:fixed",
+              "name": "#Physics.PersistedAxis.Index"
+            },
+            "score": "Physics"
+          },
+          "test": {
+            "type": "minecraft:score",
+            "target": {
+              "type": "minecraft:fixed",
+              "name": "Physics.CandidateAxis.Index"
+            },
+            "score": "Physics"
+          }
+        },
+        {
+          "type": "minecraft:float_value_check",
+          "value": {
+            "type": "minecraft:from_int",
+            "input": {
+              "type": "minecraft:score",
+              "target": {
+                "type": "minecraft:fixed",
+                "name": "#Physics.PersistedAxis.OverlapSquared"
+              },
+              "score": "Physics"
+            }
+          },
+          "test": {
+            "max": 0.065536
+          }
+        },
+        {
+          "type": "minecraft:float_value_check",
+          "value": {
+            "type": "minecraft:from_int",
+            "input": {
+              "type": "minecraft:score",
+              "target": {
+                "type": "minecraft:fixed",
+                "name": "#Physics.CandidateAxis.OverlapSquared"
+              },
+              "score": "Physics"
+            }
+          },
+          "test": {
+            "min": {
+              "type": "minecraft:pow",
+              "base": "physics:collision_detection/axis_data/switch_threshold",
+              "exponent": 2
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

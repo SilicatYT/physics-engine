@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:sub",
+  "left": {
+    "type": "minecraft:sqrt",
+    "input": {
+      "type": "minecraft:from_int",
+      "input": {
+        "type": "minecraft:score",
+        "target": {
+          "type": "minecraft:fixed",
+          "name": "#Physics.PersistedAxis.OverlapSquared"
+        },
+        "score": "Physics"
+      }
+    }
+  },
+  "right": 0.256
+}

@@ -48,10 +48,10 @@ execute unless score @s Physics.Object.Gametime = #Physics.Gametime Physics run 
     # (Note): The max distance is hardcoded for the other object's max scale of 10: sqrt(3)*10/2 is added to the OBB Radius for cubes of size 1, 4, 7 or 10 respectively.
     # (TODO): Check if adding an obb radius check in the selector (score check) would help performance.
     tag @s add Physics.Checked
-    execute if score @s Physics.Object.ObbRadius matches ..113512 as @e[type=minecraft:item_display,tag=!Physics.Checked,distance=..9.52628231048583984375,predicate=physics:collision_detection/overlaps_aabb] run function physics:zprivate/simulation/collision_detection/object/sat
-    execute if score @s Physics.Object.ObbRadius matches 113513..454048 as @e[type=minecraft:item_display,tag=!Physics.Checked,distance=..12.12436580657958984375,predicate=physics:collision_detection/overlaps_aabb] run function physics:zprivate/simulation/collision_detection/object/sat
-    execute if score @s Physics.Object.ObbRadius matches 454049..794584 as @e[type=minecraft:item_display,tag=!Physics.Checked,distance=..14.72244930267333984375,predicate=physics:collision_detection/overlaps_aabb] run function physics:zprivate/simulation/collision_detection/object/sat
-    execute if score @s Physics.Object.ObbRadius matches 794585.. as @e[type=minecraft:item_display,tag=!Physics.Checked,distance=..17.32050895690917968755,predicate=physics:collision_detection/overlaps_aabb] run function physics:zprivate/simulation/collision_detection/object/sat
+    execute if score @s Physics.Object.ObbRadius matches ..113512 as @e[type=minecraft:item_display,tag=!Physics.Checked,distance=..9.52628231048583984375,predicate=physics:collision_detection/overlaps_aabb] run function physics:zprivate/simulation/collision_detection/object/obb
+    execute if score @s Physics.Object.ObbRadius matches 113513..454048 as @e[type=minecraft:item_display,tag=!Physics.Checked,distance=..12.12436580657958984375,predicate=physics:collision_detection/overlaps_aabb] run function physics:zprivate/simulation/collision_detection/object/obb
+    execute if score @s Physics.Object.ObbRadius matches 454049..794584 as @e[type=minecraft:item_display,tag=!Physics.Checked,distance=..14.72244930267333984375,predicate=physics:collision_detection/overlaps_aabb] run function physics:zprivate/simulation/collision_detection/object/obb
+    execute if score @s Physics.Object.ObbRadius matches 794585.. as @e[type=minecraft:item_display,tag=!Physics.Checked,distance=..17.32050895690917968755,predicate=physics:collision_detection/overlaps_aabb] run function physics:zprivate/simulation/collision_detection/object/obb
 
 # Terrain collisions
 
