@@ -162,6 +162,7 @@ data modify storage physics:zprivate constants set value {\
 }
 
 # Set initial config dialog
+# (Note): Use the \\$ regex rule to select the trailing backslashes for easy importing to misode's generator. To put it back in the datapack, search for $ and replace it with \.
 data modify storage physics:zprivate settings.dialog set value \
 {\
   "type": "minecraft:dialog_list",\
@@ -280,6 +281,15 @@ data modify storage physics:zprivate settings.dialog set value \
           "start": 0,\
           "end": 1,\
           "step": 0.01\
+        },\
+        {\
+          "type": "minecraft:number_range",\
+          "key": "penetration_slop",\
+          "label": "Penetration Slop",\
+          "label_format": "%1$s: %2$sm",\
+          "start": 0,\
+          "end": 0.1,\
+          "step": 0.0025\
         }\
       ],\
       "columns": 3,\
@@ -290,7 +300,7 @@ data modify storage physics:zprivate settings.dialog set value \
           "width": 150,\
           "action": {\
             "type": "minecraft:dynamic/run_command",\
-            "template": "function physics:zprivate/settings/simulation/apply {delta_time_denominator:$(delta_time_denominator),gravity:$(gravity)f,linear_damping:$(linear_damping)f,angular_damping:$(angular_damping)f}"\
+            "template": "function physics:zprivate/settings/simulation/apply {delta_time_denominator:$(delta_time_denominator),gravity:$(gravity)f,linear_damping:$(linear_damping)f,angular_damping:$(angular_damping)f,penetration_slop:$(penetration_slop)f}"\
           }\
         },\
         {\

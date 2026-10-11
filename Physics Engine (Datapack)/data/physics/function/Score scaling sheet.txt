@@ -4,7 +4,7 @@ NOTE: Floats can represent 24bit integers losslessly, so I can scale values to a
 NOTE: +-/* for floats that are scaled up by a power of two doesn't require dividing the individual numbers by their scaling factor first. Precision doesn't get lost.
 
 Settings:
-- ...
+- PenetrationSlop: 65,536x (2^16, same as PenetrationDepth for easy subtraction)
 
 Object:
 - BlockPos: 1x

@@ -2,7 +2,8 @@ $data modify storage physics:zprivate settings.new set value {\
     delta_time_denominator:$(delta_time_denominator),\
     gravity:$(gravity)f,\
     linear_damping:$(linear_damping)f,\
-    angular_damping:$(angular_damping)f\
+    angular_damping:$(angular_damping)f,\
+    penetration_slop:$(penetration_slop)f\
 }
 
 # (Note): All setting values are updated every time, because adding guards doesn't matter for one-time calls' performance, and some values depend on others.
@@ -22,6 +23,10 @@ function physics:settings/simulation/set_linear_damping with storage physics:zpr
 # Setting: Angular Damping
 data modify storage physics:zprivate settings.value set from storage physics:zprivate settings.new.angular_damping
 function physics:settings/simulation/set_angular_damping with storage physics:zprivate settings
+
+# Setting: Penetration Slop
+data modify storage physics:zprivate settings.value set from storage physics:zprivate settings.new.penetration_slop
+function physics:settings/simulation/set_penetration_slop with storage physics:zprivate settings
 
 # Tellraw
 tellraw @s ["",{text:"Physics Engine >> ",color:"#12D9D6"},{text:"Saved configuration!",color:"green"}]
